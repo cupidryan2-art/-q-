@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chyu's Intro</title>
+    <style>
+        /* 1. 页面整体样式 */
+        body {
+            background-color: #f5f5f5; /* 浅灰色背景，柔和不刺眼 */
+            font-family: "Helvetica Neue", Arial, sans-serif; /* 优雅的字体 */
+            margin: 0; /* 清除页面默认外边距 */
+            padding: 60px; /* 给页面内容留边距，避免贴边 */
+            display: flex; /* 用 flex 布局让内容垂直居中 */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* 让 body 至少占满屏幕高度 */
+        }
+
+        /* 2. 标题样式（h1） */
+        h1 {
+            color: #333; /* 深灰色文字，更高级 */
+            font-size: 2.5rem; /* 字体大小适中 */
+            margin-bottom: 10px; /* 与下方内容留间距 */
+            font-weight: 300; /* 字体粗细更轻盈 */
+            letter-spacing: 1px; /* 字母间距，更优雅 */
+        }
+
+        /* 3. 副标题样式（h2） */
+        h2 {
+            color: #666; /* 浅灰色文字，层次分明 */
+            font-size: 1.2rem;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        /* 4. 段落与链接样式 */
+        p {
+            color: #444;
+            line-height: 1.6; /* 行高更舒适 */
+            max-width: 600px; /* 限制段落宽度，避免太宽难读 */
+            text-align: center; /* 文字居中，更规整 */
+        }
+
+        a {
+            color: #4285f4; /* 谷歌蓝，链接更醒目且高级 */
+            text-decoration: none; /* 去掉默认下划线，hover 时再显示 */
+            transition: color 0.3s ease; /* 颜色过渡动画，更丝滑 */
+        }
+
+        a:hover {
+            color: #1a73e8; /* hover 时加深颜色 */
+            text-decoration: underline; /* 显示下划线，提示可点击 */
+        }
+
+        /* 5. 图片样式 */
+        img {
+            width: 200px; /* 统一图片宽度 */
+            height: 200px; /* 统一图片高度 */
+            border-radius: 50%; /* 圆形头像，更优雅 */
+            object-fit: cover; /* 图片裁剪适应，避免变形 */
+            margin: 20px 0; /* 与上下内容留间距 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 轻微阴影，更立体 */
+        }
+
+        /* 6. 输入框样式 */
+        input[type="text"] {
+            padding: 10px 15px; /* 内边距，更舒适 */
+            border: 1px solid #ddd; /* 浅灰色边框 */
+            border-radius: 4px; /* 圆角，更柔和 */
+            font-size: 1rem;
+            width: 240px;
+            margin-top: 20px;
+            transition: border-color 0.3s ease; /* 边框颜色过渡 */
+        }
+
+        input[type="text"]:focus {
+            border-color: #4285f4; /* 聚焦时边框变谷歌蓝 */
+            outline: none; /* 去掉默认聚焦外框 */
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2); /* 聚焦阴影，提示交互 */
+        }
+        /* 联系按钮样式 */
+        .contact-btn {
+    display: inline-block; /* 让按钮能设置宽高和内外边距 */
+    padding: 12px 30px; /* 按钮内边距，上下12px，左右30px */
+    background-color: #4285f4; /* 谷歌蓝，和链接颜色呼应 */
+    color: white; /* 文字白色 */
+    border-radius: 30px; /* 大圆角，更柔和 */
+    text-decoration: none; /* 去除下划线 */
+    font-size: 1rem;
+    margin-top: 20px; /* 与上方内容保持距离 */
+    transition: all 0.3s ease; /* 所有样式变化添加过渡动画 */
+    box-shadow: 0 4px 6px rgba(66, 133, 244, 0.2); /* 轻微阴影 */
+                  }
+
+/* 鼠标悬停时的样式 */
+      .contact-btn:hover {
+    background-color: #1a73e8; /* 颜色加深 */
+    transform: translateY(-2px); /* 轻微上移，增加交互感 */
+    box-shadow: 0 6px 10px rgba(66, 133, 244, 0.3); /* 阴影加大 */
+    color: white; /* 确保文字还是白色 */
+    text-decoration: none; /* 去除下划线 */
+}
+    </style>
+</head>
+<body>
+    <h1>Chyu</h1>
+    <h2>18 years old</h2>
+    <p>
+        xiamen university malaysia
+    </p>
+    <p>
+        major in data science. From Hangzhou, China. Loving music and travel.
+    </p>
+    <p>
+        below is my self profile picture
+    </p>
+    <img src="1.jpg" alt="my picture">
+    <p>
+        If you want to know more about me <a href="https://www.instagram.com/turtle.6376470/">there is the link</a>
+    </p>
+    <a href="https://github.com/cupidryan2-art" class="contact-btn" target="_blank">click here to contact me</a>
+</body>
+</html>

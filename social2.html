@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiscussHub - 现代社交论坛</title>
+    <!-- 引入外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        accent: '#722ED1',
+                        neutral: '#F5F7FA',
+                        dark: '#1D2129',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .nav-item {
+                @apply relative px-3 py-2 text-gray-700 hover:text-primary transition-colors duration-200;
+            }
+            .nav-item::after {
+                @apply content-[''] absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-200;
+            }
+            .nav-item:hover::after {
+                @apply w-full;
+            }
+            .pulse-animation {
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark">
+    <!-- 顶部导航栏 -->
+    <header id="navbar" class="fixed w-full bg-white/95 backdrop-blur-sm shadow-sm z-50 transition-all duration-300">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="#" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                            <i class="fa fa-comments text-white text-xl"></i>
+                        </div>
+                        <span class="text-xl font-bold text-primary">DiscussHub</span>
+                    </a>
+                    
+                    <!-- 主导航 - 桌面版 -->
+                    <nav class="hidden md:flex ml-10 space-x-1">
+                        <a href="#" class="nav-item font-medium text-primary">首页</a>
+                        <a href="#" class="nav-item font-medium">发现</a>
+                        <a href="#" class="nav-item font-medium">话题</a>
+                        <a href="#" class="nav-item font-medium">排行榜</a>
+                    </nav>
+                </div>
+                
+                <!-- 搜索栏 -->
+                <div class="hidden md:flex items-center flex-1 max-w-xl mx-8">
+                    <div class="relative w-full">
+                        <input type="text" placeholder="搜索话题、帖子或用户..." 
+                               class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                        <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- 用户操作区 -->
+                <div class="flex items-center space-x-4">
+                    <!-- 移动端搜索按钮 -->
+                    <button id="mobile-search-btn" class="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-search text-gray-600"></i>
+                    </button>
+                    
+                    <!-- 通知按钮 -->
+                    <button id="notification-btn" class="p-2 rounded-full hover:bg-gray-100 transition-colors relative">
+                        <i class="fa fa-bell text-gray-600"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    
+                    <!-- 发布按钮 -->
+                    <button id="desktop-post-btn" class="hidden md:flex items-center px-4 py-2 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors shadow-sm">
+                        <i class="fa fa-pencil mr-2"></i>
+                        <span>发布帖子</span>
+                    </button>
+                    
+                    <!-- 移动端发布按钮 -->
+                    <button id="mobile-post-btn" class="md:hidden p-2 rounded-full bg-primary text-white shadow-sm">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                    
+                    <!-- 用户头像 -->
+                    <div class="relative group">
+                        <button id="user-menu-btn" class="w-9 h-9 rounded-full overflow-hidden border-2 border-transparent hover:border-primary transition-all">
+                            <img src="https://picsum.photos/id/64/200/200" alt="用户头像" class="w-full h-full object-cover">
+                        </button>
+                        
+                        <!-- 用户下拉菜单 -->
+                        <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fa fa-user mr-2"></i>个人主页
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fa fa-cog mr-2"></i>设置
+                            </a>
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                <i class="fa fa-sign-out mr-2"></i>退出登录
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- 移动端菜单按钮 -->
+                    <button id="mobile-menu-button" class="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-bars text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 移动端导航菜单 -->
+            <div id="mobile-menu" class="md:hidden hidden pb-4">
+                <div id="mobile-search" class="relative mb-4 hidden">
+                    <input type="text" placeholder="搜索话题、帖子或用户..." 
+                           class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                    <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <nav class="flex flex-col space-y-1">
+                    <a href="#" class="px-3 py-2 text-primary font-medium rounded-lg bg-primary/10">首页</a>
+                    <a href="#" class="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">发现</a>
+                    <a href="#" class="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">话题</a>
+                    <a href="#" class="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">排行榜</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-24 md:pt-28 pb-16">
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- 左侧边栏 -->
+            <aside class="lg:w-64 flex-shrink-0">
+                <div class="hidden lg:block sticky top-24 space-y-6">
+                    <!-- 分类导航 -->
+                    <div class="bg-white rounded-xl shadow-sm p-4">
+                        <h3 class="font-semibold text-lg mb-3">论坛分类</h3>
+                        <ul class="space-y-1">
+                            <li>
+                                <a href="#" class="flex items-center px-3 py-2 rounded-lg bg-primary/10 text-primary">
+                                    <i class="fa fa-fire w-5 text-center mr-3"></i>
+                                    <span>热门讨论</span>
+                                    <span class="ml-auto bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">24</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="category-link flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fa fa-laptop w-5 text-center mr-3"></i>
+                                    <span>技术交流</span>
+                                    <span class="ml-auto bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">18</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="category-link flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fa fa-briefcase w-5 text-center mr-3"></i>
+                                    <span>职场发展</span>
+                                    <span class="ml-auto bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">12</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="category-link flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fa fa-graduation-cap w-5 text-center mr-3"></i>
+                                    <span>学习资源</span>
+                                    <span class="ml-auto bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">9</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="category-link flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fa fa-gamepad w-5 text-center mr-3"></i>
+                                    <span>游戏娱乐</span>
+                                    <span class="ml-auto bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">15</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <button class="mt-3 w-full text-primary text-sm hover:text-primary/80 transition-colors">
+                            查看全部分类 <i class="fa fa-angle-right ml-1"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 社区活跃度 -->
+                    <div class="bg-white rounded-xl shadow-sm p-4">
+                        <h3 class="font-semibold text-lg mb-3">社区活跃度</h3>
+                        <canvas id="activityChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 移动端分类导航 - 水平滚动 -->
+                <div class="lg:hidden overflow-x-auto pb-2 mb-4 -mx-4 px-4">
+                    <div class="flex space-x-2 min-w-max">
+                        <button class="category-btn px-4 py-2 bg-primary text-white rounded-full text-sm whitespace-nowrap">
+                            热门讨论
+                        </button>
+                        <button class="category-btn px-4 py-2 bg-white text-gray-700 rounded-full text-sm whitespace-nowrap hover:bg-gray-100 transition-colors">
+                            技术交流
+                        </button>
+                        <button class="category-btn px-4 py-2 bg-white text-gray-700 rounded-full text-sm whitespace-nowrap hover:bg-gray-100 transition-colors">
+                            职场发展
+                        </button>
+                        <button class="category-btn px-4 py-2 bg-white text-gray-700 rounded-full text-sm whitespace-nowrap hover:bg-gray-100 transition-colors">
+                            学习资源
+                        </button>
+                        <button class="category-btn px-4 py-2 bg-white text-gray-700 rounded-full text-sm whitespace-nowrap hover:bg-gray-100 transition-colors">
+                            游戏娱乐
+                        </button>
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- 中间内容区 -->
+            <div class="flex-1">
+                <!-- 帖子排序 -->
+                <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <h2 id="category-title" class="text-xl font-bold">热门讨论</h2>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-500 text-sm">排序方式:</span>
+                            <select id="sort-select" class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                <option value="latest">最新发布</option>
+                                <option value="popular" selected>热门程度</option>
+                                <option value="comments">最多评论</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 帖子列表 -->
+                <div id="posts-container" class="space-y-4">
+                    <!-- 帖子1 -->
+                    <article class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                        <div class="p-5">
+                            <div class="flex items-start">
+                                <!-- 作者信息 -->
+                                <div class="mr-4">
+                                    <a href="#" class="block w-10 h-10 rounded-full overflow-hidden">
+                                        <img src="https://picsum.photos/id/237/200/200" alt="用户头像" class="w-full h-full object-cover">
+                                    </a>
+                                </div>
+                                
+                                <!-- 帖子内容 -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <a href="#" class="font-medium text-gray-900 hover:text-primary transition-colors">张小明</a>
+                                        <span class="text-gray-400 text-sm">发布于 2 小时前</span>
+                                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">技术交流</span>
+                                    </div>
+                                    
+                                    <h3 class="text-lg font-semibold mb-2 line-clamp-2">
+                                        <a href="#" class="hover:text-primary transition-colors">2023年前端开发的趋势是什么？哪些技术值得学习？</a>
+                                    </h3>
+                                    
+                                    <div class="text-gray-600 text-sm mb-4 line-clamp-2">
+                                        随着Web技术的快速发展，前端领域也在不断变化。想问问大家对2023年前端开发的趋势有什么看法？哪些框架和工具值得我们投入时间学习？比如React、Vue、Svelte这些框架的发展前景如何？
+                                    </div>
+                                    
+                                    <!-- 帖子图片 -->
+                                    <div class="mb-4 rounded-lg overflow-hidden">
+                                        <img src="https://picsum.photos/id/0/800/400" alt="前端开发趋势讨论" class="w-full h-48 object-cover">
+                                    </div>
+                                    
+                                    <!-- 互动数据 -->
+                                    <div class="flex items-center justify-between text-gray-500 text-sm">
+                                        <div class="flex items-center space-x-4">
+                                            <button class="like-btn flex items-center hover:text-primary transition-colors" data-post-id="1">
+                                                <i class="fa fa-thumbs-o-up mr-1"></i>
+                                                <span class="like-count">128</span>
+                                            </button>
+                                            <button class="comment-btn flex items-center hover:text-primary transition-colors" data-post-id="1">
+                                                <i class="fa fa-comment-o mr-1"></i>
+                                                <span>45</span>
+                                            </button>
+                                            <button class="bookmark-btn flex items-center hover:text-primary transition-colors" data-post-id="1">
+                                                <i class="fa fa-bookmark-o mr-1"></i>
+                                                <span>23</span>
+                                            </button>
+                                        </div>
+                                        <button class="share-btn flex items-center hover:text-primary transition-colors">
+                                            <i class="fa fa-share-alt mr-1"></i>
+                                            <span>分享</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 热门评论预览 -->
+                        <div class="bg-gray-50 px-5 py-3 border-t border-gray-100">
+                            <div class="flex items-start">
+                                <a href="#" class="block w-8 h-8 rounded-full overflow-hidden mr-3">
+                                    <img src="https://picsum.photos/id/1005/200/200" alt="评论用户头像" class="w-full h-full object-cover">
+                                </a>
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-1">
+                                        <a href="#" class="text-sm font-medium text-gray-900 hover:text-primary">李小华</a>
+                                        <span class="text-gray-400 text-xs ml-2">1小时前</span>
+                                    </div>
+                                    <p class="text-sm text-gray-700">我认为React仍然会保持领先地位，但Vue3的Composition API也非常值得学习。另外，Web Assembly可能会在性能要求高的场景中得到更多应用。</p>
+                                    <div class="flex items-center mt-2 space-x-4 text-gray-500 text-xs">
+                                        <button class="hover:text-primary transition-colors">
+                                            <i class="fa fa-thumbs-o-up mr-1"></i> 32
+                                        </button>
+                                        <button class="hover:text-primary transition-colors">回复</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="#" class="text-primary text-sm mt-2 inline-block hover:underline">查看全部45条评论</a>
+                        </div>
+                    </article>
+                    
+                    <!-- 帖子2 -->
+                    <article class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                        <div class="p-5">
+                            <div class="flex items-start">
+                                <!-- 作者信息 -->
+                                <div class="mr-4">
+                                    <a href="#" class="block w-10 h-10 rounded-full overflow-hidden">
+                                        <img src="https://picsum.photos/id/1012/200/200" alt="用户头像" class="w-full h-full object-cover">
+                                    </a>
+                                </div>
+                                
+                                <!-- 帖子内容 -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <a href="#" class="font-medium text-gray-900 hover:text-primary transition-colors">王大锤</a>
+                                        <span class="text-gray-400 text-sm">发布于 昨天</span>
+                                        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">职场发展</span>
+                                    </div>
+                                    
+                                    <h3 class="text-lg font-semibold mb-2 line-clamp-2">
+                                        <a href="#" class="hover:text-primary transition-colors">工作三年，感觉遇到了瓶颈，该如何突破？</a>
+                                    </h3>
+                                    
+                                    <div class="text-gray-600 text-sm mb-4 line-clamp-3">
+                                        我已经工作三年了，目前在一家中型公司做开发。最近感觉工作内容越来越重复，技术上没有太大提升，薪资也进入了停滞期。想问问大家有没有类似的经历，是如何突破这个瓶颈的？是应该跳槽还是在现有公司寻求内部机会？或者有什么学习方法可以推荐？
+                                    </div>
+                                    
+                                    <!-- 互动数据 -->
+                                    <div class="flex items-center justify-between text-gray-500 text-sm">
+                                        <div class="flex items-center space-x-4">
+                                            <button class="like-btn flex items-center hover:text-primary transition-colors" data-post-id="2">
+                                                <i class="fa fa-thumbs-o-up mr-1"></i>
+                                                <span class="like-count">256</span>
+                                            </button>
+                                            <button class="comment-btn flex items-center hover:text-primary transition-colors" data-post-id="2">
+                                                <i class="fa fa-comment-o mr-1"></i>
+                                                <span>89</span>
+                                            </button>
+                                            <button class="bookmark-btn flex items-center hover:text-primary transition-colors" data-post-id="2">
+                                                <i class="fa fa-bookmark-o mr-1"></i>
+                                                <span>56</span>
+                                            </button>
+                                        </div>
+                                        <button class="share-btn flex items-center hover:text-primary transition-colors">
+                                            <i class="fa fa-share-alt mr-1"></i>
+                                            <span>分享</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <!-- 帖子3 -->
+                    <article class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                        <div class="p-5">
+                            <div class="flex items-start">
+                                <!-- 作者信息 -->
+                                <div class="mr-4">
+                                    <a href="#" class="block w-10 h-10 rounded-full overflow-hidden">
+                                        <img src="https://picsum.photos/id/1027/200/200" alt="用户头像" class="w-full h-full object-cover">
+                                    </a>
+                                </div>
+                                
+                                <!-- 帖子内容 -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <a href="#" class="font-medium text-gray-900 hover:text-primary transition-colors">赵小丽</a>
+                                        <span class="text-gray-400 text-sm">发布于 3 天前</span>
+                                        <span class="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full">学习资源</span>
+                                    </div>
+                                    
+                                    <h3 class="text-lg font-semibold mb-2 line-clamp-2">
+                                        <a href="#" class="hover:text-primary transition-colors">分享一些我珍藏的免费编程学习资源，从入门到进阶</a>
+                                    </h3>
+                                    
+                                    <div class="text-gray-600 text-sm mb-4 line-clamp-3">
+                                        整理了一批我自己学习过程中收集的优质免费编程资源，包括视频教程、电子书、练习平台等。涵盖前端、后端、移动开发等多个方向，适合不同阶段的学习者。希望能帮到大家，一起在编程的道路上进步！
+                                    </div>
+                                    
+                                    <!-- 帖子图片 -->
+                                    <div class="mb-4 grid grid-cols-3 gap-2 rounded-lg overflow-hidden">
+                                        <img src="https://picsum.photos/id/24/300/300" alt="学习资源图片1" class="w-full h-24 object-cover">
+                                        <img src="https://picsum.photos/id/48/300/300" alt="学习资源图片2" class="w-full h-24 object-cover">
+                                        <img src="https://picsum.photos/id/60/300/300" alt="学习资源图片3" class="w-full h-24 object-cover">
+                                    </div>
+                                    
+                                    <!-- 互动数据 -->
+                                    <div class="flex items-center justify-between text-gray-500 text-sm">
+                                        <div class="flex items-center space-x-4">
+                                            <button class="like-btn flex items-center hover:text-primary transition-colors" data-post-id="3">
+                                                <i class="fa fa-thumbs-o-up mr-1"></i>
+                                                <span class="like-count">342</span>
+                                            </button>
+                                            <button class="comment-btn flex items-center hover:text-primary transition-colors" data-post-id="3">
+                                                <i class="fa fa-comment-o mr-1"></i>
+                                                <span>67</span>
+                                            </button>
+                                            <button class="bookmark-btn flex items-center hover:text-primary transition-colors" data-post-id="3">
+                                                <i class="fa fa-bookmark-o mr-1"></i>
+                                                <span>128</span>
+                                            </button>
+                                        </div>
+                                        <button class="share-btn flex items-center hover:text-primary transition-colors">
+                                            <i class="fa fa-share-alt mr-1"></i>
+                                            <span>分享</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                
+                <!-- 加载更多 -->
+                <div class="mt-8 text-center">
+                    <button id="load-more-btn" class="px-6 py-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+                        加载更多 <i class="fa fa-refresh ml-1"></i>
+                    </button>
+                    <div id="loading-indicator" class="hidden mt-4">
+                        <div class="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p class="mt-2 text-gray-600">加载中...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧边栏 -->
+            <aside class="hidden xl:block w-80 flex-shrink-0">
+                <div class="sticky top-24 space-y-6">
+                    <!-- 社区公告 -->
+                    <div class="bg-gradient-to-br from-primary to-accent rounded-xl p-5 text-white shadow-md pulse-animation">
+                        <h3 class="font-bold text-lg mb-2">社区公告</h3>
+                        <p class="text-sm text-white/90 mb-3">DiscussHub社区年度活动开始啦！参与话题讨论赢取丰厚奖品，详情点击查看。</p>
+                        <a href="#" class="inline-block text-sm bg-white text-primary px-3 py-1.5 rounded-full hover:bg-opacity-90 transition-colors">
+                            了解详情
+                        </a>
+                    </div>
+                    
+                    <!-- 热门话题 -->
+                    <div class="bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-lg">热门话题</h3>
+                            <a href="#" class="text-primary text-sm hover:underline">更多</a>
+                        </div>
+                        <div class="space-y-3">
+                            <a href="#" class="block group">
+                                <div class="flex items-center">
+                                    <span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium mr-3">1</span>
+                                    <span class="text-gray-800 group-hover:text-primary transition-colors">#人工智能在开发中的应用</span>
+                                    <span class="ml-auto text-gray-500 text-sm">328</span>
+                                </div>
+                            </a>
+                            <a href="#" class="block group">
+                                <div class="flex items-center">
+                                    <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-medium mr-3">2</span>
+                                    <span class="text-gray-800 group-hover:text-primary transition-colors">#远程工作的利与弊</span>
+                                    <span class="ml-auto text-gray-500 text-sm">256</span>
+                                </div>
+                            </a>
+                            <a href="#" class="block group">
+                                <div class="flex items-center">
+                                    <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-medium mr-3">3</span>
+                                    <span class="text-gray-800 group-hover:text-primary transition-colors">#2023年最值得学习的编程语言</span>
+                                    <span class="ml-auto text-gray-500 text-sm">198</span>
+                                </div>
+                            </a>
+                            <a href="#" class="block group">
+                                <div class="flex items-center">
+                                    <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-medium mr-3">4</span>
+                                    <span class="text-gray-800 group-hover:text-primary transition-colors">#程序员的健身计划</span>
+                                    <span class="ml-auto text-gray-500 text-sm">145</span>
+                                </div>
+                            </a>
+                            <a href="#" class="block group">
+                                <div class="flex items-center">
+                                    <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-medium mr-3">5</span>
+                                    <span class="text-gray-800 group-hover:text-primary transition-colors">#如何有效提高代码质量</span>
+                                    <span class="ml-auto text-gray-500 text-sm">122</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- 活跃用户 -->
+                    <div class="bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-lg">活跃用户</h3>
+                            <a href="#" class="text-primary text-sm hover:underline">查看全部</a>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <a href="#" class="block w-10 h-10 rounded-full overflow-hidden mr-3">
+                                    <img src="https://picsum.photos/id/1001/200/200" alt="用户头像" class="w-full h-full object-cover">
+                                </a>
+                                <div class="flex-1 min-w-0">
+                                    <a href="#" class="block font-medium text-gray-900 hover:text-primary transition-colors truncate">陈开发</a>
+                                    <p class="text-gray-500 text-xs truncate">发布了 42 个帖子</p>
+                                </div>
+                                <button class="follow-btn text-sm text-primary border border-primary px-3 py-1 rounded-full hover:bg-primary hover:text-white transition-colors" data-user-id="1">
+                                    关注
+                                </button>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="#" class="block w-10 h-10 rounded-full overflow-hidden mr-3">
+                                    <img src="https://picsum.photos/id/1002/200/200" alt="用户头像" class="w-full h-full object-cover">
+                                </a>
+                                <div class="flex-1 min-w-0">
+                                    <a href="#" class="block font-medium text-gray-900 hover:text-primary transition-colors truncate">李设计</a>
+                                    <p class="text-gray-500 text-xs truncate">发布了 36 个帖子</p>
+                                </div>
+                                <button class="follow-btn text-sm text-gray-600 border border-gray-300 px-3 py-1 rounded-full hover:bg-gray-50 transition-colors" data-user-id="2">
+                                    已关注
+                                </button>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="#" class="block w-10 h-10 rounded-full overflow-hidden mr-3">
+                                    <img src="https://picsum.photos/id/1003/200/200" alt="用户头像" class="w-full h-full object-cover">
+                                </a>
+                                <div class="flex-1 min-w-0">
+                                    <a href="#" class="block font-medium text-gray-900 hover:text-primary transition-colors truncate">王产品</a>
+                                    <p class="text-gray-500 text-xs truncate">发布了 29 个帖子</p>
+                                </div>
+                                <button class="follow-btn text-sm text-primary border border-primary px-3 py-1 rounded-full hover:bg-primary hover:text-white transition-colors" data-user-id="3">
+                                    关注
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200">
+        <div class="container mx-auto px-4 py-10">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                            <i class="fa fa-comments text-white text-xl"></i>
+                        </div>
+                        <span class="text-xl font-bold text-primary">DiscussHub</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">
+                        DiscussHub是一个现代化的社交论坛平台，致力于为用户提供高质量的交流社区。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="social-link text-gray-400 hover:text-primary transition-colors">
+                            <i class="fa fa-weibo text-lg"></i>
+                        </a>
+                        <a href="#" class="social-link text-gray-400 hover:text-primary transition-colors">
+                            <i class="fa fa-wechat text-lg"></i>
+                        </a>
+                        <a href="#" class="social-link text-gray-400 hover:text-primary transition-colors">
+                            <i class="fa fa-github text-lg"></i>
+                        </a>
+                        <a href="#" class="social-link text-gray-400 hover:text-primary transition-colors">
+                            <i class="fa fa-twitter text-lg"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">关于我们</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="text-gray-600 hover:text-primary transition-colors">平台介绍</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-primary transition-colors">团队成员</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-primary transition-colors">加入我们</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-primary transition-colors">联系方式</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">帮助中心</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="text-gray-600 hover:text-primary transition-colors">新手指南</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-primary transition-colors">社区规范</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-primary transition-colors">常见问题</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-primary transition-colors">意见反馈</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">订阅更新</h4>
+                    <p class="text-gray-600 text-sm mb-3">订阅我们的 newsletter，获取最新社区动态</p>
+                    <div class="flex">
+                        <input type="email" id="subscribe-email" placeholder="你的邮箱地址" 
+                               class="flex-1 px-3 py-2 rounded-l-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm">
+                        <button id="subscribe-btn" class="bg-primary text-white px-4 py-2 rounded-r-lg hover:bg-primary/90 transition-colors">
+                            订阅
+                        </button>
+                    </div>
+                    <div id="subscribe-message" class="mt-2 text-sm hidden"></div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-200 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm">© 2023 DiscussHub. 保留所有权利。</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-500 text-sm hover:text-primary transition-colors">隐私政策</a>
+                    <a href="#" class="text-gray-500 text-sm hover:text-primary transition-colors">服务条款</a>
+                    <a href="#" class="text-gray-500 text-sm hover:text-primary transition-colors">Cookie 政策</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" class="fixed bottom-6 right-6 w-12 h-12 bg-primary text-white rounded-full shadow-lg flex items-center justify-center opacity-0 invisible transition-all duration-300 hover:bg-primary/90">
+        <i class="fa fa-chevron-up"></i>
+    </button>
+
+    <!-- 通知弹窗 -->
+    <div id="notification-toast" class="fixed top-20 right-6 bg-white rounded-lg shadow-lg p-4 max-w-xs transform translate-x-full opacity-0 transition-all duration-300 z-50 flex items-start">
+        <div id="toast-icon" class="mr-3 text-green-500">
+            <i class="fa fa-check-circle text-xl"></i>
+        </div>
+        <div class="flex-1">
+            <h4 id="toast-title" class="font-medium text-gray-900">操作成功</h4>
+            <p id="toast-message" class="text-sm text-gray-600 mt-1">您的操作已成功完成</p>
+        </div>
+        <button id="close-toast" class="ml-2 text-gray-400 hover:text-gray-600">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+
+    <!-- 发布帖子模态框 -->
+    <div id="post-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center opacity-0 invisible transition-all duration-300">
+        <div class="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-all duration-300">
+            <div class="p-5 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-xl font-bold">发布新帖子</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <form id="post-form">
+                    <div class="mb-4">
+                        <label for="post-title" class="block text-gray-700 font-medium mb-2">标题</label>
+                        <input type="text" id="post-title" name="title" placeholder="请输入帖子标题" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
+                        <p class="error-message text-red-500 text-xs mt-1 hidden">请输入标题</p>
+                    </div>
+                    <div class="mb-4">
+                        <label for="post-category" class="block text-gray-700 font-medium mb-2">分类</label>
+                        <select id="post-category" name="category" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
+                            <option value="">请选择分类</option>
+                            <option value="tech">技术交流</option>
+                            <option value="career">职场发展</option>
+                            <option value="study">学习资源</option>
+                            <option value="game">游戏娱乐</option>
+                            <option value="other">其他</option>
+                        </select>
+                        <p class="error-message text-red-500 text-xs mt-1 hidden">请选择分类</p>
+                    </div>
+                    <div class="mb-4">
+                        <label for="post-content" class="block text-gray-700 font-medium mb-2">内容</label>
+                        <textarea id="post-content" name="content" rows="6" placeholder="请输入帖子内容..." 
+                                  class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"></textarea>
+                        <p class="error-message text-red-500 text-xs mt-1 hidden">请输入内容</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">添加图片 (可选)</label>
+                        <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                            <i class="fa fa-cloud-upload text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-500 mb-2">点击或拖拽图片到此处上传</p>
+                            <p class="text-gray-400 text-sm">支持 JPG、PNG 格式，最大 10MB</p>
+                            <input type="file" id="image-upload" class="hidden" multiple accept="image/*">
+                        </div>
+                        <div id="preview-container" class="mt-3 flex flex-wrap gap-2 hidden"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-5 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="cancel-post" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    取消
+                </button>
+                <button id="submit-post" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    发布帖子
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 评论模态框 -->
+    <div id="comment-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center opacity-0 invisible transition-all duration-300">
+        <div class="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-all duration-300">
+            <div class="p-5 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-xl font-bold">帖子评论</h3>
+                <button id="close-comment-modal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <!-- 评论输入框 -->
+                <div class="mb-6">
+                    <div class="flex">
+                        <a href="#" class="block w-10 h-10 rounded-full overflow-hidden mr-3">
+                            <img src="https://picsum.photos/id/64/200/200" alt="用户头像" class="w-full h-full object-cover">
+                        </a>
+                        <div class="flex-1">
+                            <textarea id="comment-content" rows="3" placeholder="写下你的评论..." 
+                                      class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"></textarea>
+                            <div class="flex justify-end mt-2">
+                                <button id="submit-comment" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm">
+                                    发表评论
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 评论列表 -->
+                <div id="comments-list" class="space-y-4">
+                    <!-- 评论1 -->
+                    <div class="flex">
+                        <a href="#" class="block w-10 h-10 rounded-full overflow-hidden mr-3">
+                            <img src="https://picsum.photos/id/1005/200/200" alt="评论用户头像" class="w-full h-full object-cover">
+                        </a>
+                        <div class="flex-1 bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <a href="#" class="text-sm font-medium text-gray-900 hover:text-primary">李小华</a>
+                                <span class="text-gray-400 text-xs">1小时前</span>
+                            </div>
+                            <p class="text-sm text-gray-700">我认为React仍然会保持领先地位，但Vue3的Composition API也非常值得学习。另外，Web Assembly可能会在性能要求高的场景中得到更多应用。</p>
+                            <div class="flex items-center mt-2 space-x-4 text-gray-500 text-xs">
+                                <button class="hover:text-primary transition-colors">
+                                    <i class="fa fa-thumbs-o-up mr-1"></i> 32
+                                </button>
+                                <button class="hover:text-primary transition-colors">回复</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 评论2 -->
+                    <div class="flex">
+                        <a href="#" class="block w-10 h-10 rounded-full overflow-hidden mr-3">
+                            <img src="https://picsum.photos/id/1010/200/200" alt="评论用户头像" class="w-full h-full object-cover">
+                        </a>
+                        <div class="flex-1 bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <a href="#" class="text-sm font-medium text-gray-900 hover:text-primary">张技术</a>
+                                <span class="text-gray-400 text-xs">2小时前</span>
+                            </div>
+                            <p class="text-sm text-gray-700">除了三大框架外，我觉得可以关注一下跨端解决方案，比如Taro、UniApp这些，在实际项目中能提高开发效率。</p>
+                            <div class="flex items-center mt-2 space-x-4 text-gray-500 text-xs">
+                                <button class="hover:text-primary transition-colors">
+                                    <i class="fa fa-thumbs-o-up mr-1"></i> 18
+                                </button>
+                                <button class="hover:text-primary transition-colors">回复</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // DOM元素引用
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileSearchBtn = document.getElementById('mobile-search-btn');
+        const mobileSearch = document.getElementById('mobile-search');
+        const navbar = document.getElementById('navbar');
+        const backToTopButton = document.getElementById('back-to-top');
+        const postModal = document.getElementById('post-modal');
+        const closeModalButton = document.getElementById('close-modal');
+        const cancelPostButton = document.getElementById('cancel-post');
+        const submitPostButton = document.getElementById('submit-post');
+        const postForm = document.getElementById('post-form');
+        const uploadArea = document.getElementById('upload-area');
+        const imageUpload = document.getElementById('image-upload');
+        const previewContainer = document.getElementById('preview-container');
+        const notificationToast = document.getElementById('notification-toast');
+        const closeToastButton = document.getElementById('close-toast');
+        const toastTitle = document.getElementById('toast-title');
+        const toastMessage = document.getElementById('toast-message');
+        const toastIcon = document.getElementById('toast-icon');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const postsContainer = document.getElementById('posts-container');
+        const sortSelect = document.getElementById('sort-select');
+        const categoryTitle = document.getElementById('category-title');
+        const categoryLinks = document.querySelectorAll('.category-link');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const desktopPostBtn = document.getElementById('desktop-post-btn');
+        const mobilePostBtn = document.getElementById('mobile-post-btn');
+        const commentBtns = document.querySelectorAll('.comment-btn');
+        const commentModal = document.getElementById('comment-modal');
+        const closeCommentModal = document.getElementById('close-comment-modal');
+        const submitCommentBtn = document.getElementById('submit-comment');
+        const subscribeBtn = document.getElementById('subscribe-btn');
+        const subscribeEmail = document.getElementById('subscribe-email');
+        const subscribeMessage = document.getElementById('subscribe-message');
+        const notificationBtn = document.getElementById('notification-btn');
+        const likeBtns = document.querySelectorAll('.like-btn');
+        const bookmarkBtns = document.querySelectorAll('.bookmark-btn');
+        const followBtns = document.querySelectorAll('.follow-btn');
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenu = document.getElementById('user-menu');
+
+        // 移动端菜单切换
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // 移动端搜索框切换
+        mobileSearchBtn.addEventListener('click', () => {
+            mobileSearch.classList.toggle('hidden');
+            if (!mobileSearch.classList.contains('hidden')) {
+                mobileSearch.querySelector('input').focus();
+            }
+        });
+
+        // 导航栏滚动效果
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('shadow');
+                navbar.classList.remove('shadow-sm');
+            } else {
+                navbar.classList.remove('shadow');
+                navbar.classList.add('shadow-sm');
+            }
+        });
+
+        // 返回顶部按钮
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTopButton.classList.remove('opacity-0', 'invisible');
+                backToTopButton.classList.add('opacity-100', 'visible');
+            } else {
+                backToTopButton.classList.add('opacity-0', 'invisible');
+                backToTopButton.classList.remove('opacity-100', 'visible');
+            }
+        });
+
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 用户菜单切换
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userMenu.classList.toggle('opacity-0');
+            userMenu.classList.toggle('invisible');
+            userMenu.classList.toggle('translate-y-2');
+            userMenu.classList.toggle('translate-y-0');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('opacity-0', 'invisible', 'translate-y-2');
+                userMenu.classList.remove('translate-y-0');
+            }
+        });
+
+        // 发布帖子模态框
+        function openModal() {
+            postModal.classList.remove('opacity-0', 'invisible');
+            postModal.classList.add('opacity-100', 'visible');
+            postModal.querySelector('div').classList.remove('scale-95');
+            postModal.querySelector('div').classList.add('scale-100');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            postModal.classList.add('opacity-0', 'invisible');
+            postModal.classList.remove('opacity-100', 'visible');
+            postModal.querySelector('div').classList.add('scale-95');
+            postModal.querySelector('div').classList.remove('scale-100');
+            document.body.style.overflow = '';
+            // 重置表单
+            postForm.reset();
+            previewContainer.innerHTML = '';
+            previewContainer.classList.add('hidden');
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.add('hidden');
+            });
+        }
+
+        desktopPostBtn.addEventListener('click', openModal);
+        mobilePostBtn.addEventListener('click', openModal);
+        closeModalButton.addEventListener('click', closeModal);
+        cancelPostButton.addEventListener('click', closeModal);
+
+        postModal.addEventListener('click', (e) => {
+            if (e.target === postModal) {
+                closeModal();
+            }
+        });
+
+        // 评论模态框
+        function openCommentModal() {
+            commentModal.classList.remove('opacity-0', 'invisible');
+            commentModal.classList.add('opacity-100', 'visible');
+            commentModal.querySelector('div').classList.remove('scale-95');
+            commentModal.querySelector('div').classList.add('scale-100');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCommentModalFunc() {
+            commentModal.classList.add('opacity-0', 'invisible');
+            commentModal.classList.remove('opacity-100', 'visible');
+            commentModal.querySelector('div').classList.add('scale-95');
+            commentModal.querySelector('div').classList.remove('scale-100');
+            document.body.style.overflow = '';
+            document.getElementById('comment-content').value = '';
+        }
+
+        commentBtns.forEach(btn => {
+            btn.addEventListener('click', openCommentModal);
+        });
+
+        closeCommentModal.addEventListener('click', closeCommentModalFunc);
+
+        commentModal.addEventListener('click', (e) => {
+            if (e.target === commentModal) {
+                closeCommentModalFunc();
+            }
+        });
+
+        // 显示通知提示
+        function showToast(title, message, isSuccess = true) {
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            
+            if (isSuccess) {
+                toastIcon.className = 'fa fa-check-circle text-xl text-green-500 mr-3';
+            } else {
+                toastIcon.className = 'fa fa-exclamation-circle text-xl text-red-500 mr-3';
+            }
+            
+            notificationToast.classList.remove('translate-x-full', 'opacity-0');
+            notificationToast.classList.add('translate-x-0', 'opacity-100');
+            
+            // 3秒后自动关闭
+            setTimeout(() => {
+                hideToast();
+            }, 3000);
+        }
+
+        function hideToast() {
+            notificationToast.classList.add('translate-x-full', 'opacity-0');
+            notificationToast.classList.remove('translate-x-0', 'opacity-100');
+        }
+
+        closeToastButton.addEventListener('click', hideToast);
+
+        // 图片上传功能
+        uploadArea.addEventListener('click', () => {
+            imageUpload.click();
+        });
+
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('border-primary');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('border-primary');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-primary');
+            
+            if (e.dataTransfer.files.length) {
+                imageUpload.files = e.dataTransfer.files;
+                handleFiles(imageUpload.files);
+            }
+        });
+
+        // 处理选择的文件
+        imageUpload.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            previewContainer.innerHTML = '';
+            previewContainer.classList.remove('hidden');
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                // 只处理图片文件
+                if (!file.type.startsWith('image/')) continue;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = document.createElement('div');
+                    preview.className = 'relative w-20 h-20 rounded-md overflow-hidden';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'w-full h-full object-cover';
+                    img.alt = '上传图片预览';
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors';
+                    removeBtn.innerHTML = '<i class="fa fa-times text-xs"></i>';
+                    removeBtn.onclick = () => {
+                        preview.remove();
+                        if (previewContainer.children.length === 0) {
+                            previewContainer.classList.add('hidden');
+                        }
+                    };
+                    
+                    preview.appendChild(img);
+                    preview.appendChild(removeBtn);
+                    previewContainer.appendChild(preview);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 发布帖子表单提交
+        submitPostButton.addEventListener('click', () => {
+            const title = document.getElementById('post-title').value.trim();
+            const category = document.getElementById('post-category').value;
+            const content = document.getElementById('post-content').value.trim();
+            
+            let isValid = true;
+            
+            // 验证标题
+            if (!title) {
+                showError('post-title', '请输入标题');
+                isValid = false;
+            } else {
+                hideError('post-title');
+            }
+            
+            // 验证分类
+            if (!category) {
+                showError('post-category', '请选择分类');
+                isValid = false;
+            } else {
+                hideError('post-category');
+            }
+            
+            // 验证内容
+            if (!content) {
+                showError('post-content', '请输入内容');
+                isValid = false;
+            } else {
+                hideError('post-content');
+            }
+            
+            if (isValid) {
+                // 模拟提交
+                submitPostButton.disabled = true;
+                submitPostButton.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 发布中...';
+                
+                setTimeout(() => {
+                    closeModal();
+                    showToast('发布成功', '您的帖子已成功发布');
+                    
+                    // 重置按钮状态
+                    submitPostButton.disabled = false;
+                    submitPostButton.innerHTML = '发布帖子';
+                    
+                    // 模拟添加新帖子到列表顶部
+                    const categoryMap = {
+                        'tech': '技术交流',
+                        'career': '职场发展',
+                        'study': '学习资源',
+                        'game': '游戏娱乐',
+                        'other': '其他'
+                    };
+                    
+                    const newPost = createPostElement({
+                        id: Date.now(),
+                        author: '我',
+                        avatar: 'https://picsum.photos/id/64/200/200',
+                        time: '刚刚',
+                        category: categoryMap[category],
+                        title: title,
+                        content: content.length > 100 ? content.substring(0, 100) + '...' : content,
+                        likes: 0,
+                        comments: 0,
+                        bookmarks: 0,
+                        hasImage: previewContainer.children.length > 0
+                    });
+                    
+                    postsContainer.insertBefore(newPost, postsContainer.firstChild);
+                    
+                    // 为新添加的帖子绑定事件
+                    bindPostEvents(newPost);
+                }, 1500);
+            }
+        });
+
+        // 显示错误信息
+        function showError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorElement = field.parentElement.querySelector('.error-message');
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+            field.classList.add('border-red-500');
+            field.classList.remove('border-gray-200', 'focus:border-primary');
+        }
+
+        // 隐藏错误信息
+        function hideError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorElement = field.parentElement.querySelector('.error-message');
+            errorElement.classList.add('hidden');
+            field.classList.remove('border-red-500');
+            field.classList.add('border-gray-200', 'focus:border-primary');
+        }
+
+        // 创建帖子元素
+        function createPostElement(data) {
+            const post = document.createElement('article');
+            post.className = 'bg-white rounded-xl shadow-sm overflow-hidden card-hover';
+            
+            let imageHtml = '';
+            if (data.hasImage) {
+                imageHtml = `
+                    <div class="mb-4 rounded-lg overflow-hidden">
+                        <img src="https://picsum.photos/id/${Math.floor(Math.random() * 100)}/800/400" alt="${data.title}" class="w-full h-48 object-cover">
+                    </div>
+                `;
+            }
+            
+            post.innerHTML = `
+                <div class="p-5">
+                    <div class="flex items-start">
+                        <div class="mr-4">
+                            <a href="#" class="block w-10 h-10 rounded-full overflow-hidden">
+                                <img src="${data.avatar}" alt="${data.author}的头像" class="w-full h-full object-cover">
+                            </a>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <a href="#" class="font-medium text-gray-900 hover:text-primary transition-colors">${data.author}</a>
+                                <span class="text-gray-400 text-sm">${data.time}</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">${data.category}</span>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2 line-clamp-2">
+                                <a href="#" class="hover:text-primary transition-colors">${data.title}</a>
+                            </h3>
+                            <div class="text-gray-600 text-sm mb-4 line-clamp-2">
+                                ${data.content}
+                            </div>
+                            ${imageHtml}
+                            <div class="flex items-center justify-between text-gray-500 text-sm">
+                                <div class="flex items-center space-x-4">
+                                    <button class="like-btn flex items-center hover:text-primary transition-colors" data-post-id="${data.id}">
+                                        <i class="fa fa-thumbs-o-up mr-1"></i>
+                                        <span class="like-count">${data.likes}</span>
+                                    </button>
+                                    <button class="comment-btn flex items-center hover:text-primary transition-colors" data-post-id="${data.id}">
+                                        <i class="fa fa-comment-o mr-1"></i>
+                                        <span>${data.comments}</span>
+                                    </button>
+                                    <button class="bookmark-btn flex items-center hover:text-primary transition-colors" data-post-id="${data.id}">
+                                        <i class="fa fa-bookmark-o mr-1"></i>
+                                        <span>${data.bookmarks}</span>
+                                    </button>
+                                </div>
+                                <button class="share-btn flex items-center hover:text-primary transition-colors">
+                                    <i class="fa fa-share-alt mr-1"></i>
+                                    <span>分享</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return post;
+        }
+
+        // 绑定帖子事件
+        function bindPostEvents(postElement) {
+            const likeBtn = postElement.querySelector('.like-btn');
+            const commentBtn = postElement.querySelector('.comment-btn');
+            const bookmarkBtn = postElement.querySelector('.bookmark-btn');
+            const shareBtn = postElement.querySelector('.share-btn');
+            
+            if (likeBtn) {
+                likeBtn.addEventListener('click', handleLike);
+            }
+            
+            if (commentBtn) {
+                commentBtn.addEventListener('click', openCommentModal);
+            }
+            
+            if (bookmarkBtn) {
+                bookmarkBtn.addEventListener('click', handleBookmark);
+            }
+            
+            if (shareBtn) {
+                shareBtn.addEventListener('click', handleShare);
+            }
+        }
+
+        // 处理点赞
+        function handleLike(e) {
+            e.preventDefault();
+            const btn = e.currentTarget;
+            const countElement = btn.querySelector('.like-count');
+            let count = parseInt(countElement.textContent);
+            
+            if (btn.classList.contains('text-primary')) {
+                // 取消点赞
+                count--;
+                btn.classList.remove('text-primary');
+                btn.innerHTML = '<i class="fa fa-thumbs-o-up mr-1"></i><span class="like-count">' + count + '</span>';
+                showToast('已取消', '已取消点赞', true);
+            } else {
+                // 点赞
+                count++;
+                btn.classList.add('text-primary');
+                btn.innerHTML = '<i class="fa fa-thumbs-up mr-1"></i><span class="like-count">' + count + '</span>';
+                showToast('点赞成功', '感谢您的认可', true);
+            }
+        }
+
+        // 处理收藏
+        function handleBookmark(e) {
+            e.preventDefault();
+            const btn = e.currentTarget;
+            const countElement = btn.querySelector('span');
+            let count = parseInt(countElement.textContent);
+            
+            if (btn.classList.contains('text-primary')) {
+                // 取消收藏
+                count--;
+                btn.classList.remove('text-primary');
+                btn.innerHTML = '<i class="fa fa-bookmark-o mr-1"></i><span>' + count + '</span>';
+                showToast('已取消', '已取消收藏', true);
+            } else {
+                // 收藏
+                count++;
+                btn.classList.add('text-primary');
+                btn.innerHTML = '<i class="fa fa-bookmark mr-1"></i><span>' + count + '</span>';
+                showToast('收藏成功', '已添加到您的收藏', true);
+            }
+        }
+
+        // 处理分享
+        function handleShare(e) {
+            e.preventDefault();
+            showToast('分享成功', '帖子已成功分享', true);
+        }
+
+        // 初始绑定帖子事件
+        document.querySelectorAll('#posts-container article').forEach(post => {
+            bindPostEvents(post);
+        });
+
+        // 提交评论
+        submitCommentBtn.addEventListener('click', () => {
+            const content = document.getElementById('comment-content').value.trim();
+            
+            if (!content) {
+                showToast('评论失败', '请输入评论内容', false);
+                return;
+            }
+            
+            // 模拟提交评论
+            submitCommentBtn.disabled = true;
+            submitCommentBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i> 发表中...';
+            
+            setTimeout(() => {
+                // 创建新评论元素
+                const newComment = document.createElement('div');
+                newComment.className = 'flex animate-fade-in';
+                newComment.innerHTML = `
+                    <div class="flex">
+                        <a href="#" class="block w-10 h-10 rounded-full overflow-hidden mr-3">
+                            <img src="https://picsum.photos/id/64/200/200" alt="你的头像" class="w-full h-full object-cover">
+                        </a>
+                        <div class="flex-1 bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <a href="#" class="text-sm font-medium text-gray-900 hover:text-primary">我</a>
+                                <span class="text-gray-400 text-xs">刚刚</span>
+                            </div>
+                            <p class="text-sm text-gray-700">${content}</p>
+                            <div class="flex items-center mt-2 space-x-4 text-gray-500 text-xs">
+                                <button class="hover:text-primary transition-colors">
+                                    <i class="fa fa-thumbs-o-up mr-1"></i> 0
+                                </button>
+                                <button class="hover:text-primary transition-colors">回复</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // 添加到评论列表顶部
+                const commentsList = document.getElementById('comments-list');
+                commentsList.insertBefore(newComment, commentsList.firstChild);
+                
+                // 更新按钮状态
+                submitCommentBtn.disabled = false;
+                submitCommentBtn.textContent = '发表评论';
+                
+                // 清空输入框
+                document.getElementById('comment-content').value = '';
+                
+                showToast('评论成功', '您的评论已发表', true);
+            }, 1000);
+        });
+
+        // 加载更多帖子
+        loadMoreBtn.addEventListener('click', () => {
+            // 显示加载指示器，隐藏加载按钮
+            loadMoreBtn.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            
+            // 模拟加载延迟
+            setTimeout(() => {
+                // 模拟新帖子数据
+                const newPosts = [
+                    {
+                        id: Date.now() + 1,
+                        author: '孙游戏',
+                        avatar: 'https://picsum.photos/id/1025/200/200',
+                        time: '4 天前',
+                        category: '游戏娱乐',
+                        title: '2023年有哪些值得期待的游戏大作？',
+                        content: '每年都有很多游戏发布，想问问大家2023年有哪些值得期待的游戏大作？包括主机、PC和手游都可以分享一下。',
+                        likes: 89,
+                        comments: 32,
+                        bookmarks: 15,
+                        hasImage: true
+                    },
+                    {
+                        id: Date.now() + 2,
+                        author: '周设计',
+                        avatar: 'https://picsum.photos/id/1062/200/200',
+                        time: '5 天前',
+                        category: '技术交流',
+                        title: 'UI设计中如何平衡美观与实用性？',
+                        content: '作为一名UI设计师，经常会面临美观与实用性之间的权衡。想听听大家的经验，如何在保证界面美观的同时不影响用户体验和功能实用性？',
+                        likes: 156,
+                        comments: 47,
+                        bookmarks: 32,
+                        hasImage: false
+                    }
+                ];
+                
+                // 添加新帖子到列表
+                newPosts.forEach(postData => {
+                    const postElement = createPostElement(postData);
+                    postsContainer.appendChild(postElement);
+                    bindPostEvents(postElement);
+                });
+                
+                // 隐藏加载指示器，显示加载按钮
+                loadingIndicator.classList.add('hidden');
+                loadMoreBtn.classList.remove('hidden');
+                
+                showToast('加载成功', '已加载更多内容', true);
+            }, 1500);
+        });
+
+        // 分类切换
+        function handleCategoryChange(categoryName) {
+            // 更新标题
+            categoryTitle.textContent = categoryName;
+            
+            // 更新按钮样式
+            categoryBtns.forEach(btn => {
+                if (btn.textContent.trim() === categoryName) {
+                    btn.classList.add('bg-primary', 'text-white');
+                    btn.classList.remove('bg-white', 'text-gray-700');
+                } else {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-700');
+                }
+            });
+            
+            // 模拟加载分类内容
+            postsContainer.innerHTML = '';
+            loadMoreBtn.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            
+            setTimeout(() => {
+                loadingIndicator.classList.add('hidden');
+                loadMoreBtn.classList.remove('hidden');
+                
+                // 为不同分类生成不同的帖子
+                const categoryPosts = [
+                    {
+                        id: Date.now() + 10,
+                        author: '分类用户1',
+                        avatar: `https://picsum.photos/id/${Math.floor(Math.random() * 100)}/200/200`,
+                        time: '2 天前',
+                        category: categoryName,
+                        title: `${categoryName}相关的热门话题讨论`,
+                        content: `这是一个关于${categoryName}的讨论帖子，欢迎大家分享自己的观点和经验。`,
+                        likes: Math.floor(Math.random() * 200) + 50,
+                        comments: Math.floor(Math.random() * 50) + 10,
+                        bookmarks: Math.floor(Math.random() * 30) + 5,
+                        hasImage: Math.random() > 0.3
+                    },
+                    {
+                        id: Date.now() + 11,
+                        author: '分类用户2',
+                        avatar: `https://picsum.photos/id/${Math.floor(Math.random() * 100)}/200/200`,
+                        time: '3 天前',
+                        category: categoryName,
+                        title: `大家在${categoryName}方面有什么推荐？`,
+                        content: `想了解一下大家在${categoryName}方面有什么好的推荐和建议，比如相关的工具、资源或方法等。`,
+                        likes: Math.floor(Math.random() * 200) + 50,
+                        comments: Math.floor(Math.random() * 50) + 10,
+                        bookmarks: Math.floor(Math.random() * 30) + 5,
+                        hasImage: Math.random() > 0.3
+                    }
+                ];
+                
+                categoryPosts.forEach(postData => {
+                    const postElement = createPostElement(postData);
+                    postsContainer.appendChild(postElement);
+                    bindPostEvents(postElement);
+                });
+            }, 1000);
+        }
+
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const categoryName = link.querySelector('span').textContent;
+                handleCategoryChange(categoryName);
+            });
+        });
+
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const categoryName = btn.textContent.trim();
+                handleCategoryChange(categoryName);
+            });
+        });
+
+        // 排序切换
+        sortSelect.addEventListener('change', () => {
+            const sortValue = sortSelect.value;
+            let sortText = '';
+            
+            switch(sortValue) {
+                case 'latest':
+                    sortText = '最新发布';
+                    break;
+                case 'popular':
+                    sortText = '热门程度';
+                    break;
+                case 'comments':
+                    sortText = '最多评论';
+                    break;
+            }
+            
+            // 模拟排序加载
+            postsContainer.innerHTML = '';
+            loadMoreBtn.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            
+            setTimeout(() => {
+                loadingIndicator.classList.add('hidden');
+                loadMoreBtn.classList.remove('hidden');
+                showToast('排序成功', `已按${sortText}排序`, true);
+                
+                // 重新添加帖子（实际应用中应该是按排序条件重新请求数据）
+                const posts = [
+                    {
+                        id: Date.now() + 20,
+                        author: '排序用户1',
+                        avatar: `https://picsum.photos/id/${Math.floor(Math.random() * 100)}/200/200`,
+                        time: sortValue === 'latest' ? '1 小时前' : '5 天前',
+                        category: '热门讨论',
+                        title: `按${sortText}排序的帖子1`,
+                        content: `这是一个按${sortText}排序的示例帖子内容。`,
+                        likes: sortValue === 'popular' ? 300 : Math.floor(Math.random() * 200) + 50,
+                        comments: sortValue === 'comments' ? 100 : Math.floor(Math.random() * 50) + 10,
+                        bookmarks: Math.floor(Math.random() * 30) + 5,
+                        hasImage: Math.random() > 0.3
+                    },
+                    {
+                        id: Date.now() + 21,
+                        author: '排序用户2',
+                        avatar: `https://picsum.photos/id/${Math.floor(Math.random() * 100)}/200/200`,
+                        time: sortValue === 'latest' ? '2 小时前' : '6 天前',
+                        category: '技术交流',
+                        title: `按${sortText}排序的帖子2`,
+                        content: `这是另一个按${sortText}排序的示例帖子内容。`,
+                        likes: sortValue === 'popular' ? 250 : Math.floor(Math.random() * 200) + 50,
+                        comments: sortValue === 'comments' ? 80 : Math.floor(Math.random() * 50) + 10,
+                        bookmarks: Math.floor(Math.random() * 30) + 5,
+                        hasImage: Math.random() > 0.3
+                    }
+                ];
+                
+                posts.forEach(postData => {
+                    const postElement = createPostElement(postData);
+                    postsContainer.appendChild(postElement);
+                    bindPostEvents(postElement);
+                });
+            }, 800);
+        });
+
+        // 关注用户
+        followBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const userId = btn.getAttribute('data-user-id');
+                
+                if (btn.textContent.trim() === '关注') {
+                    // 关注用户
+                    btn.textContent = '已关注';
+                    btn.classList.remove('text-primary', 'border-primary', 'hover:bg-primary', 'hover:text-white');
+                    btn.classList.add('text-gray-600', 'border-gray-300', 'hover:bg-gray-50');
+                    showToast('关注成功', '您已成功关注该用户', true);
+                } else {
+                    // 取消关注
+                    btn.textContent = '关注';
+                    btn.classList.add('text-primary', 'border-primary', 'hover:bg-primary', 'hover:text-white');
+                    btn.classList.remove('text-gray-600', 'border-gray-300', 'hover:bg-gray-50');
+                    showToast('已取消关注', '您已取消关注该用户', true);
+                }
+            });
+        });
+
+        // 订阅功能
+        subscribeBtn.addEventListener('click', () => {
+            const email = subscribeEmail.value.trim();
+            
+            if (!email || !isValidEmail(email)) {
+                showToast('订阅失败', '请输入有效的邮箱地址', false);
+                return;
+            }
+            
+            // 模拟订阅
+            subscribeBtn.disabled = true;
+            subscribeBtn.textContent = '订阅中...';
+            
+            setTimeout(() => {
+                subscribeBtn.disabled = false;
+                subscribeBtn.textContent = '已订阅';
+                subscribeBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+                subscribeBtn.classList.remove('bg-primary', 'hover:bg-primary/90');
+                subscribeEmail.disabled = true;
+                
+                showToast('订阅成功', '感谢您的订阅，我们会定期发送最新资讯', true);
+            }, 1000);
+        });
+
+        // 验证邮箱格式
+        function isValidEmail(email) {
+            const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            return re.test(email);
+        }
+
+        // 通知按钮点击
+        notificationBtn.addEventListener('click', () => {
+            showToast('通知中心', '您有3条未读通知', true);
+        });
+
+        // 社区活跃度图表
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                datasets: [{
+                    label: '帖子数量',
+                    data: [65, 59, 80, 81, 56, 55, 72],
+                    backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                    borderColor: 'rgba(22, 93, 255, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
