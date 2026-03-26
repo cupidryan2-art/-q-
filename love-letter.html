@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Our Quiet, Gentle Miracle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      /* Subtle warm-cream background gradient */
+      background: radial-gradient(ellipse at 50% 55%, #FFF0F4 0%, #FEF2F4 45%, #FDF6F8 100%);
+    }
+
+    /* Canvas sits below everything, captures no pointer events */
+    #canvas {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Invisible full-screen div that captures all mouse / touch events */
+    #hit {
+      position: fixed; inset: 0;
+      z-index: 2;
+      cursor: none;   /* hide system cursor; we draw our own on canvas */
+    }
+
+    /* Text stage — centered, no pointer events, sits above canvas */
+    #stage {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* ── Shared verse-line style ─────────────────────────────── */
+    .verse {
+      display: block;
+      font-family: 'Cormorant Garamond', 'Georgia', serif;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(18px);
+      /* Long, silky transition for an emotional feel */
+      transition: opacity 2.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  transform 2.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+      will-change: opacity, transform;
+    }
+    .verse.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Individual line sizing ──────────────────────────────── */
+
+    /* LINE 1 — the date, whisper-small */
+    #l1 {
+      font-size: clamp(9px, 1.3vw, 13px);
+      font-weight: 300;
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: #CDA5BB;
+      margin-bottom: 2.4em;
+    }
+
+    /* LINE 2 — poetic subtitle, italic */
+    #l2 {
+      font-size: clamp(14px, 2.3vw, 21px);
+      font-weight: 300;
+      font-style: italic;
+      letter-spacing: 0.07em;
+      color: #BE8EAC;
+      margin-bottom: 0.75em;
+    }
+
+    /* LINE 3 — the main declaration, large and airy */
+    #l3 {
+      font-size: clamp(22px, 4.4vw, 46px);
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      color: #A97090;
+      line-height: 1.15;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas"></canvas>
+  <div id="hit"></div>
+
+  <div id="stage">
+    <!-- ╔══════════════════════════════════════════════════════╗
+         ║   EDITABLE TEXT — change the three lines below      ║
+         ╚══════════════════════════════════════════════════════╝ -->
+    <span id="l1" class="verse">January 26th</span>
+    <span id="l2" class="verse">60 days of light and shadow…</span>
+    <span id="l3" class="verse">Our quiet, gentle miracle.</span>
+    <!-- ═══════════════════════════════════════════════════════ -->
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ╔══════════════════════════════════════════════════════════════╗
+  // ║  CONFIGURATION — everything tuneable lives here             ║
+  // ╚══════════════════════════════════════════════════════════════╝
+  const CFG = {
+
+    // ── Trail particles (cursor follow) ─────────────────────────
+    trail: {
+      maxAlive:    100,    // pool ceiling
+      perFrame:    4,      // particles spawned each mouse-move step
+      life:        95,     // frames a single trail dot lives
+      friction:    0.958,  // velocity decay per frame (closer to 1 = more glide)
+      spread:      4,      // px random spread around cursor
+      driftY:     -0.3,    // gentle upward float
+      radiusMax:   5,      // max dot size before glow expansion
+    },
+
+    // ── Idle / ambient aura (breathing glow) ────────────────────
+    aura: {
+      baseR:     88,    // resting radius in px
+      pulseSpeed: 0.017, // radians added per frame (breathing rate)
+      pulseAmp:  20,    // how much the radius swells on each breath
+      layers:    4,     // number of concentric glow rings
+    },
+
+    // ── Click burst ─────────────────────────────────────────────
+    burst: {
+      count:      160,   // total burst particles
+      speedMin:   1.8,
+      speedMax:   9.5,
+      friction:   0.916, // slow-down after launch
+      holdFrames: 95,    // frames of outward flight before converging
+      delaySpread: 28,   // random stagger so not all pop at once
+    },
+
+    // ── Convergence (particles fly back to center) ───────────────
+    converge: {
+      springK:    0.036,  // attraction force toward center
+      damping:    0.875,  // velocity damping during spring
+      spiralBias: 0.018,  // small tangential nudge → gentle spiral inward
+      frames:     135,    // total convergence phase length
+    },
+
+    // ── Text reveal timing (ms after convergence begins) ────────
+    text: {
+      delay1:  500,   // date line
+      delay2:  1150,  // subtitle line
+      delay3:  1950,  // title line
+    },
+
+    // ── Colour palette (RGB arrays) ──────────────────────────────
+    color: {
+      trail:  [229, 178, 198],   // #E5B2C6 — Morandi pink
+      aura:   [224, 155, 185],   // warm rose
+      burst:  [255, 192, 215],   // soft blush
+      bloom:  [255, 230, 240],   // near-white petal
+      cursor: [220, 155, 180],   // custom cursor dot
+    },
+  };
+  // ╚══════════════════════════════════════════════════════════════╝
+
+  /* ─── helpers ────────────────────────────────────────────────── */
+  const rgba   = ([r,g,b], a) => `rgba(${r},${g},${b},${+a.toFixed(4)})`;
+  const lerp   = (a, b, t)    => a + (b - a) * t;
+  const clamp  = (v, lo, hi)  => Math.max(lo, Math.min(hi, v));
+  const rnd    = (lo, hi)     => lo + Math.random() * (hi - lo);
+
+  /* ─── canvas setup ───────────────────────────────────────────── */
+  const canvas = document.getElementById('canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, CX, CY;
+
+  const resize = () => {
+    W  = canvas.width  = window.innerWidth;
+    H  = canvas.height = window.innerHeight;
+    CX = W / 2;
+    CY = H / 2;
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* ─── app state machine ──────────────────────────────────────── */
+  //  IDLE → MOVING → BURST → CONVERGE → DONE
+  const S = { IDLE: 0, MOVING: 1, BURST: 2, CONVERGE: 3, DONE: 4 };
+  let state = S.IDLE, age = 0;  // age = frames since last transition
+
+  const go = (next) => { state = next; age = 0; if (next === S.BURST) spawnBurst(); };
+
+  /* ─── cursor tracking ────────────────────────────────────────── */
+  let raw    = { x: -999, y: -999 };   // raw pointer position
+  let smooth = { x: -999, y: -999 };   // lerped position used for spawning
+
+  const onMove = (x, y) => {
+    if (raw.x === -999) { smooth.x = x; smooth.y = y; }   // first move — skip lerp jump
+    raw.x = x; raw.y = y;
+    if (state === S.IDLE) go(S.MOVING);
+  };
+
+  const onTap = () => {
+    if (state >= S.BURST) return;   // only once
+    go(S.BURST);
+  };
+
+  const hit = document.getElementById('hit');
+  hit.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+  hit.addEventListener('touchmove',  e => { e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+  hit.addEventListener('click',    onTap);
+  hit.addEventListener('touchend', e => { e.preventDefault(); onTap(); }, { passive: false });
+
+  /* ═══════════════════════════════════════════════════════════════
+   *  TRAIL PARTICLE
+   * ═══════════════════════════════════════════════════════════════ */
+  const trailPool = [];
+
+  class TrailDot {
+    constructor(x, y) {
+      this.x  = x + rnd(-CFG.trail.spread, CFG.trail.spread);
+      this.y  = y + rnd(-CFG.trail.spread, CFG.trail.spread);
+      this.vx = rnd(-0.55, 0.55);
+      this.vy = rnd(-0.55, 0.55) + CFG.trail.driftY;
+      this.t  = CFG.trail.life;      // remaining life
+      this.T  = CFG.trail.life;      // total life (constant)
+      this.r  = rnd(CFG.trail.radiusMax * 0.4, CFG.trail.radiusMax);
+    }
+
+    step() {
+      this.vx *= CFG.trail.friction;
+      this.vy *= CFG.trail.friction;
+      this.x  += this.vx;
+      this.y  += this.vy;
+      this.t--;
+    }
+
+    paint() {
+      const p  = this.t / this.T;              // 1 → 0
+      const a  = p * p * 0.6;                  // quadratic ease-out alpha
+      const gr = this.r * (1 + (1 - p) * 0.8) * 2.2;  // glow softly expands as it dies
+
+      ctx.save();
+      ctx.shadowColor  = rgba(CFG.color.trail, a * 0.9);
+      ctx.shadowBlur   = gr * 2.5;
+      ctx.fillStyle    = rgba(CFG.color.trail, a);
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, Math.max(0.5, this.r * p), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+   *  BURST / CONVERGE PARTICLE
+   * ═══════════════════════════════════════════════════════════════ */
+  const burstPool = [];
+
+  class BurstDot {
+    constructor() {
+      const angle  = rnd(0, Math.PI * 2);
+      const spd    = rnd(CFG.burst.speedMin, CFG.burst.speedMax);
+      this.x       = CX;
+      this.y       = CY;
+      this.vx      = Math.cos(angle) * spd;
+      this.vy      = Math.sin(angle) * spd;
+      this.r       = rnd(1.2, 4.2);
+      this.a       = rnd(0.65, 0.95);
+      this.delay   = Math.floor(Math.random() * CFG.burst.delaySpread);
+      this.alive   = false;
+      this.phase   = 'burst';  // 'burst' | 'converge'
+    }
+
+    step(frame) {
+      if (frame < this.delay) return;
+      this.alive = true;
+
+      if (this.phase === 'burst') {
+        this.vx *= CFG.burst.friction;
+        this.vy *= CFG.burst.friction;
+
+      } else {
+        // Spring force toward center
+        const dx = CX - this.x;
+        const dy = CY - this.y;
+        this.vx += dx * CFG.converge.springK;
+        this.vy += dy * CFG.converge.springK;
+
+        // Tiny tangential nudge creates a mesmerising gentle spiral
+        const dist = Math.hypot(dx, dy) || 0.001;
+        this.vx += (-dy / dist) * CFG.converge.spiralBias;
+        this.vy += ( dx / dist) * CFG.converge.spiralBias;
+
+        this.vx *= CFG.converge.damping;
+        this.vy *= CFG.converge.damping;
+
+        // Fade as they converge
+        const d = Math.hypot(this.x - CX, this.y - CY);
+        if (d < 30) this.a = Math.max(0, this.a - 0.008);
+      }
+
+      this.x += this.vx;
+      this.y += this.vy;
+    }
+
+    paint() {
+      if (!this.alive || this.a <= 0.01) return;
+
+      ctx.save();
+      ctx.shadowColor = rgba(CFG.color.burst, this.a * 0.7);
+      ctx.shadowBlur  = this.r * 5;
+      ctx.fillStyle   = rgba(CFG.color.burst, this.a);
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Second pass: soft bloom halo
+      ctx.shadowColor = rgba(CFG.color.bloom, this.a * 0.35);
+      ctx.shadowBlur  = this.r * 12;
+      ctx.fillStyle   = rgba(CFG.color.bloom, this.a * 0.25);
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }
+
+  const spawnBurst = () => {
+    burstPool.length = 0;
+    for (let i = 0; i < CFG.burst.count; i++) burstPool.push(new BurstDot());
+  };
+
+  /* ═══════════════════════════════════════════════════════════════
+   *  AURA (breathing idle glow)
+   * ═══════════════════════════════════════════════════════════════ */
+  let auraT = 0;
+
+  const drawAura = (masterAlpha = 1) => {
+    auraT += CFG.aura.pulseSpeed;
+    const pulse = Math.sin(auraT);  // -1 … +1
+    const base  = CFG.aura.baseR + pulse * CFG.aura.pulseAmp;
+
+    ctx.save();
+    for (let i = CFG.aura.layers; i >= 0; i--) {
+      const layerR = base * (1 + i * 0.58);
+      const a = (masterAlpha * 0.14) / (i + 1);
+
+      const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, layerR);
+      g.addColorStop(0,   rgba(CFG.color.aura, clamp(a * 3.8, 0, 1)));
+      g.addColorStop(0.35,rgba(CFG.color.aura, clamp(a,       0, 1)));
+      g.addColorStop(1,   rgba(CFG.color.aura, 0));
+      ctx.beginPath();
+      ctx.arc(CX, CY, layerR, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+    ctx.restore();
+  };
+
+  /* ─── custom cursor dot ─────────────────────────────────────── */
+  const drawCursor = () => {
+    if (raw.x < 0 || state >= S.BURST) return;
+    ctx.save();
+    ctx.shadowColor = rgba(CFG.color.cursor, 0.7);
+    ctx.shadowBlur  = 12;
+    ctx.fillStyle   = rgba(CFG.color.cursor, 0.85);
+    ctx.beginPath();
+    ctx.arc(smooth.x, smooth.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
+  /* ─── text reveal ───────────────────────────────────────────── */
+  let textUnlocked = false;
+
+  const revealText = () => {
+    if (textUnlocked) return;
+    textUnlocked = true;
+
+    const lines = [
+      { id: 'l1', delay: CFG.text.delay1 },
+      { id: 'l2', delay: CFG.text.delay2 },
+      { id: 'l3', delay: CFG.text.delay3 },
+    ];
+
+    lines.forEach(({ id, delay }) => {
+      setTimeout(() => {
+        document.getElementById(id).classList.add('show');
+      }, delay);
+    });
+  };
+
+  /* ─── ambient sparkles around center (DONE state) ───────────── */
+  const spawnAmbient = () => {
+    const angle = rnd(0, Math.PI * 2);
+    const dist  = rnd(12, 75);
+    const p = new TrailDot(CX + Math.cos(angle) * dist, CY + Math.sin(angle) * dist);
+    p.vx *= 0.18; p.vy *= 0.18;   // near-still, just drifting
+    trailPool.push(p);
+  };
+
+  /* ═══════════════════════════════════════════════════════════════
+   *  MAIN LOOP
+   * ═══════════════════════════════════════════════════════════════ */
+  const tick = () => {
+    requestAnimationFrame(tick);
+    ctx.clearRect(0, 0, W, H);
+    age++;
+
+    // Smooth cursor (lag gives silky trail feel)
+    smooth.x = lerp(smooth.x, raw.x, 0.11);
+    smooth.y = lerp(smooth.y, raw.y, 0.11);
+
+    // ── IDLE ───────────────────────────────────────────────────
+    if (state === S.IDLE) {
+      drawAura(1);
+    }
+
+    // ── MOVING ─────────────────────────────────────────────────
+    if (state === S.MOVING) {
+      drawAura(0.42);   // aura recedes slightly while cursor is active
+
+      // Spawn trail particles at smoothed cursor position
+      for (let i = 0; i < CFG.trail.perFrame; i++) {
+        if (trailPool.length >= CFG.trail.maxAlive) trailPool.shift();
+        trailPool.push(new TrailDot(smooth.x, smooth.y));
+      }
+
+      // Step + paint; prune dead ones
+      for (let i = trailPool.length - 1; i >= 0; i--) {
+        trailPool[i].step();
+        trailPool[i].paint();
+        if (trailPool[i].t <= 0) trailPool.splice(i, 1);
+      }
+
+      drawCursor();
+    }
+
+    // ── BURST ──────────────────────────────────────────────────
+    if (state === S.BURST) {
+      trailPool.length = 0;   // clear trail on activation
+
+      burstPool.forEach(p => { p.step(age); p.paint(); });
+      drawAura(0.3);
+
+      if (age >= CFG.burst.holdFrames) {
+        // Switch all particles into converge mode
+        burstPool.forEach(p => { p.phase = 'converge'; });
+        go(S.CONVERGE);
+      }
+    }
+
+    // ── CONVERGE ───────────────────────────────────────────────
+    if (state === S.CONVERGE) {
+      const progress = age / CFG.converge.frames;
+      burstPool.forEach(p => { p.step(age); p.paint(); });
+      drawAura(0.28 + progress * 0.72);   // aura blooms back as particles return
+
+      if (age >= CFG.converge.frames) {
+        go(S.DONE);
+        revealText();
+      }
+    }
+
+    // ── DONE ───────────────────────────────────────────────────
+    if (state === S.DONE) {
+      drawAura(1);
+
+      // Linger: residual burst dots fade away slowly
+      burstPool.forEach(p => { p.a = Math.max(0, p.a - 0.004); p.paint(); });
+
+      // Ambient sparkle halo around center
+      if (Math.random() < 0.22) spawnAmbient();
+      for (let i = trailPool.length - 1; i >= 0; i--) {
+        trailPool[i].step();
+        trailPool[i].paint();
+        if (trailPool[i].t <= 0) trailPool.splice(i, 1);
+      }
+    }
+  };
+
+  tick();
+})();
+</script>
+</body>
+</html>
