@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 10 — Transform & Aggregate | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="10">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 10</div>
+    <h1>Transform &amp; Aggregate <span style="font-weight:300;color:var(--text-muted)">数据变换</span></h1>
+    <p class="lead">
+      Once your data is clean, you need to reshape it — grouping rows by category, merging tables, pivoting summaries, and engineering new features. This chapter covers the transformation toolkit that bridges raw data and model-ready features.
+    </p>
+  </div>
+
+  <!-- ── groupby ── -->
+  <h2>Grouping Data with <code>.groupby()</code></h2>
+
+  <p>
+    <code>.groupby()</code> is pandas' implementation of the SQL <code>GROUP BY</code> clause. The pattern is always: <strong>split</strong> the DataFrame into groups, <strong>apply</strong> a function to each group, <strong>combine</strong> the results. This is the Split-Apply-Combine (分割-应用-合并) paradigm.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — groupby basics</div>
+    <pre><code class="language-python">import pandas as pd
+
+df = pd.read_csv("employees.csv")
+# columns: name, dept, salary, years_exp, score
+
+# Single-column group + single aggregation
+df.groupby("dept")["salary"].mean()
+# dept
+# Engineering    95000.0
+# HR             62000.0
+# Sales          71000.0
+# Name: salary, dtype: float64
+
+# Multiple aggregations on one column — .agg()
+df.groupby("dept")["salary"].agg(["mean", "median", "std", "count"])
+
+# Multiple columns
+df.groupby("dept")[["salary", "score"]].mean()
+
+# Group by multiple columns
+df.groupby(["dept", "level"])["salary"].mean()</code></pre>
+  </div>
+
+  <h3>Named aggregations (Python 3.8+)</h3>
+  <div class="code-block">
+    <div class="code-label">Python — named agg for clean output</div>
+    <pre><code class="language-python"># Named aggregation: output_col_name = pd.NamedAgg(column, aggfunc)
+summary = df.groupby("dept").agg(
+    avg_salary  = ("salary", "mean"),
+    max_salary  = ("salary", "max"),
+    headcount   = ("name",   "count"),
+    avg_tenure  = ("years_exp", "median"),
+)
+# Returns a clean DataFrame with intuitive column names
+
+# Custom aggregation functions
+def cv(series):
+    """Coefficient of variation (变异系数)."""
+    return series.std() / series.mean()
+
+df.groupby("dept")["salary"].agg(["mean", cv])
+
+# Transform — returns same-length Series (for adding group stats back)
+df["dept_avg_salary"] = df.groupby("dept")["salary"].transform("mean")
+df["salary_ratio"] = df["salary"] / df["dept_avg_salary"]</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Analogy</div>
+    <code>groupby + agg</code> is roughly equivalent to iterating over a sorted vector, detecting group boundaries, and computing a running aggregate — but pandas does all the bookkeeping, sorting, and result assembly for you. In SQL terms it's <code>SELECT dept, AVG(salary) FROM employees GROUP BY dept</code>. No temporary containers, no manual iteration.
+  </div>
+
+  <!-- ── pivot_table ── -->
+  <h2>Pivot Tables (透视表)</h2>
+
+  <p>
+    A pivot table (透视表) reshapes data by spreading one column's values across new columns — turning "long" format into "wide" format. Think of it as a two-dimensional groupby.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — pd.pivot_table</div>
+    <pre><code class="language-python">df = pd.read_csv("sales.csv")
+# columns: region, product, quarter, revenue
+
+# Mean revenue by region (rows) × product (columns)
+pivot = pd.pivot_table(
+    df,
+    values  = "revenue",      # what to aggregate
+    index   = "region",       # rows
+    columns = "product",      # new columns
+    aggfunc = "mean",         # how to aggregate (default: mean)
+    fill_value = 0,           # replace NaN with 0
+)
+
+# Multi-level: rows = region × quarter, columns = product
+pd.pivot_table(df,
+               values="revenue",
+               index=["region", "quarter"],
+               columns="product",
+               aggfunc="sum",
+               margins=True)    # add row/column totals (汇总行)
+
+# Reverse operation: pd.melt — wide → long format (用于机器学习)
+long = pd.melt(pivot.reset_index(),
+               id_vars="region",
+               var_name="product",
+               value_name="avg_revenue")</code></pre>
+  </div>
+
+  <!-- ── merge ── -->
+  <h2>Merging DataFrames (连接)</h2>
+
+  <p>
+    <code>pd.merge()</code> joins two DataFrames on a key column — exactly like SQL JOINs. Understanding the four join types is essential for any multi-table data work.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — pd.merge join types</div>
+    <pre><code class="language-python">employees = pd.DataFrame({
+    "emp_id": [1, 2, 3, 4],
+    "name":   ["Alice", "Bob", "Charlie", "Dave"],
+    "dept_id": [10, 20, 10, 30],
+})
+
+departments = pd.DataFrame({
+    "dept_id": [10, 20, 40],
+    "dept_name": ["Engineering", "Sales", "Marketing"],
+})
+
+# INNER JOIN — only rows with matching keys in BOTH tables
+pd.merge(employees, departments, on="dept_id", how="inner")
+# Alice, Bob, Charlie (Dave's dept_id=30 has no match → dropped)
+
+# LEFT JOIN — all rows from left, matched from right, NaN for no match
+pd.merge(employees, departments, on="dept_id", how="left")
+# All 4 employees; Dave gets dept_name = NaN
+
+# RIGHT JOIN — all rows from right
+pd.merge(employees, departments, on="dept_id", how="right")
+# Engineering, Sales appear; Marketing included but no employees match
+
+# OUTER JOIN — all rows from both, NaN where no match
+pd.merge(employees, departments, on="dept_id", how="outer")
+
+# Merge on columns with different names
+pd.merge(employees, departments,
+         left_on="dept_id", right_on="id")
+
+# Merge on index
+pd.merge(df1, df2, left_index=True, right_index=True)</code></pre>
+  </div>
+
+  <h3>Concatenating DataFrames (pd.concat)</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python"># Stack rows (axis=0, default) — append DataFrames vertically
+q1 = pd.read_csv("q1_sales.csv")
+q2 = pd.read_csv("q2_sales.csv")
+q3 = pd.read_csv("q3_sales.csv")
+
+all_quarters = pd.concat([q1, q2, q3], ignore_index=True)
+# ignore_index=True gives clean 0,1,2,... index instead of duplicates
+
+# Add a key to track origin
+all_quarters = pd.concat(
+    [q1, q2, q3],
+    keys=["Q1", "Q2", "Q3"],
+    names=["quarter", "original_idx"]
+)
+
+# Stack columns (axis=1) — join side by side on shared index
+combined = pd.concat([df_features, df_labels], axis=1)</code></pre>
+  </div>
+
+  <!-- ── apply ── -->
+  <h2>Applying Functions: <code>.apply()</code> and <code>.map()</code></h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python"># .map() — element-wise on a Series (fastest for simple transforms)
+df["grade"] = df["score"].map({90: "A", 80: "B", 70: "C"})  # dict mapping
+df["score_str"] = df["score"].map(str)   # call a function on each element
+
+# .apply() on a Series — like .map() but for functions returning non-scalar
+df["name_parts"] = df["full_name"].apply(lambda n: n.split())
+
+# .apply() on a DataFrame — row-wise (axis=1) or column-wise (axis=0)
+def categorise_employee(row):
+    if row["score"] >= 90 and row["years_exp"] >= 5:
+        return "Senior High Performer"
+    elif row["score"] >= 75:
+        return "Solid Contributor"
+    else:
+        return "Needs Support"
+
+df["category"] = df.apply(categorise_employee, axis=1)
+
+# Vectorized alternative — usually MUCH faster than apply for math
+# Bad:  df["tax"] = df["salary"].apply(lambda x: x * 0.2)
+# Good: df["tax"] = df["salary"] * 0.2
+
+# Use .apply() when you need multi-column logic or non-vectorizable operations</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Performance Note</div>
+    <code>.apply()</code> with <code>axis=1</code> (row-by-row) runs a Python loop under the hood — it's slow on large DataFrames. Always prefer vectorized operations (<code>df["col"] * 2</code>, <code>np.where</code>, <code>pd.cut</code>) when possible. Use <code>.apply()</code> only when the logic genuinely requires row context or external function calls.
+  </div>
+
+  <!-- ── Feature engineering ── -->
+  <h2>Feature Engineering Basics (特征工程)</h2>
+
+  <p>
+    Feature engineering means creating new informative columns from existing ones. It's often the single highest-leverage step in an ML project — better features beat better algorithms.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — common feature engineering patterns</div>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+
+# 1. Ratio features
+df["price_per_sqft"] = df["price"] / df["sqft"]
+df["score_per_year"]  = df["total_score"] / df["years_exp"].replace(0, np.nan)
+
+# 2. Binning continuous variables (discretisation 离散化)
+df["age_group"] = pd.cut(df["age"],
+                          bins=[0, 18, 35, 55, 100],
+                          labels=["Youth", "Adult", "Middle", "Senior"])
+
+# 3. Date/time features from datetime columns
+df["created_at"] = pd.to_datetime(df["created_at"])
+df["hour"]        = df["created_at"].dt.hour
+df["day_of_week"] = df["created_at"].dt.dayofweek  # 0=Mon, 6=Sun
+df["is_weekend"]  = df["day_of_week"].isin([5, 6]).astype(int)
+df["days_since"]  = (pd.Timestamp.now() - df["created_at"]).dt.days
+
+# 4. Text-derived features
+df["name_length"]    = df["name"].str.len()
+df["word_count"]     = df["description"].str.split().str.len()
+df["has_email"]      = df["contact"].str.contains("@").astype(int)
+
+# 5. Interaction features (combining two columns)
+df["exp_score"]  = df["years_exp"] * df["performance_score"]
+
+# 6. Log transform — stabilise skewed distributions
+df["log_salary"] = np.log1p(df["salary"])   # log(1+x), safe for zero</code></pre>
+  </div>
+
+  <!-- ── get_dummies ── -->
+  <h2>Encoding Categorical Variables (类别变量编码)</h2>
+
+  <p>
+    Most ML algorithms require numerical input. Categorical columns (strings like "Eng", "Sales") need to be encoded as numbers. The two main approaches:
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — one-hot encoding with pd.get_dummies</div>
+    <pre><code class="language-python">df = pd.DataFrame({
+    "name": ["Alice", "Bob", "Charlie"],
+    "dept": ["Eng", "Sales", "Eng"],
+    "city": ["NY", "LA", "NY"],
+})
+
+# One-hot encoding (独热编码) — creates binary columns for each category
+encoded = pd.get_dummies(df, columns=["dept", "city"])
+#    name  dept_Eng  dept_Sales  city_LA  city_NY
+#   Alice         1           0        0        1
+#     Bob         0           1        1        0
+# Charlie         1           0        0        1
+
+# drop_first=True — drop one category to avoid multicollinearity
+# (necessary for linear models that require independent features)
+pd.get_dummies(df, columns=["dept"], drop_first=True)
+
+# Label encoding — ordinal or when cardinality is high
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+df["dept_encoded"] = le.fit_transform(df["dept"])
+# Eng→0, Sales→1 (alphabetical) — only meaningful for ordinal data!
+
+# Ordinal encoding with defined order
+size_order = {"S": 0, "M": 1, "L": 2, "XL": 3}
+df["size_num"] = df["size"].map(size_order)</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">One-Hot vs Label Encoding</div>
+    Use <strong>one-hot encoding</strong> for nominal categories with no inherent order (city, colour, department). Use <strong>label/ordinal encoding</strong> only when there is a meaningful order (small &lt; medium &lt; large). For high-cardinality categories (hundreds of unique values), consider target encoding or embeddings — one-hot creates too many columns.
+  </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">Mark as complete</button>
+    <span class="done-hint">Saves your progress locally.</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "Which method is the pandas equivalent of SQL's GROUP BY + aggregate?",
+      "options": [
+        "df.aggregate()",
+        "df.groupby() combined with an aggregation like .mean() or .agg()",
+        "df.pivot()",
+        "df.cluster()"
+      ],
+      "answer": 1,
+      "explanation": "<code>df.groupby('dept')['salary'].mean()</code> is directly equivalent to <code>SELECT dept, AVG(salary) FROM df GROUP BY dept</code>. The <code>.agg()</code> method lets you apply multiple or custom aggregation functions in one call."
+    },
+    {
+      "q": "What does <code>pd.merge(left, right, on='id', how='left')</code> return?",
+      "options": [
+        "Only rows where 'id' exists in both DataFrames (inner join)",
+        "All rows from 'left', with matching rows from 'right'; non-matches become NaN",
+        "All rows from 'right', filling unmatched left rows with NaN",
+        "A concatenation of both DataFrames stacked vertically"
+      ],
+      "answer": 1,
+      "explanation": "A LEFT JOIN keeps every row from the left DataFrame. For rows where the key doesn't exist in the right DataFrame, the right-side columns are filled with NaN. This is the most common join type in data engineering because you start with your primary table and enrich it with optional lookups."
+    },
+    {
+      "q": "What does <code>pd.get_dummies(df, columns=['color'])</code> do to a column with values ['red', 'blue', 'green']?",
+      "options": [
+        "Replaces the column with integer codes (red=0, blue=1, green=2)",
+        "Creates three binary columns: color_red, color_blue, color_green, each containing 0 or 1",
+        "Converts the column to a pandas Categorical type",
+        "Removes the column and adds its unique values as row indices"
+      ],
+      "answer": 1,
+      "explanation": "One-hot encoding creates a separate 0/1 column for each unique value. A row that was 'red' gets color_red=1, color_blue=0, color_green=0. This is required by most ML algorithms which can't accept string inputs. Use <code>drop_first=True</code> with linear models to avoid the dummy variable trap."
+    }
+  ]
+  </script>
+
+  <div class="chapter-nav">
+    <a href="ch9.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 9: Data Cleaning</span>
+    </a>
+    <a href="ch11.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 11: Data Visualization</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

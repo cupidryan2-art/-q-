@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 13 — Capstone Project | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="13">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 13 · Capstone</div>
+    <h1>Putting It All Together <span style="font-weight:300;color:var(--text-muted)">综合项目</span></h1>
+    <p class="lead">
+      Every chapter in this curriculum has been a building block. Now we assemble them into a single coherent project: load raw data, explore it, clean it, engineer features, build two models, evaluate them, and interpret the results. This is the pipeline (管道思维) you'll follow on every real data science project.
+    </p>
+  </div>
+
+  <!-- ── Dataset ── -->
+  <h2>The Dataset: Student Performance Prediction</h2>
+
+  <p>
+    We'll use a synthetic dataset of 400 students. Each row represents one student with four input features and one outcome. We'll predict both a continuous score (regression) and a pass/fail label (classification).
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>study_hours</code></td><td>float</td><td>Weekly study hours (0–20), with some outliers</td></tr>
+        <tr><td><code>prev_score</code></td><td>float</td><td>Previous exam score (0–100), a few missing values</td></tr>
+        <tr><td><code>attendance</code></td><td>float</td><td>Attendance rate (0.0–1.0)</td></tr>
+        <tr><td><code>sleep_hours</code></td><td>float</td><td>Average nightly sleep (3–10)</td></tr>
+        <tr><td><code>support_level</code></td><td>str</td><td>Tutoring support: "none", "basic", "intensive"</td></tr>
+        <tr><td><code>final_score</code></td><td>float</td><td><strong>Target</strong>: final exam score (0–100)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Step 0: Generate ── -->
+  <h2>Step 0 — Generate the Synthetic Dataset</h2>
+
+  <p>
+    We generate the data with NumPy so this project is fully self-contained — no external file needed. The data has realistic noise, missing values, and outliers baked in.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — generate_data.py (run once)</div>
+    <pre><code class="language-python">import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(seed=2024)
+n = 400
+
+study_hours   = rng.uniform(0, 16, n)
+prev_score    = rng.normal(65, 18, n).clip(0, 100)
+attendance    = rng.beta(7, 2, n)           # skewed toward high attendance
+sleep_hours   = rng.normal(7, 1.2, n).clip(3, 10)
+support_level = rng.choice(["none", "basic", "intensive"],
+                             p=[0.5, 0.3, 0.2], size=n)
+
+# True relationship (with noise)
+support_bonus = {"none": 0, "basic": 5, "intensive": 12}
+bonus = np.array([support_bonus[s] for s in support_level])
+
+final_score = (
+    0.35 * study_hours * 4           # study hours → up to ~22 pts
+  + 0.40 * prev_score                # previous score carries weight
+  + 0.15 * attendance * 100          # attendance → up to 15 pts
+  + 0.10 * (sleep_hours - 4) * 5    # sleep → small bonus
+  + bonus
+  + rng.normal(0, 8, n)             # noise
+).clip(0, 100)
+
+df = pd.DataFrame({
+    "study_hours":   study_hours,
+    "prev_score":    prev_score,
+    "attendance":    attendance,
+    "sleep_hours":   sleep_hours,
+    "support_level": support_level,
+    "final_score":   final_score,
+})
+
+# Inject realistic problems
+df.loc[rng.choice(n, 20, replace=False), "prev_score"] = np.nan   # missing values
+df.loc[rng.choice(n, 5,  replace=False), "study_hours"] *= 3      # outliers
+df.loc[rng.choice(n, 8,  replace=False), "attendance"] = rng.uniform(0, 0.1, 8)
+
+df = df.round(2)
+df.to_csv("students.csv", index=False)
+print(f"Saved {len(df)} rows to students.csv")</code></pre>
+  </div>
+
+  <!-- ── Step 1: Load & Explore ── -->
+  <h2>Step 1 — Load and Explore</h2>
+
+  <p>
+    Never skip exploration. Five minutes here saves hours of debugging later.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — 01_explore.py</div>
+    <pre><code class="language-python">import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv("students.csv")
+
+# ── Shape and types ──
+print(df.shape)       # (400, 6)
+print(df.dtypes)
+print(df.head())
+
+# ── Missing values ──
+print("\nMissing values:")
+print(df.isnull().sum())
+# prev_score    20  ← we injected these
+
+# ── Statistics ──
+print("\nDescriptive statistics:")
+print(df.describe().round(2))
+
+# ── Target distribution ──
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+axes[0].hist(df["final_score"], bins=30, color="#CC785C", edgecolor="white")
+axes[0].set_title("Final Score Distribution")
+axes[0].set_xlabel("Score")
+
+# Scores by support level
+sns.boxplot(df, x="support_level",
+            y="final_score",
+            order=["none","basic","intensive"],
+            ax=axes[1],
+            palette="muted")
+axes[1].set_title("Score by Support Level")
+
+fig.tight_layout()
+plt.savefig("01_exploration.png", dpi=150, bbox_inches="tight")
+
+# ── Correlation ──
+corr = df.select_dtypes("number").corr()
+fig, ax = plt.subplots(figsize=(6, 5))
+sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm",
+            vmin=-1, vmax=1, ax=ax)
+ax.set_title("Correlation Matrix")
+fig.tight_layout()
+plt.savefig("01_correlation.png", dpi=150, bbox_inches="tight")
+print("Exploration plots saved.")</code></pre>
+  </div>
+
+  <!-- ── Step 2: Clean ── -->
+  <h2>Step 2 — Clean the Data</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — 02_clean.py</div>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+
+df = pd.read_csv("students.csv")
+
+def clean(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    # ── Missing values ──
+    # Fill prev_score with median (robust to outliers)
+    df["prev_score"] = df["prev_score"].fillna(df["prev_score"].median())
+
+    # ── Outliers in study_hours (cap at 20h/week) ──
+    df["study_hours"] = df["study_hours"].clip(upper=20.0)
+
+    # ── Impossible attendance values ──
+    df["attendance"] = df["attendance"].clip(0.0, 1.0)
+
+    # ── Ensure dtypes ──
+    df["support_level"] = df["support_level"].str.strip().str.lower()
+
+    return df
+
+df_clean = clean(df)
+
+# Verify
+print("Missing after cleaning:", df_clean.isnull().sum().sum())
+print("study_hours max:", df_clean["study_hours"].max())
+print("attendance range:", df_clean["attendance"].min(), "–", df_clean["attendance"].max())
+
+df_clean.to_csv("students_clean.csv", index=False)
+print(f"\nCleaned data saved. Shape: {df_clean.shape}")</code></pre>
+  </div>
+
+  <!-- ── Step 3: Feature Engineering ── -->
+  <h2>Step 3 — Feature Engineering</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — 03_features.py</div>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+
+df = pd.read_csv("students_clean.csv")
+
+def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    # ── Encode ordinal categorical ──
+    support_map = {"none": 0, "basic": 1, "intensive": 2}
+    df["support_num"] = df["support_level"].map(support_map)
+
+    # ── Interaction features ──
+    # Study efficiency = study hours × attendance
+    df["study_efficiency"] = df["study_hours"] * df["attendance"]
+
+    # Sleep quality score — penalise too little AND too much
+    df["sleep_quality"] = 1.0 - (np.abs(df["sleep_hours"] - 7.5) / 4.5).clip(0, 1)
+
+    # ── Binary target for classification ──
+    df["passed"] = (df["final_score"] >= 60).astype(int)
+
+    return df
+
+df_feat = engineer_features(df)
+
+# Check what we have
+print(df_feat[["study_efficiency", "sleep_quality", "support_num", "passed"]].describe().round(2))
+df_feat.to_csv("students_features.csv", index=False)
+print(f"\nFeature data saved. Columns: {list(df_feat.columns)}")</code></pre>
+  </div>
+
+  <!-- ── Step 4: Model ── -->
+  <h2>Step 4 — Build Models</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — 04_model.py</div>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import (
+    r2_score, mean_absolute_error,
+    accuracy_score, classification_report
+)
+
+df = pd.read_csv("students_features.csv")
+
+FEATURES = ["study_hours", "prev_score", "attendance",
+            "sleep_hours", "support_num", "study_efficiency", "sleep_quality"]
+
+X = df[FEATURES]
+y_reg  = df["final_score"]    # regression target (continuous)
+y_clf  = df["passed"]          # classification target (binary)
+
+X_train, X_test, yr_train, yr_test, yc_train, yc_test = train_test_split(
+    X, y_reg, y_clf, test_size=0.2, random_state=42, stratify=y_clf
+)
+
+print(f"Train: {len(X_train)} | Test: {len(X_test)}")
+print(f"Pass rate (train): {yc_train.mean():.1%}  (test): {yc_test.mean():.1%}\n")
+
+# ────────────────────────────────
+#  REGRESSION — predict final_score
+# ────────────────────────────────
+reg_pipe = Pipeline([
+    ("scaler", StandardScaler()),
+    ("model",  LinearRegression()),
+])
+reg_pipe.fit(X_train, yr_train)
+yr_pred = reg_pipe.predict(X_test)
+
+print("=== Linear Regression ===")
+print(f"R²:  {r2_score(yr_test, yr_pred):.3f}")
+print(f"MAE: {mean_absolute_error(yr_test, yr_pred):.2f} points\n")
+
+# Cross-validated R²
+cv_r2 = cross_val_score(reg_pipe, X, y_reg, cv=5, scoring="r2")
+print(f"5-fold CV R²: {cv_r2.mean():.3f} ± {cv_r2.std():.3f}\n")
+
+# ────────────────────────────────
+#  CLASSIFICATION — predict passed
+# ────────────────────────────────
+log_pipe = Pipeline([
+    ("scaler", StandardScaler()),
+    ("model",  LogisticRegression(max_iter=1000)),
+])
+log_pipe.fit(X_train, yc_train)
+yc_pred = log_pipe.predict(X_test)
+
+print("=== Logistic Regression ===")
+print(f"Accuracy: {accuracy_score(yc_test, yc_pred):.3f}")
+print(classification_report(yc_test, yc_pred, target_names=["Failed", "Passed"]))
+
+# Decision Tree for comparison
+tree_pipe = Pipeline([
+    ("model", DecisionTreeClassifier(max_depth=5, min_samples_leaf=8, random_state=42))
+])
+tree_pipe.fit(X_train, yc_train)
+print("=== Decision Tree ===")
+print(f"Accuracy: {tree_pipe.score(X_test, yc_test):.3f}")</code></pre>
+  </div>
+
+  <!-- ── Step 5: Evaluate ── -->
+  <h2>Step 5 — Evaluate and Interpret</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — 05_evaluate.py</div>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import ConfusionMatrixDisplay
+
+# ── Regression: actual vs predicted ──
+fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+
+axes[0].scatter(yr_test, yr_pred, alpha=0.5, color="steelblue", s=20)
+axes[0].plot([0,100], [0,100], "r--", lw=1.5, label="Perfect prediction")
+axes[0].set_xlabel("Actual Score")
+axes[0].set_ylabel("Predicted Score")
+axes[0].set_title(f"Regression: Actual vs Predicted  (MAE={mean_absolute_error(yr_test,yr_pred):.1f})")
+axes[0].legend()
+
+# Residuals
+residuals = yr_test - yr_pred
+axes[1].hist(residuals, bins=25, color="#CC785C", edgecolor="white")
+axes[1].axvline(0, color="black", lw=1.5)
+axes[1].set_title("Residuals (Actual − Predicted)")
+axes[1].set_xlabel("Error (points)")
+
+fig.tight_layout()
+plt.savefig("05_regression_eval.png", dpi=150, bbox_inches="tight")
+
+# ── Classification: confusion matrix ──
+fig, ax = plt.subplots(figsize=(4, 4))
+ConfusionMatrixDisplay.from_predictions(
+    yc_test, yc_pred,
+    display_labels=["Failed", "Passed"],
+    ax=ax, colorbar=False, cmap="Blues",
+)
+ax.set_title("Logistic Regression — Confusion Matrix")
+plt.tight_layout()
+plt.savefig("05_confusion_matrix.png", dpi=150, bbox_inches="tight")
+
+# ── Feature importance (from linear regression coefficients) ──
+coefs = pd.Series(
+    reg_pipe.named_steps["model"].coef_,
+    index=FEATURES
+).sort_values(key=abs, ascending=False)
+
+fig, ax = plt.subplots(figsize=(7, 4))
+coefs.plot(kind="barh", ax=ax, color=["#CC785C" if v > 0 else "steelblue" for v in coefs])
+ax.axvline(0, color="black", lw=0.8)
+ax.set_title("Linear Regression Coefficients (Standardised Features)")
+ax.set_xlabel("Coefficient Value")
+fig.tight_layout()
+plt.savefig("05_feature_importance.png", dpi=150, bbox_inches="tight")
+print("Evaluation plots saved.")</code></pre>
+  </div>
+
+  <!-- ── Interpretation ── -->
+  <h2>Interpreting the Results</h2>
+
+  <p>
+    Once you have numbers, the job isn't done — you need to ask whether they make sense and what they imply.
+  </p>
+
+  <div class="note-box">
+    <div class="callout-label">Reading the Coefficients</div>
+    Because we standardised the features before fitting, the linear regression coefficients are directly comparable. A larger absolute coefficient means a stronger influence on the predicted score. If <code>prev_score</code> has the highest coefficient, it means previous performance is the strongest predictor — which makes intuitive sense and gives us confidence the model learned something real rather than noise.
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — sanity-checking predictions</div>
+    <pre><code class="language-python"># Predict for two hypothetical students and verify the model makes sense
+hypotheticals = pd.DataFrame([
+    # study_hours, prev_score, attendance, sleep_hours, support_num, study_eff, sleep_qual
+    [2,   40, 0.50, 5.0, 0, 2*0.50,   0.56],   # low effort, poor history
+    [12,  80, 0.95, 7.5, 2, 12*0.95,  1.00],   # high effort, good history, intensive support
+], columns=FEATURES)
+
+predictions = reg_pipe.predict(hypotheticals)
+print(f"Struggling student predicted score:  {predictions[0]:.1f}")
+print(f"High-achieving student predicted score: {predictions[1]:.1f}")
+# Expected: ~35–45 for the first, ~80–90 for the second
+# If predictions look wrong, re-examine the cleaning and feature engineering steps</code></pre>
+  </div>
+
+  <!-- ── Pipeline thinking ── -->
+  <h2>Pipeline Thinking (管道思维)</h2>
+
+  <p>
+    Notice what we did: every step is a <em>pure function</em> (Chapter 4) that takes a DataFrame and returns a new DataFrame. The pipeline is just function composition:
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — the complete pipeline in one function</div>
+    <pre><code class="language-python">def run_pipeline(raw_csv: str) -> dict:
+    """
+    Complete data science pipeline — load to evaluation in one call.
+    Each step is independently testable and replaceable.
+    """
+    # Load
+    df = pd.read_csv(raw_csv)
+
+    # Clean
+    df = clean(df)                # Step 2
+
+    # Feature engineering
+    df = engineer_features(df)    # Step 3
+
+    # Train / test split
+    X = df[FEATURES]
+    y_reg = df["final_score"]
+    y_clf = df["passed"]
+    X_train, X_test, yr_train, yr_test, yc_train, yc_test = train_test_split(
+        X, y_reg, y_clf, test_size=0.2, random_state=42, stratify=y_clf
+    )
+
+    # Train models
+    reg_pipe = Pipeline([("scaler", StandardScaler()), ("model", LinearRegression())])
+    clf_pipe = Pipeline([("scaler", StandardScaler()), ("model", LogisticRegression(max_iter=1000))])
+    reg_pipe.fit(X_train, yr_train)
+    clf_pipe.fit(X_train, yc_train)
+
+    # Evaluate
+    return {
+        "regression_r2":       r2_score(yr_test, reg_pipe.predict(X_test)),
+        "regression_mae":      mean_absolute_error(yr_test, reg_pipe.predict(X_test)),
+        "classification_acc":  clf_pipe.score(X_test, yc_test),
+        "n_train": len(X_train),
+        "n_test":  len(X_test),
+    }
+
+results = run_pipeline("students.csv")
+for k, v in results.items():
+    print(f"{k:25s}: {v:.3f}" if isinstance(v, float) else f"{k:25s}: {v}")</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">What You've Built</div>
+    <p>This is a real, production-ready data science workflow structure. The functions <code>clean()</code>, <code>engineer_features()</code>, and the final pipeline are independently testable, version-controllable, and reproducible. You can:</p>
+    <ul>
+      <li>Swap in new raw data without touching the model code</li>
+      <li>Add new features by extending <code>engineer_features()</code></li>
+      <li>Try different models by replacing the pipeline estimator</li>
+      <li>Write unit tests for each transformation step</li>
+    </ul>
+    <p>This is exactly how production ML systems are structured — and you now have the Python foundation to build them.</p>
+  </div>
+
+  <!-- ── Where next ── -->
+  <h2>Where to Go From Here</h2>
+
+  <p>You've covered the full arc from Python syntax to a working ML pipeline. Natural next steps:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Topic</th><th>Library / Resource</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td>Random Forests &amp; XGBoost</td><td><code>sklearn</code>, <code>xgboost</code></td><td>More powerful classifiers; handle non-linearity</td></tr>
+        <tr><td>Hyperparameter tuning</td><td><code>GridSearchCV</code>, <code>Optuna</code></td><td>Systematically find the best model settings</td></tr>
+        <tr><td>Deep Learning</td><td><code>PyTorch</code>, <code>TensorFlow</code></td><td>Neural networks for images, text, sequences</td></tr>
+        <tr><td>Data engineering at scale</td><td><code>Polars</code>, <code>DuckDB</code>, <code>Spark</code></td><td>DataFrames beyond RAM size</td></tr>
+        <tr><td>Model serving</td><td><code>FastAPI</code>, <code>MLflow</code></td><td>Deploy your model as an API</td></tr>
+        <tr><td>Time series</td><td><code>statsmodels</code>, <code>Prophet</code></td><td>Forecasting, seasonality, autocorrelation</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">Mark as complete</button>
+    <span class="done-hint">Saves your progress locally — you've finished the curriculum!</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "In a data science pipeline, what step should happen BEFORE feature engineering?",
+      "options": [
+        "Model training and evaluation",
+        "Data cleaning — handling missing values, type errors, and outliers",
+        "Hyperparameter tuning",
+        "Splitting into train and test sets"
+      ],
+      "answer": 1,
+      "explanation": "Clean first, engineer second. Features built on dirty data inherit the dirt. For example, if outlier study_hours of 45/week aren't capped first, <code>study_efficiency = study_hours × attendance</code> will contain impossibly large values that skew the model."
+    },
+    {
+      "q": "Why does the capstone define <code>clean()</code> and <code>engineer_features()</code> as separate pure functions rather than one big block of code?",
+      "options": [
+        "Python requires functions for code longer than 10 lines",
+        "Each step is independently testable and replaceable — you can re-run cleaning without re-running feature engineering, and swap feature logic without touching cleaning",
+        "It's a style preference with no practical difference",
+        "Pipeline objects require functions with exactly those names"
+      ],
+      "answer": 1,
+      "explanation": "Modular pure functions are the key to reproducible, maintainable data pipelines. You can write a unit test for <code>clean()</code> independently, verify it handles edge cases, and be confident the cleaning logic is correct before you ever touch the model. When a bug appears in production, you can pinpoint exactly which step caused it."
+    },
+    {
+      "q": "The linear regression model's coefficients are only directly comparable if…",
+      "options": [
+        "The model uses cross-validation",
+        "The features were scaled (e.g., with StandardScaler) before fitting",
+        "The target variable is binary",
+        "All features are integers"
+      ],
+      "answer": 1,
+      "explanation": "Standardising features (zero mean, unit variance) puts them on the same scale. Without scaling, a coefficient of 0.4 on <code>prev_score</code> (range 0–100) and 2.1 on <code>study_hours</code> (range 0–20) aren't comparable — the raw values have different magnitudes. After StandardScaler, both features have the same spread, and the coefficient magnitude directly reflects each feature's predictive contribution."
+    }
+  ]
+  </script>
+
+  <div class="chapter-nav">
+    <a href="ch12.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 12: Machine Learning</span>
+    </a>
+    <a href="index.html" class="nav-btn next">
+      <span class="nav-direction">↑ Back to</span>
+      <span class="nav-title">Table of Contents</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

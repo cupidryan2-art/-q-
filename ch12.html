@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 12 — Machine Learning | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="12">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 12</div>
+    <h1>Machine Learning Fundamentals <span style="font-weight:300;color:var(--text-muted)">机器学习基础</span></h1>
+    <p class="lead">
+      scikit-learn makes the mechanics of machine learning almost embarrassingly simple: every model has the same three-method API — <code>.fit()</code>, <code>.predict()</code>, <code>.score()</code>. This chapter teaches the workflow that wraps those three calls, and why each step exists.
+    </p>
+  </div>
+
+  <!-- ── What is ML ── -->
+  <h2>What is Machine Learning? (机器学习)</h2>
+
+  <p>
+    Classical programming: you write rules, feed in data, get answers.<br>
+    Machine learning: you feed in data <em>and</em> answers, and the algorithm learns the rules.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Paradigm</th><th>Definition</th><th>Examples</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Supervised Learning</strong><br><span style="color:var(--text-muted);font-size:0.85em">监督学习</span></td>
+          <td>Learn a mapping from inputs X to labelled outputs y</td>
+          <td>Predict house price, classify email as spam, diagnose disease</td>
+        </tr>
+        <tr>
+          <td><strong>Unsupervised Learning</strong><br><span style="color:var(--text-muted);font-size:0.85em">无监督学习</span></td>
+          <td>Find structure in unlabelled data</td>
+          <td>Customer segmentation (clustering), anomaly detection, dimensionality reduction</td>
+        </tr>
+        <tr>
+          <td><strong>Regression</strong> (回归)</td>
+          <td>Supervised: predict a continuous number</td>
+          <td>Predict salary, temperature, stock price</td>
+        </tr>
+        <tr>
+          <td><strong>Classification</strong> (分类)</td>
+          <td>Supervised: predict a discrete class label</td>
+          <td>Spam/not spam, dog/cat, pass/fail</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Workflow ── -->
+  <h2>The ML Workflow (机器学习流程)</h2>
+
+  <p>Every scikit-learn project follows the same seven-step loop:</p>
+  <ol>
+    <li><strong>Load &amp; explore</strong> your data</li>
+    <li><strong>Clean</strong> missing values, outliers, wrong types</li>
+    <li><strong>Engineer features</strong> — encode categoricals, scale numerics, create derived columns</li>
+    <li><strong>Split</strong> into train and test sets</li>
+    <li><strong>Train</strong> a model on the training set</li>
+    <li><strong>Evaluate</strong> on the test set — never peek during training</li>
+    <li><strong>Iterate</strong> — tune hyperparameters, try different models</li>
+  </ol>
+
+  <!-- ── Train/test split ── -->
+  <h2>Train / Test Split (训练集 / 测试集)</h2>
+
+  <p>
+    If you evaluate a model on the same data it trained on, you're measuring memorisation, not generalisation. The test set is held out and used only for final evaluation — it simulates "new, unseen data."
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — train_test_split</div>
+    <pre><code class="language-python">from sklearn.model_selection import train_test_split
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv("students.csv")
+
+# X = features (特征矩阵), y = target (目标变量)
+X = df[["study_hours", "prev_score", "attendance"]]
+y = df["final_score"]
+
+# Split — 80% train, 20% test
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,       # 20% held out for testing
+    random_state=42,     # seed for reproducibility
+    stratify=y if y.dtype == bool else None  # preserve class balance for classification
+)
+
+print(f"Train: {len(X_train)} samples | Test: {len(X_test)} samples")
+
+# Rule of thumb: 80/20 or 70/30 split
+# For very small datasets (< 1000 rows): use cross-validation instead</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">Why This Matters</div>
+    This is the equivalent of a unit test for your model. Training accuracy is meaningless — a model can memorise the training data and score 100% (this is overfitting, 过拟合). Test accuracy measures what you actually care about: does the model generalise to data it has never seen?
+  </div>
+
+  <!-- ── Feature scaling ── -->
+  <h2>Feature Scaling (特征缩放)</h2>
+
+  <p>
+    Many algorithms — logistic regression, SVM, k-NN, neural networks, PCA — are sensitive to the <em>scale</em> of input features. If <code>salary</code> ranges from 30,000 to 200,000 and <code>age</code> ranges from 22 to 65, salary will dominate any distance or gradient calculation. Scaling puts all features on the same footing.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — StandardScaler</div>
+    <pre><code class="language-python">from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+# StandardScaler: z = (x - mean) / std  → mean=0, std=1
+scaler = StandardScaler()
+
+# CRITICAL: fit on TRAIN data only, then transform both train and test
+# Fitting on test data would leak information ("data leakage" 数据泄漏)
+X_train_scaled = scaler.fit_transform(X_train)   # fit + transform
+X_test_scaled  = scaler.transform(X_test)         # transform only (use train stats)
+
+# MinMaxScaler: scales to [0, 1]  — useful when you need bounded inputs
+min_max = MinMaxScaler()
+X_train_mm = min_max.fit_transform(X_train)
+
+# Decision trees and random forests do NOT need scaling — they use thresholds
+# Linear models, SVM, k-NN, neural networks DO need scaling</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Data Leakage — The Most Common Mistake (数据泄漏)</div>
+    Always fit your scaler (and any other preprocessor) on the <strong>training set only</strong>. If you call <code>scaler.fit_transform(X)</code> on the full dataset before splitting, the test set statistics influence the scaler — the model has indirectly "seen" the test data. This inflates performance metrics and gives you false confidence.
+  </div>
+
+  <!-- ── Linear regression ── -->
+  <h2>Linear Regression (线性回归)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — LinearRegression</div>
+    <pre><code class="language-python">from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import numpy as np
+
+model = LinearRegression()
+model.fit(X_train_scaled, y_train)       # learn coefficients
+
+# Inspect the learned model
+print("Intercept:", model.intercept_)
+print("Coefficients:", dict(zip(X_train.columns, model.coef_)))
+
+# Predict
+y_pred = model.predict(X_test_scaled)
+
+# Evaluate
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+mae  = mean_absolute_error(y_test, y_pred)
+r2   = r2_score(y_test, y_pred)          # 1.0 = perfect, 0 = predicts mean, <0 = worse than mean
+
+print(f"RMSE: {rmse:.2f}")   # root mean squared error — same units as target
+print(f"MAE:  {mae:.2f}")    # mean absolute error — more interpretable
+print(f"R²:   {r2:.3f}")     # proportion of variance explained</code></pre>
+  </div>
+
+  <!-- ── Logistic regression ── -->
+  <h2>Logistic Regression (逻辑回归) — Binary Classification</h2>
+
+  <p>
+    Despite the name, logistic regression is a <em>classification</em> algorithm. It models the probability that a sample belongs to class 1 using the sigmoid function, then thresholds at 0.5. It's fast, interpretable, and a strong baseline for any binary classification problem.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — LogisticRegression</div>
+    <pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# Binary target: passed (1) or failed (0)
+y_binary = (df["final_score"] >= 60).astype(int)
+X = df[["study_hours", "prev_score", "attendance"]]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y_binary, test_size=0.2, random_state=42)
+scaler = StandardScaler()
+X_train_s = scaler.fit_transform(X_train)
+X_test_s  = scaler.transform(X_test)
+
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train_s, y_train)
+
+y_pred  = model.predict(X_test_s)
+y_proba = model.predict_proba(X_test_s)[:, 1]  # probability of class 1
+
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.3f}")
+
+# Confusion matrix (混淆矩阵)
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion matrix:")
+print(cm)
+# [[TN  FP]
+#  [FN  TP]]
+
+# Full classification report
+print(classification_report(y_test, y_pred, target_names=["Failed", "Passed"]))</code></pre>
+  </div>
+
+  <!-- ── Decision tree ── -->
+  <h2>Decision Trees (决策树)</h2>
+
+  <p>
+    A decision tree learns a series of if-then rules by recursively splitting the data on feature thresholds. It's highly interpretable — you can visualise the exact rules the model learned. It does not require feature scaling.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — DecisionTreeClassifier</div>
+    <pre><code class="language-python">from sklearn.tree import DecisionTreeClassifier, export_text
+
+model = DecisionTreeClassifier(
+    max_depth=4,          # limit tree depth — prevents overfitting
+    min_samples_leaf=5,   # each leaf needs at least 5 samples
+    random_state=42,
+)
+model.fit(X_train, y_train)   # no scaling needed for trees
+
+print(f"Train accuracy: {model.score(X_train, y_train):.3f}")
+print(f"Test  accuracy: {model.score(X_test,  y_test):.3f}")
+# If train >> test, the tree is overfitting → increase max_depth restriction
+
+# Print the learned rules as text
+rules = export_text(model, feature_names=list(X.columns))
+print(rules)
+
+# Feature importance — which features mattered most?
+importances = pd.Series(model.feature_importances_, index=X.columns)
+importances.sort_values(ascending=False)</code></pre>
+  </div>
+
+  <!-- ── Evaluation ── -->
+  <h2>Model Evaluation Metrics (模型评估)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — evaluation metrics</div>
+    <pre><code class="language-python">from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    confusion_matrix, classification_report, ConfusionMatrixDisplay
+)
+import matplotlib.pyplot as plt
+
+# Core classification metrics
+acc  = accuracy_score(y_test, y_pred)    # (TP+TN) / total
+prec = precision_score(y_test, y_pred)   # TP / (TP+FP) — of predicted positives, how many were right?
+rec  = recall_score(y_test, y_pred)      # TP / (TP+FN) — of actual positives, how many did we catch?
+f1   = f1_score(y_test, y_pred)          # harmonic mean of precision and recall
+
+print(f"Accuracy:  {acc:.3f}")
+print(f"Precision: {prec:.3f}")
+print(f"Recall:    {rec:.3f}")
+print(f"F1:        {f1:.3f}")
+
+# When to use which metric:
+# Accuracy — balanced classes, both error types equally costly
+# Precision — false positives are expensive (spam filter: don't block real emails)
+# Recall    — false negatives are expensive (cancer detection: don't miss cases)
+# F1        — imbalanced classes, need balance of precision and recall
+
+# Visual confusion matrix
+fig, ax = plt.subplots(figsize=(4, 4))
+ConfusionMatrixDisplay.from_predictions(
+    y_test, y_pred,
+    display_labels=["Failed", "Passed"],
+    ax=ax, colorbar=False,
+)
+plt.tight_layout()
+plt.savefig("confusion_matrix.png", dpi=150, bbox_inches="tight")</code></pre>
+  </div>
+
+  <!-- ── Cross-validation ── -->
+  <h2>Cross-Validation (交叉验证)</h2>
+
+  <p>
+    A single train/test split gives you one estimate of performance — which might be lucky or unlucky depending on which samples ended up in the test set. Cross-validation (CV) repeats the evaluation <em>k</em> times on different splits and averages the results, giving a much more reliable estimate.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — cross_val_score</div>
+    <pre><code class="language-python">from sklearn.model_selection import cross_val_score, KFold
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+import numpy as np
+
+# Pipeline (流水线) — chains preprocessing + model into one object
+# This ensures the scaler is fit only on training folds, never test folds
+pipe = Pipeline([
+    ("scaler", StandardScaler()),
+    ("model",  LogisticRegression(max_iter=1000)),
+])
+
+# 5-fold cross-validation
+cv_scores = cross_val_score(pipe, X, y_binary, cv=5, scoring="accuracy")
+print(f"CV scores:  {cv_scores}")
+print(f"Mean ± std: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
+# e.g. "Mean ± std: 0.847 ± 0.023"
+# The std tells you how stable the performance is across folds
+
+# Stratified K-Fold — preserves class proportions in each fold
+from sklearn.model_selection import StratifiedKFold
+skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+cv_scores = cross_val_score(pipe, X, y_binary, cv=skf, scoring="f1")</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">Always Use a Pipeline</div>
+    Wrapping your preprocessor and model in a <code>Pipeline</code> is not just convenient — it's <strong>correct</strong>. When you pass a Pipeline to <code>cross_val_score</code>, the scaler is re-fit on each training fold separately, and then applied to the corresponding test fold. This is the only way to avoid data leakage in cross-validation. Always use Pipelines for any workflow that includes preprocessing.
+  </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">Mark as complete</button>
+    <span class="done-hint">Saves your progress locally.</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "Why do we split data into a training set and a test set before modelling?",
+      "options": [
+        "To speed up training by using less data",
+        "To evaluate whether the model generalises to unseen data, detecting overfitting",
+        "Because scikit-learn requires it",
+        "To reduce memory usage during training"
+      ],
+      "answer": 1,
+      "explanation": "A model evaluated on its own training data measures memorisation, not learning. The held-out test set simulates new, unseen data — if test accuracy is much lower than training accuracy, the model has overfit (过拟合). The test set must never be seen during training or hyperparameter tuning."
+    },
+    {
+      "q": "Why is feature scaling important for logistic regression and SVM, but NOT for decision trees?",
+      "options": [
+        "Scikit-learn automatically scales for trees but not linear models",
+        "Algorithms using distance or gradient descent are sensitive to feature magnitude; trees use thresholds and are scale-invariant",
+        "Feature scaling always improves accuracy for every algorithm",
+        "Trees are slower and scaling would make them too fast"
+      ],
+      "answer": 1,
+      "explanation": "Linear models optimise a weighted sum of features — if salary (50000) and age (30) are on different scales, gradient descent takes tiny steps on salary and huge steps on age, making training slow and unstable. Decision trees split on thresholds like 'study_hours > 3.5', which is the same whether hours are measured in seconds or minutes."
+    },
+    {
+      "q": "What does <code>cross_val_score(pipeline, X, y, cv=5)</code> do?",
+      "options": [
+        "Validates that the pipeline code runs without runtime errors",
+        "Splits data into 5 folds, trains and evaluates the pipeline 5 times on different splits, returning 5 scores",
+        "Scores all 5 possible cross-products of feature combinations",
+        "Runs the model 5 times on the same data with different random seeds"
+      ],
+      "answer": 1,
+      "explanation": "5-fold CV divides the data into 5 equal parts. In each iteration, 4 parts are used for training and 1 for testing — rotating which fold is the test set. You get 5 independent performance estimates whose mean and standard deviation tell you how reliably the model generalises."
+    }
+  ]
+  </script>
+
+  <div class="chapter-nav">
+    <a href="ch11.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 11: Data Visualization</span>
+    </a>
+    <a href="ch13.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 13: Capstone Project</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

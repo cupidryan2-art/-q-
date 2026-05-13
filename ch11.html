@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 11 — Data Visualization | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="11">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 11</div>
+    <h1>Data Visualization <span style="font-weight:300;color:var(--text-muted)">数据可视化</span></h1>
+    <p class="lead">
+      A chart communicates in seconds what a table takes minutes to parse. This chapter covers matplotlib's building blocks, then seaborn's statistical shorthand — and closes with a practical guide to choosing the right chart type for your data.
+    </p>
+  </div>
+
+  <!-- ── Install ── -->
+  <div class="code-block">
+    <div class="code-label">Terminal — install</div>
+    <pre><code class="language-bash">pip install matplotlib seaborn</code></pre>
+  </div>
+
+  <!-- ── matplotlib basics ── -->
+  <h2>Matplotlib Basics</h2>
+
+  <p>
+    matplotlib is Python's foundational plotting library. Its <code>pyplot</code> interface mimics MATLAB's state-machine API — you build a chart by calling functions that modify a global "current figure." This is fine for quick plots; for production-quality figures you'll want the object-oriented API (covered next).
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — the four core chart types</div>
+    <pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x)
+
+# Line chart (折线图)
+plt.plot(x, y)
+plt.title("Sine Wave")
+plt.xlabel("x")
+plt.ylabel("sin(x)")
+plt.show()   # or plt.savefig("sine.png")
+
+# Scatter plot (散点图)
+rng = np.random.default_rng(42)
+x2 = rng.normal(0, 1, 200)
+y2 = x2 * 0.8 + rng.normal(0, 0.5, 200)
+plt.scatter(x2, y2, alpha=0.5, color="steelblue", s=20)
+plt.title("Scatter: x vs y")
+plt.show()
+
+# Bar chart (柱状图)
+depts  = ["Engineering", "Sales", "HR", "Product"]
+counts = [42, 28, 15, 23]
+plt.bar(depts, counts, color="#CC785C")
+plt.title("Headcount by Department")
+plt.xticks(rotation=30)
+plt.show()
+
+# Histogram (直方图)
+data = rng.normal(70, 15, 500)
+plt.hist(data, bins=30, edgecolor="white", color="steelblue")
+plt.title("Score Distribution")
+plt.xlabel("Score")
+plt.ylabel("Frequency")
+plt.show()</code></pre>
+  </div>
+
+  <!-- ── OO API ── -->
+  <h2>The Object-Oriented API: Figure and Axes</h2>
+
+  <p>
+    Every matplotlib plot consists of a <code>Figure</code> (图形) — the outer container — and one or more <code>Axes</code> (坐标系) objects — the individual plot areas. The OO API gives you explicit control over each element and is essential for subplots and publication-quality output.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — Figure and Axes</div>
+    <pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+# Create Figure and Axes explicitly
+fig, ax = plt.subplots(figsize=(8, 5))   # figsize in inches
+
+x = np.linspace(0, 10, 100)
+ax.plot(x, np.sin(x), label="sin(x)",  color="#CC785C",  linewidth=2)
+ax.plot(x, np.cos(x), label="cos(x)",  color="steelblue", linewidth=2, linestyle="--")
+
+# Every label, title, tick is set on the Axes object
+ax.set_title("Sine and Cosine",   fontsize=14, fontweight="bold")
+ax.set_xlabel("x",               fontsize=11)
+ax.set_ylabel("y",               fontsize=11)
+ax.legend(fontsize=10)
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 10)
+ax.set_ylim(-1.5, 1.5)
+
+fig.tight_layout()   # prevent label clipping
+plt.show()</code></pre>
+  </div>
+
+  <h3>Multiple subplots (子图)</h3>
+  <div class="code-block">
+    <div class="code-label">Python — subplots grid</div>
+    <pre><code class="language-python">fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+# axes is a 2×2 NumPy array of Axes objects
+
+rng = np.random.default_rng(0)
+data = rng.normal(50, 15, 300)
+
+axes[0, 0].hist(data, bins=20, color="#CC785C", edgecolor="white")
+axes[0, 0].set_title("Histogram")
+
+axes[0, 1].boxplot(data, vert=True)
+axes[0, 1].set_title("Boxplot")
+
+axes[1, 0].scatter(range(len(data)), data, alpha=0.4, s=10)
+axes[1, 0].set_title("Scatter (index vs value)")
+
+axes[1, 1].plot(sorted(data))
+axes[1, 1].set_title("Sorted values")
+
+fig.suptitle("Distribution Explorer", fontsize=15, fontweight="bold")
+fig.tight_layout()
+plt.savefig("distribution_report.png", dpi=150, bbox_inches="tight")</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">Mental Model</div>
+    Think of <code>Figure</code> as a canvas (<code>sf::RenderWindow</code> if you know SFML) and each <code>Axes</code> as a viewport into that canvas. You can have multiple viewports with independent coordinate systems. <code>plt.subplots(2, 2)</code> creates a 2×2 grid of viewports for you.
+  </div>
+
+  <!-- ── Customisation ── -->
+  <h2>Styling and Customisation</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — colours, markers, annotations</div>
+    <pre><code class="language-python">fig, ax = plt.subplots(figsize=(8, 5))
+
+# Colours: named, hex, RGB tuple
+ax.plot([1,2,3], color="tomato")
+ax.plot([1,2,3], color="#2E86AB")
+ax.plot([1,2,3], color=(0.2, 0.5, 0.8))
+
+# Line styles and markers
+ax.plot(x, y, linestyle="-",   marker="o", markersize=4)  # solid + circles
+ax.plot(x, y, linestyle="--",  marker="s", markersize=6)  # dashed + squares
+ax.plot(x, y, linestyle=":",   marker="^")                # dotted + triangles
+ax.plot(x, y, "r--o")    # shorthand: red dashed with circles
+
+# Fill between two lines
+ax.fill_between(x, y1, y2, alpha=0.2, color="steelblue")
+
+# Annotations
+ax.annotate("Peak", xy=(1.57, 1.0), xytext=(2.5, 0.8),
+            arrowprops=dict(arrowstyle="->", color="gray"),
+            fontsize=10)
+
+# Global style sheets
+plt.style.use("seaborn-v0_8-whitegrid")   # clean academic style
+# Other options: "ggplot", "bmh", "dark_background", "seaborn-v0_8-poster"</code></pre>
+  </div>
+
+  <!-- ── Seaborn ── -->
+  <h2>Seaborn — Statistical Visualisation (统计可视化)</h2>
+
+  <p>
+    seaborn is built on matplotlib and provides higher-level functions for statistical plots. It understands pandas DataFrames natively — you pass column names as strings and it handles the rest. Seaborn also has better default aesthetics.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — seaborn essentials</div>
+    <pre><code class="language-python">import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# seaborn works directly with DataFrames — specify column names as strings
+df = pd.read_csv("titanic.csv")   # classic dataset
+
+# Distribution plot
+sns.histplot(df, x="age", kde=True, hue="survived")  # kde = density curve overlay
+
+# Box plot (箱线图) — distribution by group
+sns.boxplot(df, x="class", y="fare", hue="survived", palette="muted")
+
+# Violin plot — boxplot + distribution shape
+sns.violinplot(df, x="class", y="age")
+
+# Count plot — categorical bar chart
+sns.countplot(df, x="class", hue="survived")
+
+# Scatter with regression line
+sns.regplot(df, x="age", y="fare", scatter_kws={"alpha":0.3})
+
+# Line plot with confidence interval (bootstrapped)
+sales = pd.read_csv("monthly_sales.csv")
+sns.lineplot(sales, x="month", y="revenue", hue="region")</code></pre>
+  </div>
+
+  <h3>Heatmap for correlation matrices</h3>
+  <div class="code-block">
+    <div class="code-label">Python — correlation heatmap</div>
+    <pre><code class="language-python">import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("employees.csv")
+
+# Compute correlation matrix (only numeric columns)
+corr = df.select_dtypes(include="number").corr()
+
+fig, ax = plt.subplots(figsize=(8, 6))
+sns.heatmap(
+    corr,
+    annot=True,        # show values in cells
+    fmt=".2f",         # 2 decimal places
+    cmap="coolwarm",   # diverging colormap: blue=negative, red=positive
+    vmin=-1, vmax=1,   # fix scale to [-1, 1]
+    linewidths=0.5,
+    ax=ax,
+)
+ax.set_title("Feature Correlation Matrix")
+fig.tight_layout()
+plt.savefig("correlation.png", dpi=150, bbox_inches="tight")</code></pre>
+  </div>
+
+  <h3>Pair plot — all pairwise relationships at once</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">import seaborn as sns
+
+df = pd.read_csv("iris.csv")   # famous 4-feature flower dataset
+
+# Creates an n×n grid of scatter plots + diagonal histograms
+# hue colours each point by class — instantly shows separability
+g = sns.pairplot(df, hue="species", diag_kind="kde", plot_kws={"alpha": 0.5})
+g.fig.suptitle("Iris: All Pairwise Feature Relationships", y=1.02)
+plt.savefig("pairplot.png", dpi=120, bbox_inches="tight")</code></pre>
+  </div>
+
+  <!-- ── Chart guide ── -->
+  <h2>Choosing the Right Chart Type (图表类型选择)</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Question you're asking</th><th>Best chart</th><th>Function</th></tr></thead>
+      <tbody>
+        <tr><td>How is this variable distributed?</td><td>Histogram / KDE</td><td><code>sns.histplot</code>, <code>sns.kdeplot</code></td></tr>
+        <tr><td>Distribution across categories?</td><td>Box / Violin plot</td><td><code>sns.boxplot</code>, <code>sns.violinplot</code></td></tr>
+        <tr><td>Relationship between two continuous variables?</td><td>Scatter plot</td><td><code>plt.scatter</code>, <code>sns.scatterplot</code></td></tr>
+        <tr><td>Linear trend between two variables?</td><td>Regression plot</td><td><code>sns.regplot</code></td></tr>
+        <tr><td>How do categories compare in size?</td><td>Bar chart</td><td><code>plt.bar</code>, <code>sns.barplot</code></td></tr>
+        <tr><td>Change over time?</td><td>Line chart</td><td><code>plt.plot</code>, <code>sns.lineplot</code></td></tr>
+        <tr><td>Correlation between many variables?</td><td>Heatmap</td><td><code>sns.heatmap</code></td></tr>
+        <tr><td>All pairwise relationships?</td><td>Pair plot</td><td><code>sns.pairplot</code></td></tr>
+        <tr><td>Part-to-whole composition?</td><td>Stacked bar / Pie</td><td><code>plt.pie</code> (use sparingly)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Saving ── -->
+  <h2>Saving Figures (保存图表)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — plt.savefig</div>
+    <pre><code class="language-python">fig, ax = plt.subplots()
+ax.plot([1, 2, 3], [4, 5, 6])
+
+# Save before plt.show() — show() clears the figure
+fig.savefig("chart.png",                    # PNG (raster)
+            dpi=300,                         # 300 dpi = print quality
+            bbox_inches="tight",             # don't clip labels
+            facecolor="white",               # white background
+            transparent=False)
+
+fig.savefig("chart.pdf", bbox_inches="tight")   # PDF (vector — scales losslessly)
+fig.savefig("chart.svg", bbox_inches="tight")   # SVG (vector — editable in Illustrator)
+
+# In Jupyter notebooks — just plt.show() or leave the figure as last cell output
+# For inline display: %matplotlib inline  (put in first cell)</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">Jupyter Tip</div>
+    In a Jupyter notebook, add <code>%matplotlib inline</code> in your first cell to display plots inline. For interactive zoom/pan, use <code>%matplotlib widget</code> (requires <code>ipympl</code>). For reports and presentations, save as PDF or SVG — they scale losslessly and look sharp at any size.
+  </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">Mark as complete</button>
+    <span class="done-hint">Saves your progress locally.</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "In matplotlib's object-oriented API, what is the relationship between a Figure and Axes?",
+      "options": [
+        "Figure and Axes are the same object — the terms are interchangeable",
+        "A Figure is the outer canvas that contains one or more Axes objects (individual plot areas)",
+        "An Axes contains one or more Figures as subplots",
+        "Figure controls colours and fonts; Axes controls data"
+      ],
+      "answer": 1,
+      "explanation": "A <code>Figure</code> is the top-level window or page — the whole canvas. An <code>Axes</code> is one plot within that canvas, with its own coordinate system, axis labels, and title. <code>plt.subplots(2, 2)</code> creates one Figure with four Axes objects arranged in a 2×2 grid."
+    },
+    {
+      "q": "Which seaborn function is best suited for visualising the correlation between all pairs of numerical columns simultaneously?",
+      "options": [
+        "sns.heatmap()",
+        "sns.pairplot()",
+        "sns.barplot()",
+        "sns.lineplot()"
+      ],
+      "answer": 1,
+      "explanation": "<code>sns.pairplot()</code> creates an n×n grid where each off-diagonal cell is a scatter plot of two features, and each diagonal cell shows that feature's distribution. It's the fastest way to spot linear relationships and class separability across all feature pairs at once."
+    },
+    {
+      "q": "What does <code>plt.savefig('chart.png', dpi=300, bbox_inches='tight')</code> do?",
+      "options": [
+        "Saves 300 copies of the chart to a folder",
+        "Saves the figure as a high-resolution (300 DPI) PNG, cropped tightly so axis labels aren't clipped",
+        "Saves only the first 300 data points",
+        "Sets the chart display size to 300×300 pixels on screen"
+      ],
+      "answer": 1,
+      "explanation": "<code>dpi=300</code> sets the resolution to 300 dots-per-inch — standard for print-quality output (screen is typically 72–96 DPI). <code>bbox_inches='tight'</code> automatically adjusts the bounding box to include all labels and titles, preventing them from being cut off at the edges."
+    }
+  ]
+  </script>
+
+  <div class="chapter-nav">
+    <a href="ch10.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 10: Transform &amp; Aggregate</span>
+    </a>
+    <a href="ch12.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 12: Machine Learning</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

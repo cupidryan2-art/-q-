@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 8 — Pandas: Working with Data | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="8">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 8</div>
+    <h1>Pandas: Working with Real Data <span style="font-weight:300;color:var(--text-muted)">数据处理</span></h1>
+    <p class="lead">
+      pandas is the central table in every Python data science workflow. Its two core abstractions — <code>Series</code> and <code>DataFrame</code> — let you manipulate labelled, heterogeneous tabular data with an expressive, SQL-like API. This chapter covers everything you need to load, inspect, select, filter, and modify data.
+    </p>
+  </div>
+
+  <!-- ── Series and DataFrame ── -->
+  <h2>DataFrame and Series — The Core Abstractions</h2>
+
+  <p>
+    A <code>Series</code> (序列) is a one-dimensional labelled array — essentially a NumPy array with an index. A <code>DataFrame</code> (数据框) is a two-dimensional table: a collection of Series that share the same index. Think of it as a spreadsheet you program.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — Series</div>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+
+# Creating a Series
+s = pd.Series([88, 75, 92, 60], name="score")
+print(s)
+# 0    88
+# 1    75
+# 2    92
+# 3    60
+# Name: score, dtype: int64
+
+# Custom index
+s = pd.Series([88, 75, 92, 60],
+              index=["Alice", "Bob", "Charlie", "Dave"],
+              name="score")
+s["Alice"]   # 88
+s[s > 80]    # Alice: 88, Charlie: 92  — boolean indexing works on Series too</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — creating a DataFrame</div>
+    <pre><code class="language-python"># From a dict of lists — most common approach
+df = pd.DataFrame({
+    "name":       ["Alice", "Bob", "Charlie", "Dave"],
+    "age":        [30, 25, 35, 28],
+    "score":      [88, 75, 92, 60],
+    "department": ["Eng", "Sales", "Eng", "HR"],
+})
+
+# From a list of dicts (as discussed in Chapter 3)
+records = [{"name": "Alice", "score": 88}, {"name": "Bob", "score": 75}]
+df = pd.DataFrame(records)
+
+# From a NumPy array
+arr = np.random.randint(0, 100, (4, 3))
+df = pd.DataFrame(arr, columns=["A", "B", "C"])</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Analogy</div>
+    A DataFrame is conceptually similar to a <code>std::vector&lt;struct Row&gt;</code> combined with column-wise random access and a rich query API. Unlike a C++ struct array where every row must have the same schema at compile time, a DataFrame can have mixed types per column and you can add/remove columns at runtime.
+  </div>
+
+  <!-- ── Loading data ── -->
+  <h2>Loading Data (加载数据)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — read_csv, read_json</div>
+    <pre><code class="language-python">import pandas as pd
+
+# CSV — the most common format in data science
+df = pd.read_csv("data.csv")
+
+# Common read_csv options
+df = pd.read_csv(
+    "data.csv",
+    sep=";",                  # delimiter (default is ",")
+    header=0,                 # row number of header (default 0)
+    index_col="id",           # use this column as the row index
+    usecols=["name","score"], # only load these columns
+    dtype={"score": float},   # specify dtypes to avoid inference
+    na_values=["N/A", "-"],   # treat these strings as NaN
+    encoding="utf-8",
+    nrows=1000,               # only read first 1000 rows (great for large files)
+)
+
+# JSON
+df = pd.read_json("data.json")
+df = pd.read_json("https://api.example.com/data.json")  # URL works too
+
+# Excel
+df = pd.read_excel("report.xlsx", sheet_name="Q1 Sales")
+
+# From a dict / list (in-memory, useful for testing)
+df = pd.DataFrame({"x": [1,2,3], "y": [4,5,6]})</code></pre>
+  </div>
+
+  <!-- ── Exploring ── -->
+  <h2>Exploring Your Data (探索数据)</h2>
+
+  <p>
+    The first thing you do with any new dataset is explore it. These five operations answer "what do I have?" in about 30 seconds.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — exploration workflow</div>
+    <pre><code class="language-python">df = pd.read_csv("students.csv")
+
+# Shape (形状) — always start here
+df.shape           # (200, 6)  — 200 rows, 6 columns
+
+# First and last rows
+df.head()          # first 5 rows (default)
+df.head(10)        # first 10 rows
+df.tail(3)         # last 3 rows
+
+# Column names and dtypes
+df.columns         # Index(['name','age','score','dept', ...])
+df.dtypes          # name: object, age: int64, score: float64, ...
+df.info()          # concise summary: dtypes, null counts, memory usage
+
+# Descriptive statistics for numerical columns
+df.describe()
+# count, mean, std, min, 25%, 50%, 75%, max for each numeric col
+
+# Value counts for categorical columns
+df["dept"].value_counts()    # Eng: 80, Sales: 60, HR: 60
+df["dept"].unique()          # array(['Eng', 'Sales', 'HR'])
+df["dept"].nunique()         # 3
+
+# Missing value summary (crucial before any analysis!)
+df.isnull().sum()            # count NaN per column
+df.isnull().sum() / len(df)  # proportion missing per column</code></pre>
+  </div>
+
+  <!-- ── Selecting ── -->
+  <h2>Selecting Columns</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">df = pd.read_csv("students.csv")
+
+# Single column → Series
+df["score"]          # returns a Series
+df.score             # attribute access — only works for valid Python identifiers!
+
+# Multiple columns → DataFrame
+df[["name", "score"]]        # double brackets — list of column names
+
+# Add a new column
+df["passed"] = df["score"] >= 60
+
+# Rename columns
+df.rename(columns={"score": "final_score", "dept": "department"}, inplace=True)
+
+# Drop a column
+df = df.drop(columns=["temp_col"])    # returns new DataFrame
+# or: df.drop(columns=["temp_col"], inplace=True)  # modifies in-place</code></pre>
+  </div>
+
+  <!-- ── loc and iloc ── -->
+  <h2>Selecting Rows: <code>.loc[]</code> and <code>.iloc[]</code></h2>
+
+  <p>
+    This is where beginners consistently get confused. pandas has two indexers:
+    <code>.loc</code> (label-based) and <code>.iloc</code> (integer position-based).
+    Knowing which to use and when is one of the most important pandas fundamentals.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — loc (label-based, labels inclusive)</div>
+    <pre><code class="language-python">df = pd.DataFrame({
+    "name":  ["Alice", "Bob", "Charlie", "Dave"],
+    "score": [88, 75, 92, 60],
+    "dept":  ["Eng", "Sales", "Eng", "HR"],
+}, index=["a", "b", "c", "d"])   # string row labels
+
+# loc uses the INDEX LABEL
+df.loc["a"]            # row with label 'a' → Alice's data
+df.loc["a", "score"]   # 88  — specific cell
+df.loc["a":"c"]        # rows 'a', 'b', 'c'  — NOTE: end is INCLUSIVE with loc!
+df.loc[:, "score"]     # all rows, 'score' column
+df.loc[["a", "c"], ["name", "score"]]  # specific rows and columns</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — iloc (position-based, exclusive end)</div>
+    <pre><code class="language-python"># iloc uses INTEGER POSITIONS — ignores the index labels
+df.iloc[0]             # first row (regardless of index label)
+df.iloc[0, 1]          # row 0, column 1 → 88
+df.iloc[0:3]           # rows 0,1,2  — end is EXCLUSIVE like Python slices!
+df.iloc[:, 1]          # all rows, column 1
+df.iloc[[0, 2], [0, 1]] # rows 0 and 2, columns 0 and 1</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">The Key Difference</div>
+    <strong>loc</strong> = labels. <strong>iloc</strong> = positions (integer). When your DataFrame has a default integer index (0, 1, 2, …), loc and iloc behave the same for single rows. They differ when your index has custom labels or when slicing: <code>loc["a":"c"]</code> includes "c", while <code>iloc[0:3]</code> excludes position 3. In practice, use <code>.iloc</code> for positional slicing and <code>.loc</code> for label or conditional selection.
+  </div>
+
+  <!-- ── Boolean indexing ── -->
+  <h2>Filtering Rows with Boolean Indexing (布尔索引)</h2>
+
+  <p>
+    This is the pandas feature you'll use most. The pattern: create a boolean Series, use it to filter rows. It builds directly on NumPy's boolean indexing from Chapter 7.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — filtering</div>
+    <pre><code class="language-python">df = pd.read_csv("employees.csv")
+
+# Simple filter
+df[df["age"] > 30]
+df[df["dept"] == "Engineering"]
+
+# Multiple conditions — ALWAYS use & (and) | (or), NOT Python's 'and'/'or'
+# AND: parentheses around each condition are required!
+df[(df["age"] > 25) & (df["salary"] > 50000)]
+
+# OR
+df[(df["dept"] == "Eng") | (df["dept"] == "Sales")]
+
+# NOT
+df[~(df["dept"] == "HR")]           # everyone not in HR
+
+# String filtering — .str accessor
+df[df["name"].str.startswith("A")]  # names starting with A
+df[df["email"].str.contains("@company.com")]
+
+# .isin() — check membership in a list
+df[df["dept"].isin(["Eng", "Product", "Design"])]
+
+# .between() — range filter (inclusive on both ends)
+df[df["score"].between(60, 90)]
+
+# .query() — SQL-like string syntax (readable for simple conditions)
+df.query("age > 25 and salary > 50000")</code></pre>
+  </div>
+
+  <!-- ── Sorting ── -->
+  <h2>Sorting (排序)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python"># Sort by a single column
+df.sort_values("score")                    # ascending (default)
+df.sort_values("score", ascending=False)   # descending
+
+# Sort by multiple columns (hierarchical sort)
+df.sort_values(["dept", "score"], ascending=[True, False])
+# First sort by dept A→Z, then within each dept sort score high→low
+
+# Sort by index
+df.sort_index()           # sort rows by their index
+df.sort_index(axis=1)     # sort columns alphabetically
+
+# Note: sort_values returns a new DataFrame by default
+df = df.sort_values("score", ascending=False).reset_index(drop=True)
+# reset_index(drop=True) gives the sorted result clean 0,1,2,... indices</code></pre>
+  </div>
+
+  <!-- ── Adding/modifying ── -->
+  <h2>Adding and Modifying Columns (列操作)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python"># Add a column — simple assignment
+df["passed"] = df["score"] >= 60
+df["score_pct"] = df["score"] / 100.0
+df["full_name"] = df["first_name"] + " " + df["last_name"]
+
+# Conditional column — np.where or pd.cut
+import numpy as np
+df["grade"] = np.where(df["score"] >= 90, "A",
+              np.where(df["score"] >= 80, "B",
+              np.where(df["score"] >= 70, "C", "F")))
+
+# Binning — pd.cut for equal-width, pd.qcut for equal-frequency
+df["score_bin"] = pd.cut(df["score"],
+                          bins=[0, 60, 75, 90, 100],
+                          labels=["F", "C", "B", "A"])
+
+# Modify a column in-place
+df["score"] = df["score"].round(1)         # round to 1 decimal
+df["name"]  = df["name"].str.strip().str.title()  # clean strings
+
+# Remove columns
+df = df.drop(columns=["temp", "raw_value"])  # drop by name</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">Data Science Habit</div>
+    In exploratory analysis, always keep a copy of the raw DataFrame: <code>raw = df.copy()</code> before you start cleaning or modifying. pandas operations that return new DataFrames leave <code>df</code> unchanged (unless you use <code>inplace=True</code>), but assignment like <code>df["col"] = ...</code> mutates <code>df</code> directly.
+  </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">Mark as complete</button>
+    <span class="done-hint">Saves your progress locally.</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "What is the difference between <code>df.loc</code> and <code>df.iloc</code>?",
+      "options": [
+        "loc is for columns, iloc is for rows",
+        "loc uses label-based indexing; iloc uses integer position-based indexing",
+        "loc is faster than iloc for large DataFrames",
+        "They are identical when the index is the default integer range"
+      ],
+      "answer": 1,
+      "explanation": "<code>.loc['a':'c']</code> selects rows with index <em>labels</em> 'a' through 'c' (inclusive). <code>.iloc[0:3]</code> selects rows at integer <em>positions</em> 0, 1, 2 (exclusive end). They diverge when your index has custom labels or non-zero starting integers."
+    },
+    {
+      "q": "How do you correctly select rows where the 'age' column is greater than 25 AND salary is above 50000?",
+      "options": [
+        "df[df['age'] > 25 and df['salary'] > 50000]",
+        "df[(df['age'] > 25) & (df['salary'] > 50000)]",
+        "df.select(age > 25, salary > 50000)",
+        "df.filter(age='>25', salary='>50000')"
+      ],
+      "answer": 1,
+      "explanation": "Python's <code>and</code> keyword is not defined for Series objects. You must use the bitwise <code>&amp;</code> operator, with <strong>each condition in parentheses</strong> — operator precedence rules require this. <code>df['age'] > 25 and df['salary'] > 50000</code> will raise a <code>ValueError</code>."
+    },
+    {
+      "q": "What does <code>df.describe()</code> return?",
+      "options": [
+        "Column names and their data types",
+        "Summary statistics for numerical columns: count, mean, std, min, percentiles, max",
+        "A written description of the DataFrame's schema",
+        "The first and last five rows of the DataFrame"
+      ],
+      "answer": 1,
+      "explanation": "<code>df.describe()</code> computes descriptive statistics for every numeric column by default: count of non-null values, mean, standard deviation, minimum, 25th/50th/75th percentiles, and maximum. Pass <code>include='all'</code> to also include object/categorical columns."
+    }
+  ]
+  </script>
+
+  <div class="chapter-nav">
+    <a href="ch7.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 7: NumPy</span>
+    </a>
+    <a href="ch9.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 9: Data Cleaning</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 5 — Modules & Ecosystem | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="5">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 5</div>
+    <h1>Modules &amp; Ecosystem <span style="font-weight:300;color:var(--text-muted)">模块与生态系统</span></h1>
+    <p class="lead">
+      Python's real superpower isn't the language — it's the ecosystem. The standard library covers nearly every everyday task,
+      and PyPI (the Python Package Index) hosts over 500,000 third-party packages.
+      This chapter covers how to navigate all of it.
+    </p>
+  </div>
+
+  <!-- ── import ── -->
+  <h2>The <code>import</code> System (导入系统)</h2>
+
+  <p>
+    Python organises code into <em>modules</em> (模块) — individual <code>.py</code> files — and <em>packages</em> (包) — directories containing an <code>__init__.py</code> file. You bring them into your namespace with <code>import</code>.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — import forms</div>
+    <pre><code class="language-python"># 1. Import the whole module — access via module.name
+import math
+math.sqrt(16)     # 4.0
+math.pi           # 3.141592653589793
+
+# 2. Import specific names — brings them into local namespace
+from math import sqrt, pi
+sqrt(16)          # 4.0  (no math. prefix needed)
+pi                # 3.141592653589793
+
+# 3. Import with alias (别名) — essential for long names
+import numpy as np          # industry-standard alias
+import pandas as pd
+import matplotlib.pyplot as plt
+
+np.array([1, 2, 3])
+
+# 4. Import everything — avoid in production code
+from math import *    # pollutes namespace — hard to trace where names come from
+
+# 5. Conditional import — for optional dependencies
+try:
+    import ujson as json    # faster JSON library if available
+except ImportError:
+    import json             # fall back to standard library</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    <p><code>import math</code> ≈ <code>#include &lt;cmath&gt;</code>, but <code>import</code> happens at runtime — the module's code actually executes when you import it for the first time. Subsequent imports of the same module are cached in <code>sys.modules</code> and return instantly, similar to include guards.</p>
+    <p><code>from math import sqrt</code> is roughly equivalent to <code>using std::sqrt;</code> after including the header.</p>
+    <p><code>import numpy as np</code> is like <code>namespace np = numpy;</code> — you're just creating a short alias for the module object.</p>
+  </div>
+
+  <h3>How Python finds modules</h3>
+  <div class="code-block">
+    <div class="code-label">Python — the module search path</div>
+    <pre><code class="language-python">import sys
+
+# Python searches these directories in order:
+for path in sys.path:
+    print(path)
+
+# 1. The directory of the script being run (or '' for REPL/current dir)
+# 2. PYTHONPATH environment variable entries
+# 3. Standard library directories
+# 4. Site-packages (where pip installs third-party packages)</code></pre>
+  </div>
+
+  <!-- ── Standard library ── -->
+  <h2>Standard Library Highlights (标准库)</h2>
+
+  <p>
+    Python's standard library is large enough that experienced developers spend years discovering new corners of it. Here are the modules you'll reach for most often in data and scripting work.
+  </p>
+
+  <h3><code>math</code> — Mathematical functions</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">import math
+
+math.sqrt(2)         # 1.4142135623730951
+math.floor(3.7)      # 3
+math.ceil(3.2)       # 4
+math.log(math.e)     # 1.0   — natural log
+math.log10(1000)     # 3.0
+math.log2(8)         # 3.0
+math.sin(math.pi/2)  # 1.0
+math.factorial(10)   # 3628800
+math.gcd(48, 18)     # 6
+math.isfinite(float('inf'))  # False
+math.isnan(float('nan'))     # True</code></pre>
+  </div>
+
+  <h3><code>random</code> — Pseudorandom numbers</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">import random
+
+random.random()              # float in [0.0, 1.0)
+random.randint(1, 6)         # int in [1, 6] inclusive — roll a die
+random.uniform(0.5, 1.5)     # float in [0.5, 1.5]
+
+items = ["apple", "banana", "cherry"]
+random.choice(items)         # random element
+random.choices(items, k=3)   # 3 random elements WITH replacement
+random.sample(items, k=2)    # 2 random elements WITHOUT replacement
+random.shuffle(items)        # shuffle in-place
+
+# Reproducible randomness — essential for data science experiments
+random.seed(42)
+print(random.random())   # always the same value for seed=42</code></pre>
+  </div>
+
+  <h3><code>datetime</code> — Dates and times</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">from datetime import datetime, date, timedelta
+
+now = datetime.now()
+print(now)                          # 2024-03-15 14:32:07.123456
+
+today = date.today()
+print(today)                        # 2024-03-15
+
+# Parse a date string
+d = datetime.strptime("2024-01-15", "%Y-%m-%d")
+
+# Format as string
+d.strftime("%B %d, %Y")             # 'January 15, 2024'
+
+# Arithmetic
+one_week = timedelta(weeks=1)
+next_week = today + one_week
+
+# Difference between dates
+delta = datetime(2024, 12, 31) - datetime.now()
+print(f"{delta.days} days until New Year")</code></pre>
+  </div>
+
+  <h3><code>os</code> and <code>pathlib</code> — File system</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">import os
+from pathlib import Path   # modern, object-oriented approach (推荐)
+
+# pathlib — the modern way (Python 3.4+)
+p = Path("data/results.csv")
+p.exists()          # True / False
+p.name              # 'results.csv'
+p.stem              # 'results'
+p.suffix            # '.csv'
+p.parent            # Path('data')
+
+# Build paths safely (works on Windows and Unix)
+data_dir = Path("data")
+output   = data_dir / "output" / "report.csv"   # / operator!
+
+# List directory
+for f in Path(".").iterdir():
+    if f.suffix == ".py":
+        print(f)
+
+# Create / delete
+Path("logs").mkdir(parents=True, exist_ok=True)
+
+# os module — legacy but still common
+os.getcwd()                  # current working directory
+os.listdir(".")              # list files
+os.path.join("data", "f.csv") # safe path join (use pathlib instead)</code></pre>
+  </div>
+
+  <h3><code>sys</code> — Interpreter internals</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">import sys
+
+sys.version          # '3.12.1 (main, ...)'
+sys.platform         # 'darwin' / 'linux' / 'win32'
+sys.argv             # command-line arguments: ['script.py', 'arg1', 'arg2']
+sys.exit(0)          # exit the program with a return code
+sys.stdin            # standard input stream
+sys.stdout           # standard output stream
+
+# Check Python version in code
+if sys.version_info < (3, 10):
+    raise RuntimeError("Python 3.10+ required")</code></pre>
+  </div>
+
+  <!-- ── pip and venv ── -->
+  <h2>pip and Virtual Environments (包管理)</h2>
+
+  <p>
+    <code>pip</code> is Python's package installer (包安装工具). It downloads packages from PyPI and installs them. Always use it inside a virtual environment so different projects stay isolated.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Terminal — common pip commands</div>
+    <pre><code class="language-bash"># Install a package
+pip install numpy
+
+# Install a specific version
+pip install numpy==1.26.4
+
+# Install multiple packages
+pip install numpy pandas matplotlib
+
+# Install from a requirements file
+pip install -r requirements.txt
+
+# Upgrade a package
+pip install --upgrade pandas
+
+# Uninstall
+pip uninstall numpy
+
+# List installed packages
+pip list
+
+# Show info about a package
+pip show pandas
+
+# Freeze current environment to a requirements file
+pip freeze > requirements.txt</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Terminal — virtual environment workflow</div>
+    <pre><code class="language-bash"># Create
+python3 -m venv .venv
+
+# Activate
+source .venv/bin/activate    # macOS / Linux
+.venv\Scripts\activate       # Windows
+
+# Your prompt changes: (.venv) $
+
+# Install packages — they go into .venv/lib/, not system Python
+pip install pandas matplotlib scikit-learn
+
+# Save dependencies
+pip freeze > requirements.txt
+
+# Deactivate when done
+deactivate
+
+# Recreate the environment on another machine:
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">Modern Alternative</div>
+    <strong>uv</strong> (from Astral) is a very fast modern replacement for pip + venv, written in Rust. <code>uv init</code>, <code>uv add pandas</code>, <code>uv run script.py</code>. Worth knowing about if you're starting a new project in 2024+.
+  </div>
+
+  <!-- ── Data science preview ── -->
+  <h2>The Data Science Stack — A Preview (数据科学生态预览)</h2>
+
+  <p>
+    Four libraries form the backbone of Python data science. You'll spend most of Chapters 7–11 with them. Here's what each one is for:
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Terminal — install the stack</div>
+    <pre><code class="language-bash">pip install numpy pandas matplotlib scikit-learn</code></pre>
+  </div>
+
+  <h3>NumPy (数值计算)</h3>
+  <p>
+    NumPy provides the <code>ndarray</code> — a fixed-type, C-backed multidimensional array. It's the foundation everything else is built on. The key insight: NumPy operations run in compiled C/Fortran code, so looping over a NumPy array in C is orders of magnitude faster than looping in Python.
+  </p>
+  <div class="code-block">
+    <div class="code-label">Python — NumPy taste</div>
+    <pre><code class="language-python">import numpy as np
+
+a = np.array([1, 2, 3, 4, 5])
+a * 2             # array([2, 4, 6, 8, 10]) — vectorised, no loop!
+a ** 2            # array([1, 4, 9, 16, 25])
+a.mean()          # 3.0
+a.std()           # 1.4142...
+
+# 2D array — matrix operations
+m = np.array([[1, 2], [3, 4]])
+m.T               # transpose
+m @ m             # matrix multiply (Python 3.5+ @ operator)</code></pre>
+  </div>
+
+  <h3>pandas (数据分析)</h3>
+  <p>
+    pandas provides the <code>DataFrame</code> — a table with labelled columns and a row index. Think of it as a spreadsheet you program. If Chapter 3's list-of-dicts was your raw data, a pandas DataFrame is what it becomes after it grows up.
+  </p>
+  <div class="code-block">
+    <div class="code-label">Python — pandas taste</div>
+    <pre><code class="language-python">import pandas as pd
+
+df = pd.read_csv("sales.csv")   # load a CSV into a DataFrame
+
+df.head()                    # first 5 rows
+df.info()                    # column types and null counts
+df.describe()                # summary statistics
+
+df["revenue"].mean()         # column mean
+df[df["revenue"] > 1000]     # filter rows
+df.groupby("region").sum()   # SQL-style GROUP BY</code></pre>
+  </div>
+
+  <h3>Matplotlib (数据可视化)</h3>
+  <p>
+    Matplotlib is Python's foundational plotting library. It can feel verbose, but it's precise. Higher-level libraries like seaborn and pandas' own <code>.plot()</code> wrap it.
+  </p>
+  <div class="code-block">
+    <div class="code-label">Python — matplotlib taste</div>
+    <pre><code class="language-python">import matplotlib.pyplot as plt
+
+x = [1, 2, 3, 4, 5]
+y = [1, 4, 9, 16, 25]
+
+plt.plot(x, y, marker='o')
+plt.title("Squares")
+plt.xlabel("x")
+plt.ylabel("x²")
+plt.savefig("squares.png")   # or plt.show() in Jupyter</code></pre>
+  </div>
+
+  <h3>scikit-learn (机器学习)</h3>
+  <p>
+    scikit-learn is the standard ML library for classical algorithms: regression, classification, clustering, dimensionality reduction, model evaluation. It has a beautifully consistent API: every model has <code>.fit(X, y)</code>, <code>.predict(X)</code>, and <code>.score(X, y)</code>.
+  </p>
+  <div class="code-block">
+    <div class="code-label">Python — scikit-learn taste</div>
+    <pre><code class="language-python">from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+model = LinearRegression()
+model.fit(X_train, y_train)       # train
+predictions = model.predict(X_test)  # infer
+score = model.score(X_test, y_test)  # R² score</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">What's Next</div>
+    Before we dive into these libraries, Chapter 6 covers something more fundamental: reading and writing data from files. Real data science starts with loading data, and that means files — CSV, JSON, Excel. That's where we're headed.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="ch4.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 4: Functions &amp; Scope</span>
+    </a>
+    <a href="ch6.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 6: File I/O &amp; Data Formats</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

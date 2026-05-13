@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 4 — Functions & Scope | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="4">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 4</div>
+    <h1>Functions &amp; Scope <span style="font-weight:300;color:var(--text-muted)">函数与作用域</span></h1>
+    <p class="lead">
+      In Python, functions are <em>first-class objects</em> (一等公民) — they can be stored in variables, passed as arguments, and returned from other functions. This single fact unlocks an enormous amount of expressive power, especially in data work.
+    </p>
+  </div>
+
+  <!-- ── Defining functions ── -->
+  <h2>Defining Functions with <code>def</code></h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — basic function</div>
+    <pre><code class="language-python">def greet(name):
+    """Return a greeting string."""   # docstring (文档字符串) — optional but good practice
+    return f"Hello, {name}!"
+
+result = greet("Alice")
+print(result)   # Hello, Alice!</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    <p>Python's <code>def</code> is like a C++ function definition, but with no return-type annotation required (though you can add type hints — more below). There's no function prototype / forward declaration — just define the function before you call it.</p>
+    <p>The docstring (triple-quoted string immediately after <code>def</code>) is Python's version of a doxygen comment. It's accessible at runtime via <code>help(greet)</code> or <code>greet.__doc__</code>.</p>
+  </div>
+
+  <h3>Type hints (类型注解) — optional but recommended</h3>
+  <p>
+    Python 3.5+ supports optional type hints. They don't affect runtime behaviour — Python stays dynamically typed — but they enable IDE autocomplete and static analysis tools like <code>mypy</code>.
+  </p>
+  <div class="code-block">
+    <div class="code-label">Python — type-annotated function</div>
+    <pre><code class="language-python">def add(a: int, b: int) -> int:
+    return a + b
+
+def greet(name: str, loud: bool = False) -> str:
+    msg = f"Hello, {name}!"
+    return msg.upper() if loud else msg</code></pre>
+  </div>
+
+  <!-- ── Parameters ── -->
+  <h2>Parameters and Arguments (参数)</h2>
+
+  <h3>Positional and keyword arguments</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">def describe(name, age, city):
+    print(f"{name}, {age}, from {city}")
+
+# Positional (位置参数) — order matters
+describe("Alice", 30, "Beijing")
+
+# Keyword (关键字参数) — order doesn't matter
+describe(age=30, city="Beijing", name="Alice")
+
+# Mix — positional must come first
+describe("Alice", city="Beijing", age=30)</code></pre>
+  </div>
+
+  <h3>Default arguments (默认参数)</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">def connect(host, port=5432, timeout=30):
+    print(f"Connecting to {host}:{port} (timeout={timeout}s)")
+
+connect("localhost")               # uses defaults
+connect("db.prod.com", port=3306)  # override just port</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Classic Pitfall — Mutable Default Arguments</div>
+    <strong>Never</strong> use a mutable object (list, dict) as a default argument. The default is evaluated once at function definition time, not on each call.
+    <div class="code-block" style="margin-top:0.75rem;">
+      <div class="code-label">Python — the trap and the fix</div>
+      <pre><code class="language-python"># WRONG — the list is shared across all calls
+def add_item(item, lst=[]):
+    lst.append(item)
+    return lst
+
+add_item(1)   # [1]
+add_item(2)   # [1, 2]  ← NOT [2] — same list!
+
+# CORRECT — use None as sentinel, create inside the function
+def add_item(item, lst=None):
+    if lst is None:
+        lst = []
+    lst.append(item)
+    return lst</code></pre>
+    </div>
+  </div>
+
+  <h3>*args — variable positional arguments</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">def total(*args):
+    """Accept any number of positional arguments."""
+    print(type(args))   # &lt;class 'tuple'&gt;
+    return sum(args)
+
+total(1, 2, 3)       # 6
+total(10, 20)         # 30
+total()               # 0
+
+# Unpack a list into positional args with *
+nums = [1, 2, 3, 4]
+print(total(*nums))   # same as total(1, 2, 3, 4)</code></pre>
+  </div>
+
+  <h3>**kwargs — variable keyword arguments</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">def configure(**kwargs):
+    """Accept any number of keyword arguments."""
+    print(type(kwargs))   # &lt;class 'dict'&gt;
+    for key, value in kwargs.items():
+        print(f"  {key} = {value}")
+
+configure(host="localhost", port=5432, debug=True)
+
+# Combining everything — order must be: positional, *args, keyword, **kwargs
+def everything(a, b, *args, sep=" ", **kwargs):
+    print(a, b, args, sep, kwargs)</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    <code>*args</code> is Python's equivalent of C variadic functions (<code>...</code> / <code>va_list</code>) or C++11's variadic templates, but far simpler — you just get a tuple. <code>**kwargs</code> has no direct C++ equivalent; the closest pattern is passing a <code>std::map&lt;std::string, std::any&gt;</code> or using a builder pattern.
+  </div>
+
+  <!-- ── Return values ── -->
+  <h2>Return Values (返回值)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python"># Implicit return — returns None
+def say_hi():
+    print("Hi!")
+
+result = say_hi()   # result is None
+
+# Single return
+def square(x):
+    return x ** 2
+
+# Multiple return values — actually returns a tuple
+def divmod_manual(a, b):
+    return a // b, a % b   # parentheses optional
+
+quotient, remainder = divmod_manual(17, 5)
+# quotient=3, remainder=2
+
+# Early return (guard clause pattern)
+def safe_divide(a, b):
+    if b == 0:
+        return None          # early exit
+    return a / b</code></pre>
+  </div>
+
+  <!-- ── Scope ── -->
+  <h2>Scope: LEGB Rule (作用域)</h2>
+
+  <p>
+    When Python looks up a name, it searches four scopes in order: <strong>L</strong>ocal → <strong>E</strong>nclosing → <strong>G</strong>lobal → <strong>B</strong>uilt-in. This is the LEGB rule (LEGB 规则).
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — scope lookup</div>
+    <pre><code class="language-python">x = "global"        # Global scope (全局作用域)
+
+def outer():
+    x = "enclosing"  # Enclosing scope (闭包作用域)
+
+    def inner():
+        x = "local"  # Local scope (局部作用域)
+        print(x)     # 'local'  — found in Local first
+
+    inner()
+    print(x)         # 'enclosing'
+
+outer()
+print(x)             # 'global'</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — global and nonlocal keywords</div>
+    <pre><code class="language-python">count = 0
+
+def increment():
+    global count        # declare intent to modify the global
+    count += 1
+
+increment()
+increment()
+print(count)   # 2
+
+# nonlocal — reach into enclosing (not global) scope
+def make_counter():
+    n = 0
+    def tick():
+        nonlocal n      # modify n in the enclosing function
+        n += 1
+        return n
+    return tick
+
+counter = make_counter()
+counter()   # 1
+counter()   # 2
+counter()   # 3</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">Best Practice</div>
+    Avoid <code>global</code> in most code. It makes functions hard to test and reason about. Prefer passing values as arguments and returning results. <code>nonlocal</code> is fine inside closures.
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Python's global scope ≈ C++ file-scope variables. Python's local scope ≈ C++ function-scope. The key difference: in C++ you can shadow an outer variable just by declaring a new one with the same name. In Python, if you assign to a name inside a function, Python treats it as local throughout that function — even before the assignment. Referencing it before the assignment gives <code>UnboundLocalError</code>, not the global value.
+  </div>
+
+  <!-- ── Lambda ── -->
+  <h2>Lambda Functions (匿名函数)</h2>
+
+  <p>
+    A <code>lambda</code> is a small anonymous function defined in a single expression. It can take any number of arguments but contains only one expression — its implicit return value.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — lambda syntax</div>
+    <pre><code class="language-python"># lambda arguments: expression
+double  = lambda x: x * 2
+add     = lambda x, y: x + y
+clamp01 = lambda x: max(0.0, min(1.0, x))
+
+double(5)     # 10
+add(3, 4)     # 7
+clamp01(1.5)  # 1.0
+
+# Primary use case: inline key/sort functions
+pairs = [(1, "b"), (3, "a"), (2, "c")]
+pairs.sort(key=lambda p: p[0])         # sort by first element
+pairs.sort(key=lambda p: p[1])         # sort by second element
+
+# With map() and filter() — functional style
+nums = [1, 2, 3, 4, 5]
+doubled  = list(map(lambda x: x * 2, nums))       # [2, 4, 6, 8, 10]
+evens    = list(filter(lambda x: x % 2 == 0, nums)) # [2, 4]
+
+# Modern Pythonic alternative — comprehensions are usually clearer:
+doubled = [x * 2 for x in nums]
+evens   = [x for x in nums if x % 2 == 0]</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Python <code>lambda x: x * 2</code> ≈ C++ <code>[](int x) { return x * 2; }</code>. Python's lambdas are simpler (one expression only) but capture the enclosing scope automatically — no need to specify <code>[&amp;]</code> or <code>[=]</code>. For multi-statement logic, use a named <code>def</code> instead.
+  </div>
+
+  <!-- ── Pure functions ── -->
+  <h2>Pure Functions and Side Effects (纯函数)</h2>
+
+  <p>
+    A <em>pure function</em> (纯函数) always returns the same output for the same input, and causes no observable side effects (no modifying external state, no I/O, no printing). This concept matters in data work because pure functions are:
+  </p>
+  <ul>
+    <li><strong>Predictable</strong> — easy to test, no hidden dependencies</li>
+    <li><strong>Composable</strong> — you can chain them safely</li>
+    <li><strong>Parallelisable</strong> — no shared mutable state</li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-label">Python — pure vs impure</div>
+    <pre><code class="language-python"># IMPURE — modifies external state
+total = 0
+def add_to_total(x):
+    global total
+    total += x      # side effect: mutates global
+
+# PURE — takes input, returns output, touches nothing else
+def running_total(previous, x):
+    return previous + x
+
+# IMPURE — mutates its argument
+def normalize_inplace(lst):
+    max_val = max(lst)
+    for i in range(len(lst)):
+        lst[i] /= max_val    # modifies the original list
+
+# PURE — returns a new list
+def normalize(lst):
+    max_val = max(lst)
+    return [x / max_val for x in lst]
+
+data = [10, 20, 50, 100]
+scaled = normalize(data)   # data is untouched
+print(data)    # [10, 20, 50, 100]
+print(scaled)  # [0.1, 0.2, 0.5, 1.0]</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Data Science Note</div>
+    Pandas and NumPy are built around this pattern. Most DataFrame operations return a <em>new</em> DataFrame rather than mutating the original — <code>df.dropna()</code>, <code>df.sort_values()</code>, <code>df.rename()</code> all return copies by default. Embrace this: it makes your data pipelines reproducible and debuggable.
+  </div>
+
+  <!-- ── Higher-order ── -->
+  <h2>Higher-Order Functions (高阶函数)</h2>
+
+  <p>
+    Since functions are first-class objects, you can pass them as arguments to other functions. This is a pattern you'll encounter constantly in Python data libraries.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — functions as arguments</div>
+    <pre><code class="language-python">def apply_twice(f, x):
+    """Apply function f to x, then apply f to the result."""
+    return f(f(x))
+
+apply_twice(lambda x: x * 2, 3)   # 12  →  3→6→12
+apply_twice(str.upper, "hello")    # 'HELLO' (idempotent)
+
+# Returning a function — factory pattern (工厂模式)
+def make_multiplier(n):
+    def multiply(x):
+        return x * n      # n is captured from enclosing scope
+    return multiply
+
+triple = make_multiplier(3)
+triple(7)     # 21
+
+# This is a closure (闭包) — triple "remembers" that n=3</code></pre>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="ch3.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 3: Data Structures</span>
+    </a>
+    <a href="ch5.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 5: Modules &amp; Ecosystem</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

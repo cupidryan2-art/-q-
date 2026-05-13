@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 6 — File I/O & Data Formats | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="6">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 6</div>
+    <h1>File I/O &amp; Data Formats <span style="font-weight:300;color:var(--text-muted)">文件操作</span></h1>
+    <p class="lead">
+      Every real data science project starts with loading data from somewhere — a text file, a CSV export, a JSON API response, an Excel spreadsheet.
+      Python makes this remarkably straightforward. This chapter takes you from the lowest level (raw file handles) to the idiom you'll actually use every day.
+    </p>
+  </div>
+
+  <!-- ── open() ── -->
+  <h2>Reading and Writing Text Files</h2>
+
+  <h3>The <code>open()</code> function</h3>
+  <p>
+    <code>open(path, mode)</code> returns a file object (文件对象). The <code>mode</code> argument controls whether you read, write, or append, and whether the file is treated as text or binary.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mode</th><th>Meaning</th><th>File must exist?</th></tr></thead>
+      <tbody>
+        <tr><td><code>'r'</code></td><td>Read text (default)</td><td>Yes — FileNotFoundError otherwise</td></tr>
+        <tr><td><code>'w'</code></td><td>Write text — <strong>overwrites</strong> existing content</td><td>No — creates if missing</td></tr>
+        <tr><td><code>'a'</code></td><td>Append text — adds to end</td><td>No — creates if missing</td></tr>
+        <tr><td><code>'x'</code></td><td>Exclusive create — fails if file exists</td><td>No — must be new</td></tr>
+        <tr><td><code>'rb'</code> / <code>'wb'</code></td><td>Read / write binary bytes</td><td>Same as above</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — reading a file (low-level)</div>
+    <pre><code class="language-python">f = open("notes.txt", "r", encoding="utf-8")
+content = f.read()    # entire file as one string
+f.close()             # MUST close — releases the file handle
+
+# Read line by line
+f = open("notes.txt", "r", encoding="utf-8")
+for line in f:           # file objects are iterable
+    print(line.strip())  # strip() removes trailing \n
+f.close()</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Always Specify Encoding</div>
+    Pass <code>encoding="utf-8"</code> explicitly. The default encoding varies by OS (UTF-8 on macOS/Linux, often CP1252 on Windows). Specifying it makes your code portable and avoids silent mojibake (乱码) errors with non-ASCII text.
+  </div>
+
+  <!-- ── with ── -->
+  <h2>The <code>with</code> Statement — Context Managers (上下文管理器)</h2>
+
+  <p>
+    Calling <code>f.close()</code> manually is error-prone — if an exception occurs between <code>open()</code> and <code>close()</code>, the file stays open. Python's <code>with</code> statement guarantees the file is closed when the block exits, regardless of whether it exits normally or via an exception.
+  </p>
+  <p>
+    <strong>Always use <code>with open(...)</code></strong>. You will never see experienced Python developers using bare <code>open()</code> in production code.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — with open() (the correct idiom)</div>
+    <pre><code class="language-python"># Reading
+with open("notes.txt", "r", encoding="utf-8") as f:
+    content = f.read()          # entire file as string
+# f is automatically closed here, even if an exception was raised
+
+# Read all lines into a list
+with open("notes.txt", "r", encoding="utf-8") as f:
+    lines = f.readlines()       # ['line1\n', 'line2\n', ...]
+
+# Iterate line by line (memory-efficient for large files)
+with open("notes.txt", "r", encoding="utf-8") as f:
+    for line in f:
+        process(line.strip())
+
+# Writing — overwrites existing content
+with open("output.txt", "w", encoding="utf-8") as f:
+    f.write("Hello, World!\n")
+    f.write("Second line\n")
+
+# Writing multiple lines at once
+lines = ["apple\n", "banana\n", "cherry\n"]
+with open("fruits.txt", "w", encoding="utf-8") as f:
+    f.writelines(lines)
+
+# Appending — adds to end without erasing
+with open("log.txt", "a", encoding="utf-8") as f:
+    f.write("New log entry\n")</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Python's <code>with</code> block is the equivalent of C++ RAII. The file object implements <code>__enter__</code> and <code>__exit__</code> — the context manager protocol — so <code>__exit__</code> calls <code>close()</code> automatically. This is like a <code>std::ifstream</code> on the stack whose destructor closes the file when it goes out of scope, except it works for any resource, not just files (database connections, locks, network sockets, etc.).
+  </div>
+
+  <h3>Reading structured text</h3>
+  <div class="code-block">
+    <div class="code-label">Python — common text file patterns</div>
+    <pre><code class="language-python"># Count lines
+with open("data.txt", "r", encoding="utf-8") as f:
+    line_count = sum(1 for _ in f)
+
+# Find lines matching a pattern
+with open("server.log", "r", encoding="utf-8") as f:
+    errors = [line for line in f if "ERROR" in line]
+
+# Read a config file (key=value format)
+config = {}
+with open("config.ini", "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if "=" in line and not line.startswith("#"):
+            key, _, value = line.partition("=")
+            config[key.strip()] = value.strip()</code></pre>
+  </div>
+
+  <!-- ── CSV ── -->
+  <h2>CSV Files (逗号分隔值)</h2>
+
+  <p>
+    CSV (Comma-Separated Values) is the most common plain-text data format. Let's see the evolution from doing it manually to using the right tool for the job.
+  </p>
+
+  <h3>Stage 1 — Manual parsing (don't do this in production)</h3>
+  <div class="code-block">
+    <div class="code-label">Python — naive CSV parsing</div>
+    <pre><code class="language-python"># This breaks on: quoted fields, commas inside quotes, newlines in fields...
+with open("data.csv", "r", encoding="utf-8") as f:
+    header = f.readline().strip().split(",")
+    rows = []
+    for line in f:
+        values = line.strip().split(",")
+        rows.append(dict(zip(header, values)))</code></pre>
+  </div>
+
+  <h3>Stage 2 — The <code>csv</code> module (handles edge cases)</h3>
+  <div class="code-block">
+    <div class="code-label">Python — csv module</div>
+    <pre><code class="language-python">import csv
+
+# Reading with DictReader — each row is a dict keyed by header
+with open("students.csv", "r", encoding="utf-8", newline="") as f:
+    reader = csv.DictReader(f)
+    students = list(reader)
+    # [{'name': 'Alice', 'score': '92'}, {'name': 'Bob', 'score': '78'}, ...]
+
+# Note: all values are strings — cast as needed
+scores = [int(s["score"]) for s in students]
+
+# Writing with DictWriter
+fieldnames = ["name", "score", "grade"]
+with open("results.csv", "w", encoding="utf-8", newline="") as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows([
+        {"name": "Alice", "score": 92, "grade": "A"},
+        {"name": "Bob",   "score": 78, "grade": "C"},
+    ])</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Why newline=""?</div>
+    Pass <code>newline=""</code> when opening CSV files with the <code>csv</code> module. Otherwise the module's own newline handling conflicts with Python's universal newline translation, producing blank rows on Windows.
+  </div>
+
+  <h3>Stage 3 — pandas (what you'll actually use)</h3>
+  <div class="code-block">
+    <div class="code-label">Python — pandas read_csv (one line replaces all of the above)</div>
+    <pre><code class="language-python">import pandas as pd
+
+# One line to load, parse headers, infer types, handle encoding
+df = pd.read_csv("students.csv")
+
+print(df.head())        # first 5 rows
+print(df.dtypes)        # column types (automatically inferred!)
+print(df["score"].mean())   # column operations
+
+# Filtering and sorting
+top_students = df[df["score"] >= 90].sort_values("score", ascending=False)
+
+# Save back to CSV
+top_students.to_csv("top_students.csv", index=False)</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">When to Use Which</div>
+    Use the <code>csv</code> module when you're writing a script that needs no dependencies and the data is simple. Use pandas when you're doing any analysis, filtering, or transformation — the ergonomics are incomparably better. Avoid manual <code>split(",")</code> for anything beyond a quick prototype.
+  </div>
+
+  <!-- ── JSON ── -->
+  <h2>JSON Files (JavaScript Object Notation)</h2>
+
+  <p>
+    JSON is the dominant format for API responses and configuration files. Python's <code>json</code> module maps JSON directly to Python objects: objects become <code>dict</code>, arrays become <code>list</code>, strings stay <code>str</code>, numbers become <code>int</code> or <code>float</code>, booleans become <code>bool</code>, and <code>null</code> becomes <code>None</code>.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — reading JSON</div>
+    <pre><code class="language-python">import json
+
+# From a file — json.load() (note: no 's')
+with open("config.json", "r", encoding="utf-8") as f:
+    config = json.load(f)    # returns a dict, list, etc.
+
+print(config["database"]["host"])
+
+# From a string — json.loads() ('s' = string)
+raw = '{"name": "Alice", "scores": [90, 85, 92]}'
+data = json.loads(raw)
+print(data["scores"])        # [90, 85, 92]</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — writing JSON</div>
+    <pre><code class="language-python">import json
+
+results = {
+    "experiment": "run_01",
+    "params": {"lr": 0.001, "epochs": 100},
+    "accuracy": 0.9423,
+    "losses": [1.2, 0.8, 0.5, 0.3],
+}
+
+# To a file — json.dump()
+with open("results.json", "w", encoding="utf-8") as f:
+    json.dump(results, f, indent=2)   # indent=2 for pretty printing
+
+# To a string — json.dumps() ('s' = string)
+s = json.dumps(results, indent=2)
+print(s)
+
+# Handle non-serialisable types
+import datetime
+data = {"timestamp": datetime.datetime.now()}
+# json.dumps(data)  ← raises TypeError: datetime is not JSON serialisable
+
+# Fix: use default= to specify a serialiser
+def json_default(obj):
+    if isinstance(obj, datetime.datetime):
+        return obj.isoformat()
+    raise TypeError(f"Not serialisable: {type(obj)}")
+
+json.dumps(data, default=json_default)</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Python's <code>json</code> module does what nlohmann/json or RapidJSON do in C++, but with zero boilerplate. There's no schema to define, no type to map to — Python's dynamic types map directly to JSON's types. The equivalent of <code>json.loads(s)</code> in C++ would be <code>auto j = nlohmann::json::parse(s);</code>, but accessing nested fields is far more ergonomic in Python: <code>data["key"]["nested"]</code> just works.
+  </div>
+
+  <h3>JSON with pandas</h3>
+  <div class="code-block">
+    <div class="code-label">Python — JSON + pandas</div>
+    <pre><code class="language-python">import pandas as pd
+
+# Load a JSON file of records directly into a DataFrame
+df = pd.read_json("students.json")
+
+# Load from a URL (pandas handles the HTTP request)
+df = pd.read_json("https://api.example.com/data.json")
+
+# Convert DataFrame back to JSON
+df.to_json("output.json", orient="records", indent=2)
+# orient="records" → list of dicts [{col: val, ...}, ...]</code></pre>
+  </div>
+
+  <!-- ── Excel ── -->
+  <h2>Excel Files (.xlsx)</h2>
+
+  <p>
+    Excel files are binary formats — you can't read them with <code>open()</code>. You'll need either <code>openpyxl</code> for low-level cell manipulation or pandas for data analysis.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Terminal — install dependencies</div>
+    <pre><code class="language-bash">pip install openpyxl   # required by pandas for .xlsx support</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — Excel with pandas (most common)</div>
+    <pre><code class="language-python">import pandas as pd
+
+# Read the first sheet
+df = pd.read_excel("report.xlsx")
+
+# Read a specific sheet by name or index
+df = pd.read_excel("report.xlsx", sheet_name="Sales Q1")
+df = pd.read_excel("report.xlsx", sheet_name=0)
+
+# Read multiple sheets — returns a dict of DataFrames
+sheets = pd.read_excel("report.xlsx", sheet_name=None)
+for name, df in sheets.items():
+    print(f"Sheet '{name}': {len(df)} rows")
+
+# Write to Excel
+df.to_excel("output.xlsx", sheet_name="Results", index=False)
+
+# Write multiple sheets
+with pd.ExcelWriter("multi_sheet.xlsx", engine="openpyxl") as writer:
+    df_sales.to_excel(writer, sheet_name="Sales",    index=False)
+    df_costs.to_excel(writer, sheet_name="Costs",    index=False)
+    df_summary.to_excel(writer, sheet_name="Summary", index=False)</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — openpyxl for cell-level control</div>
+    <pre><code class="language-python">from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font, PatternFill
+
+# Create a new workbook
+wb = Workbook()
+ws = wb.active
+ws.title = "Data"
+
+# Write cells
+ws["A1"] = "Name"
+ws["B1"] = "Score"
+ws.append(["Alice", 92])
+ws.append(["Bob",   78])
+
+# Style a header cell
+ws["A1"].font = Font(bold=True, size=12)
+ws["B1"].font = Font(bold=True, size=12)
+
+wb.save("styled_report.xlsx")
+
+# Read an existing file and modify it
+wb = load_workbook("existing.xlsx")
+ws = wb["Sheet1"]
+for row in ws.iter_rows(min_row=2, values_only=True):
+    print(row)   # tuple of cell values</code></pre>
+  </div>
+
+  <!-- ── Putting it together ── -->
+  <h2>Putting It Together — A Mini ETL Pipeline</h2>
+
+  <p>
+    ETL (Extract, Transform, Load) is the backbone of data engineering: read data from a source, clean or reshape it, write it somewhere else. Here's a small example using what we've covered.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — read CSV → transform → write JSON</div>
+    <pre><code class="language-python">import csv
+import json
+from pathlib import Path
+
+def load_students(path: str) -> list[dict]:
+    """Read a CSV and return a list of dicts with typed values."""
+    students = []
+    with open(path, "r", encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            students.append({
+                "name":  row["name"].strip(),
+                "score": int(row["score"]),
+                "grade": row["grade"].strip(),
+            })
+    return students
+
+def add_pass_fail(students: list[dict]) -> list[dict]:
+    """Pure function — returns new list with pass/fail field added."""
+    return [
+        {**s, "passed": s["score"] >= 60}
+        for s in students
+    ]
+
+def save_json(data, path: str) -> None:
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+# Run the pipeline
+students = load_students("students.csv")
+students = add_pass_fail(students)
+save_json(students, "output/students.json")
+
+print(f"Processed {len(students)} students")</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">What's Next — NumPy and pandas</div>
+    You now have the complete Python foundation: types, control flow, functions, modules, and file I/O. The remaining chapters move into the data science stack proper. Chapter 7 starts with NumPy — the array library that makes numerical Python fast enough to be useful — and Chapter 8 dives deep into pandas DataFrames, where most real data work happens.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="ch5.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 5: Modules &amp; Ecosystem</span>
+    </a>
+    <a href="index.html" class="nav-btn next">
+      <span class="nav-direction">↑ Back to</span>
+      <span class="nav-title">Table of Contents</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

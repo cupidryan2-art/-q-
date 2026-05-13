@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 7 — NumPy | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="7">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 7</div>
+    <h1>NumPy <span style="font-weight:300;color:var(--text-muted)">数值计算基础</span></h1>
+    <p class="lead">
+      NumPy is the reason scientific Python is fast. Its core object — the <code>ndarray</code> (N-dimensional array) — stores data as a contiguous block of typed bytes in memory, just like a C array.
+      Once you understand why that matters, everything else falls into place.
+    </p>
+  </div>
+
+  <!-- ── Why ndarray ── -->
+  <h2>Why ndarray is Faster Than a Python List</h2>
+
+  <p>
+    A Python <code>list</code> is an array of <em>pointers</em> to Python objects scattered across the heap. To add two lists of a million numbers, Python must loop in the interpreter — fetching each object, reading its type tag, extracting the value, performing the add, boxing the result, and storing the pointer. That's roughly 10–20 operations per element, all in slow Python bytecode.
+  </p>
+  <p>
+    A NumPy <code>ndarray</code> stores values as raw bytes in a contiguous block — like a C array. When you write <code>a + b</code>, NumPy dispatches to a compiled C loop that runs at full hardware speed with no Python overhead. For a million-element array, this is typically <strong>100–1000× faster</strong>.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — the speed difference</div>
+    <pre><code class="language-python">import numpy as np
+import time
+
+n = 1_000_000
+py_list = list(range(n))
+np_arr  = np.arange(n)
+
+# Python list — pure Python loop
+t0 = time.perf_counter()
+result = [x * 2 for x in py_list]
+print(f"List comprehension: {time.perf_counter()-t0:.4f}s")
+
+# NumPy — vectorized C loop
+t0 = time.perf_counter()
+result = np_arr * 2        # one line, no Python loop at all
+print(f"NumPy vectorized:   {time.perf_counter()-t0:.4f}s")
+# NumPy is typically 50-200x faster for this operation</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Analogy</div>
+    NumPy arrays are the Python equivalent of a <code>std::vector&lt;double&gt;</code> stored as contiguous memory — except operations on them are <em>already written for you</em> in highly optimised BLAS/LAPACK routines. You get the performance of C++ numerical code without writing any C++.
+  </div>
+
+  <h3>Key constraint: one dtype per array</h3>
+  <p>
+    Unlike Python lists, every element in an ndarray must be the same type — called the <code>dtype</code> (数据类型). Common dtypes: <code>float64</code>, <code>int64</code>, <code>bool</code>, <code>complex128</code>. NumPy will infer the dtype from your input or you can specify it.
+  </p>
+
+  <!-- ── Creating arrays ── -->
+  <h2>Creating Arrays (创建数组)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — array construction</div>
+    <pre><code class="language-python">import numpy as np
+
+# From a Python list
+a = np.array([1, 2, 3, 4, 5])           # dtype inferred: int64
+b = np.array([1.0, 2.0, 3.0])           # float64
+c = np.array([1, 2, 3], dtype=np.float32)  # explicit dtype
+
+# Filled arrays
+np.zeros(5)              # [0. 0. 0. 0. 0.]  — float64 by default
+np.ones((3, 4))          # 3×4 matrix of 1.0
+np.full((2, 3), 7.5)     # 2×3 matrix of 7.5
+np.eye(3)                # 3×3 identity matrix
+
+# Range and linspace (线性空间)
+np.arange(0, 10, 2)      # [0, 2, 4, 6, 8]  — like range() but returns ndarray
+np.arange(10)            # [0,1,2,...,9]
+np.linspace(0, 1, 5)     # [0., 0.25, 0.5, 0.75, 1.0]  — 5 evenly-spaced points
+
+# 2D array from nested lists
+matrix = np.array([[1, 2, 3],
+                   [4, 5, 6]])           # shape (2, 3)</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">arange vs linspace</div>
+    Use <code>np.arange(start, stop, step)</code> when you know the <em>step size</em> (like Python's <code>range</code>).
+    Use <code>np.linspace(start, stop, n)</code> when you know the <em>number of points</em> — it always includes both endpoints and is safer for floating-point ranges.
+  </div>
+
+  <!-- ── Array attributes ── -->
+  <h2>Array Attributes and Basic Operations</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — shape, dtype, ndim</div>
+    <pre><code class="language-python">a = np.array([[1, 2, 3], [4, 5, 6]])
+
+a.shape    # (2, 3)   — rows × cols
+a.dtype    # dtype('int64')
+a.ndim     # 2        — number of dimensions
+a.size     # 6        — total number of elements
+a.nbytes   # 48       — bytes in memory (6 × 8 bytes each)
+
+# Arithmetic — all element-wise (逐元素)
+a + 10          # add 10 to every element
+a * 2           # multiply every element by 2
+a ** 2          # square every element
+np.sqrt(a)      # square root element-wise
+a + a           # element-wise addition (requires same shape)</code></pre>
+  </div>
+
+  <h3>Reshaping (重塑)</h3>
+  <div class="code-block">
+    <div class="code-label">Python — reshape, flatten, transpose</div>
+    <pre><code class="language-python">a = np.arange(12)    # [0,1,2,...,11]
+
+a.reshape(3, 4)      # 3×4 matrix  — total elements must match
+a.reshape(2, 2, 3)   # 3D: 2×2×3
+a.reshape(-1, 3)     # -1 means "infer this dimension" → shape (4,3)
+
+m = np.arange(6).reshape(2, 3)
+m.T              # transpose: shape (3, 2)
+m.flatten()      # always returns a copy: [0,1,2,3,4,5]
+m.ravel()        # returns a view (faster): [0,1,2,3,4,5]</code></pre>
+  </div>
+
+  <!-- ── Indexing ── -->
+  <h2>Indexing and Slicing (索引与切片)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — 1D and 2D indexing</div>
+    <pre><code class="language-python">a = np.array([10, 20, 30, 40, 50])
+a[0]       # 10
+a[-1]      # 50
+a[1:4]     # [20, 30, 40]
+a[::2]     # [10, 30, 50]
+
+# 2D — [row, col]
+m = np.array([[1,  2,  3],
+              [4,  5,  6],
+              [7,  8,  9]])
+
+m[0, 0]    # 1        — top-left
+m[1, 2]    # 6        — row 1, col 2
+m[0, :]    # [1,2,3]  — entire first row
+m[:, 1]    # [2,5,8]  — entire second column
+m[1:, :2]  # [[4,5],[7,8]]  — bottom-left 2×2 block</code></pre>
+  </div>
+
+  <h3>Boolean indexing (布尔索引) — your workhorse</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">scores = np.array([72, 88, 45, 95, 60, 83])
+
+# Create a boolean mask
+mask = scores >= 80
+# [False, True, False, True, False, True]
+
+# Use mask to filter
+scores[mask]          # [88, 95, 83]
+
+# Shorthand — inline condition
+scores[scores >= 80]  # same result
+
+# Combine conditions — use & and | (not 'and'/'or'!)
+scores[(scores >= 60) & (scores < 90)]  # [72, 88, 60, 83]
+
+# np.where — vectorized if/else (向量化条件)
+grades = np.where(scores >= 60, "pass", "fail")
+# ['pass', 'pass', 'fail', 'pass', 'pass', 'pass']</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Boolean indexing has no direct C++ equivalent in the standard library. The closest approach is <code>std::copy_if</code> with a predicate, but that requires writing the loop. NumPy's mask-based selection is declarative — you describe <em>which elements</em>, not <em>how to iterate</em>. You'll find this pattern everywhere in pandas too (Chapter 8 builds directly on it).
+  </div>
+
+  <!-- ── Broadcasting ── -->
+  <h2>Broadcasting (广播机制)</h2>
+
+  <p>
+    Broadcasting is NumPy's rule for applying operations on arrays of <em>compatible but different shapes</em> without copying data. It's one of NumPy's most powerful and initially confusing features.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — broadcasting in action</div>
+    <pre><code class="language-python">a = np.array([1, 2, 3, 4])   # shape (4,)
+
+# Scalar broadcasting — scalar is "stretched" to match array
+a + 10       # [11, 12, 13, 14]  — scalar treated as shape (4,)
+a * 2        # [2, 4, 6, 8]
+
+# 2D + 1D broadcasting
+m = np.ones((3, 4))       # shape (3, 4)
+row = np.array([1,2,3,4]) # shape (4,)
+m + row
+# row is broadcast along the first axis (copied 3 times):
+# [[2,3,4,5],
+#  [2,3,4,5],
+#  [2,3,4,5]]
+
+# Column vector broadcasting
+col = np.array([[10], [20], [30]])  # shape (3, 1)
+m + col
+# [[11,11,11,11],
+#  [21,21,21,21],
+#  [31,31,31,31]]
+
+# Real-world example: zero-mean normalisation
+data = np.array([[1,2,3],[4,5,6],[7,8,9]], dtype=float)
+means = data.mean(axis=0)    # mean of each column: [4, 5, 6]
+normalised = data - means    # broadcast: means subtracted from each row</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Broadcasting Rule</div>
+    Two dimensions are compatible if they are equal, or one of them is 1. NumPy aligns shapes from the right: <code>(3,4)</code> and <code>(4,)</code> → treated as <code>(3,4)</code> and <code>(1,4)</code> → compatible. If shapes don't align, you get a <code>ValueError</code>.
+  </div>
+
+  <!-- ── Key operations ── -->
+  <h2>Key Aggregation Operations (聚合运算)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">a = np.array([[1, 2, 3],
+              [4, 5, 6]])
+
+# Global aggregations
+a.sum()          # 21
+a.mean()         # 3.5
+a.std()          # 1.708...
+a.min()          # 1
+a.max()          # 6
+a.argmin()       # 0  — index of minimum element (flattened)
+a.argmax()       # 5  — index of maximum element
+
+# Axis-wise operations — axis=0 operates DOWN rows (along columns)
+a.sum(axis=0)    # [5, 7, 9]   — column sums
+a.sum(axis=1)    # [6, 15]     — row sums
+a.mean(axis=0)   # [2.5, 3.5, 4.5]
+a.mean(axis=1)   # [2.0, 5.0]
+
+# Linear algebra (线性代数)
+v1 = np.array([1, 2, 3])
+v2 = np.array([4, 5, 6])
+np.dot(v1, v2)       # 32  — dot product
+v1 @ v2              # 32  — same, using @ operator (Python 3.5+)
+
+m = np.array([[1,2],[3,4]])
+np.linalg.det(m)     # -2.0  — determinant
+np.linalg.inv(m)     # matrix inverse
+np.linalg.norm(v1)   # 3.742... — Euclidean norm</code></pre>
+  </div>
+
+  <!-- ── Random ── -->
+  <h2>Random Module (随机数)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — np.random</div>
+    <pre><code class="language-python">rng = np.random.default_rng(seed=42)   # modern API (NumPy 1.17+)
+
+rng.random((3, 4))          # 3×4 uniform floats in [0, 1)
+rng.integers(0, 10, size=5) # 5 random ints in [0, 10)
+rng.normal(0, 1, size=1000) # 1000 samples from N(0,1)
+rng.choice([1,2,3,4,5], size=3)  # sample without replacement
+
+# Legacy API (still very common — you'll see it everywhere)
+np.random.seed(42)
+np.random.rand(3, 4)        # uniform [0, 1)
+np.random.randn(3, 4)       # standard normal N(0,1)
+np.random.randint(0, 10, 5) # random integers
+
+# Data science tip: always fix a seed for reproducibility (可重复性)
+rng = np.random.default_rng(seed=2024)
+X = rng.normal(0, 1, (100, 5))   # 100 samples, 5 features — simulated dataset</code></pre>
+  </div>
+
+  <!-- ── done + quiz ── -->
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">Mark as complete</button>
+    <span class="done-hint">Saves your progress locally.</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "What is the key performance advantage of NumPy arrays over Python lists for numerical computing?",
+      "options": [
+        "They use less memory",
+        "Operations are vectorized and execute in compiled C code, avoiding Python loop overhead",
+        "They support any data type in the same array",
+        "They are automatically parallelized across CPU cores"
+      ],
+      "answer": 1,
+      "explanation": "NumPy stores elements as contiguous typed bytes and dispatches operations to compiled C/Fortran loops. A Python list stores object pointers, and any loop runs in the interpreter with type-checking overhead on every iteration."
+    },
+    {
+      "q": "What does NumPy broadcasting allow you to do?",
+      "options": [
+        "Send arrays between different Python processes",
+        "Apply operations on arrays of compatible but different shapes without copying data",
+        "Automatically detect and remove NaN values",
+        "Broadcast results to multiple output files"
+      ],
+      "answer": 1,
+      "explanation": "Broadcasting lets you write <code>matrix - mean_row</code> where mean_row has shape (n,) and matrix has shape (m,n) — NumPy conceptually 'stretches' the smaller array to match the larger one without actually copying memory."
+    },
+    {
+      "q": "What does <code>np.arange(0, 10, 2)</code> produce?",
+      "options": [
+        "[0, 2, 4, 6, 8, 10]",
+        "[0, 2, 4, 6, 8]",
+        "[0, 2, 4, 6, 8, 10] with dtype float",
+        "[2, 4, 6, 8]"
+      ],
+      "answer": 1,
+      "explanation": "<code>np.arange(start, stop, step)</code> generates values from start up to (but NOT including) stop, with the given step. So 0, 2, 4, 6, 8 — and 10 is excluded. This mirrors Python's built-in <code>range()</code> convention."
+    }
+  ]
+  </script>
+
+  <div class="chapter-nav">
+    <a href="ch6.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 6: File I/O &amp; Data Formats</span>
+    </a>
+    <a href="ch8.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 8: Pandas — Working with Data</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

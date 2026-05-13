@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 2 — Control Flow | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="2">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 2</div>
+    <h1>Control Flow <span style="font-weight:300;color:var(--text-muted)">控制流</span></h1>
+    <p class="lead">
+      Python's control flow will feel familiar — <code>if</code>, <code>for</code>, <code>while</code> all exist. The difference is what replaces the braces: <em>indentation</em>. And tucked at the end is one of Python's genuine delights: the list comprehension.
+    </p>
+  </div>
+
+  <!-- ── Section 1: Indentation ── -->
+  <h2>Indentation is Syntax (缩进即结构)</h2>
+
+  <p>
+    In C++, braces <code>{}</code> define blocks. Indentation is optional — just a convention enforced by linters.
+    In Python, indentation <em>is</em> the syntax. There are no braces. The interpreter uses whitespace to determine block boundaries.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">C++ — braces define blocks</div>
+    <pre><code class="language-cpp">if (x > 0) {
+    std::cout << "positive" << std::endl;
+    std::cout << "still in the block" << std::endl;
+}
+std::cout << "outside the block" << std::endl;</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — indentation defines blocks</div>
+    <pre><code class="language-python">if x > 0:
+    print("positive")
+    print("still in the block")   # same indent = same block
+print("outside the block")        # back to column 0 = exits block</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">The Rule</div>
+    Use <strong>4 spaces</strong> per indent level. Never mix tabs and spaces — Python 3 raises a <code>TabError</code>. Configure your editor to insert spaces when you press Tab. Every modern Python editor does this by default.
+  </div>
+
+  <!-- ── Section 2: if/elif/else ── -->
+  <h2>if / elif / else</h2>
+
+  <p>
+    Notice the colon <code>:</code> at the end of each condition. This is not optional — it's part of the syntax that signals the start of an indented block.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">score = 85
+
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
+elif score >= 70:
+    grade = "C"
+else:
+    grade = "F"
+
+print(f"Grade: {grade}")   # Grade: B</code></pre>
+  </div>
+
+  <h3>Truthiness (真值)</h3>
+  <p>
+    Python evaluates any value in a boolean context. You don't need <code>== True</code> or <code>!= None</code> for most checks.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — falsy values</div>
+    <pre><code class="language-python"># These are all falsy (假值) — evaluate to False in boolean context:
+False
+None
+0          # zero integer
+0.0        # zero float
+""         # empty string
+[]         # empty list
+{}         # empty dict
+()         # empty tuple
+set()      # empty set
+
+# Everything else is truthy (真值)
+if []:                # False — empty list
+    print("has items")
+
+items = [1, 2, 3]
+if items:             # True — non-empty list
+    print("has items")   # prints this</code></pre>
+  </div>
+
+  <h3>Ternary expression (三元表达式)</h3>
+  <div class="code-block">
+    <div class="code-label">Python — inline conditional</div>
+    <pre><code class="language-python"># Python's ternary: value_if_true if condition else value_if_false
+x = 10
+label = "even" if x % 2 == 0 else "odd"
+print(label)  # even
+
+# C++ equivalent: label = (x % 2 == 0) ? "even" : "odd";</code></pre>
+  </div>
+
+  <!-- ── Section 3: for loops ── -->
+  <h2>for Loops — Iterate Over Anything</h2>
+
+  <p>
+    Python's <code>for</code> loop iterates over any <em>iterable</em> (可迭代对象) — a list, string, range, dictionary, file, or custom object. There is no index-based <code>for (int i=0; i&lt;n; i++)</code> style loop. You use <code>range()</code> instead.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — range-based for</div>
+    <pre><code class="language-python"># range(stop) — 0 to stop-1
+for i in range(5):
+    print(i)      # 0 1 2 3 4
+
+# range(start, stop) — start to stop-1
+for i in range(2, 6):
+    print(i)      # 2 3 4 5
+
+# range(start, stop, step)
+for i in range(0, 10, 2):
+    print(i)      # 0 2 4 6 8
+
+# Counting down
+for i in range(5, 0, -1):
+    print(i)      # 5 4 3 2 1</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    <code>for i in range(n)</code> is the Python equivalent of <code>for (int i = 0; i &lt; n; i++)</code>.
+    <code>for item in collection</code> is like C++11's range-based for: <code>for (auto&amp; item : collection)</code>.
+    Python's <code>range()</code> is lazy — it doesn't actually create a list of numbers; it generates them on demand. This is similar to a C++ generator or lazy view.
+  </div>
+
+  <h3>Iterating over collections</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">fruits = ["apple", "banana", "cherry"]
+
+# Direct iteration — cleanest
+for fruit in fruits:
+    print(fruit)
+
+# With index — use enumerate() (枚举)
+for i, fruit in enumerate(fruits):
+    print(f"{i}: {fruit}")    # 0: apple, 1: banana, 2: cherry
+
+# Iterate two lists in parallel — use zip()
+prices = [1.2, 0.8, 2.5]
+for fruit, price in zip(fruits, prices):
+    print(f"{fruit}: ${price}")
+
+# Iterate dict items
+ages = {"Alice": 30, "Bob": 25}
+for name, age in ages.items():
+    print(f"{name} is {age}")</code></pre>
+  </div>
+
+  <!-- ── Section 4: while ── -->
+  <h2>while Loops</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">count = 0
+while count < 5:
+    print(count)
+    count += 1    # note: Python has no ++ or -- operators!
+
+# Reading until sentinel value
+total = 0
+while True:
+    val = int(input("Enter number (0 to stop): "))
+    if val == 0:
+        break
+    total += val
+print(f"Total: {total}")</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">No ++ in Python</div>
+    Python has no increment (<code>++</code>) or decrement (<code>--</code>) operators. Use <code>x += 1</code> and <code>x -= 1</code>. This was a deliberate design choice — <code>++x</code> and <code>x++</code> being different was considered a source of confusion.
+  </div>
+
+  <!-- ── Section 5: break/continue/pass ── -->
+  <h2>break, continue, pass</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python"># break — exit the loop entirely
+for i in range(10):
+    if i == 5:
+        break
+    print(i)          # prints 0 1 2 3 4
+
+# continue — skip to the next iteration
+for i in range(10):
+    if i % 2 == 0:
+        continue      # skip even numbers
+    print(i)          # prints 1 3 5 7 9
+
+# pass — do nothing (placeholder for empty blocks)
+for i in range(5):
+    pass              # syntactically required, does nothing
+
+# Also used for empty class/function bodies during development
+def todo_function():
+    pass              # implement later</code></pre>
+  </div>
+
+  <h3>else on loops — a Python peculiarity</h3>
+  <p>
+    Python loops have an optional <code>else</code> clause that runs <em>only if the loop completed without hitting a <code>break</code></em>. This is unusual and not present in C++, but it's genuinely useful for search patterns.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — loop else (循环的 else 子句)</div>
+    <pre><code class="language-python">target = 7
+numbers = [1, 3, 5, 9, 11]
+
+for n in numbers:
+    if n == target:
+        print(f"Found {target}!")
+        break
+else:
+    # Runs only if we never hit 'break'
+    print(f"{target} not found")   # prints this
+
+# Equivalent C++ pattern requires a flag variable — Python avoids that</code></pre>
+  </div>
+
+  <!-- ── Section 6: List Comprehensions ── -->
+  <h2>List Comprehensions (列表推导式)</h2>
+
+  <p>
+    List comprehensions are one of Python's most elegant features. They let you construct a list by expressing a transformation and optional filter in a single readable line. If you find yourself writing a <code>for</code> loop that just builds a list, a comprehension is almost always cleaner.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — comprehension vs. loop</div>
+    <pre><code class="language-python"># C++ style — build a vector of squares
+# std::vector<int> squares;
+# for (int i = 0; i < 10; i++) squares.push_back(i * i);
+
+# Python loop style
+squares = []
+for i in range(10):
+    squares.append(i ** 2)
+
+# Python comprehension style — same result, one line
+squares = [i ** 2 for i in range(10)]
+# [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — comprehensions with conditions</div>
+    <pre><code class="language-python"># Filter: only even squares
+even_squares = [x**2 for x in range(10) if x % 2 == 0]
+# [0, 4, 16, 36, 64]
+
+# Transform strings
+words = ["hello", "world", "python"]
+upper = [w.upper() for w in words]
+# ['HELLO', 'WORLD', 'PYTHON']
+
+# Nested comprehension — flatten a 2D list
+matrix = [[1,2,3],[4,5,6],[7,8,9]]
+flat = [n for row in matrix for n in row]
+# [1, 2, 3, 4, 5, 6, 7, 8, 9]</code></pre>
+  </div>
+
+  <h3>Dict and set comprehensions</h3>
+  <div class="code-block">
+    <div class="code-label">Python — other comprehension forms</div>
+    <pre><code class="language-python"># Dict comprehension (字典推导式)
+words = ["cat", "elephant", "dog"]
+lengths = {word: len(word) for word in words}
+# {'cat': 3, 'elephant': 8, 'dog': 3}
+
+# Set comprehension (集合推导式) — removes duplicates automatically
+nums = [1, 2, 2, 3, 3, 3]
+unique_squares = {x**2 for x in nums}
+# {1, 4, 9}
+
+# Generator expression (生成器表达式) — lazy, no list created
+total = sum(x**2 for x in range(1000))   # no [] brackets!</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">When to Use Comprehensions</div>
+    Use comprehensions when: you're building a new collection by transforming or filtering an existing one, the logic fits comfortably on one line, and the intent is clear. If you need multiple statements per iteration or complex nesting, a regular loop is more readable.
+  </div>
+
+  <!-- ── Section 7: Nested ── -->
+  <h2>Nested Loops and Conditionals</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — multiplication table</div>
+    <pre><code class="language-python">for i in range(1, 4):
+    for j in range(1, 4):
+        print(f"{i}×{j}={i*j}", end="  ")
+    print()   # newline after each row
+
+# Output:
+# 1×1=1  1×2=2  1×3=3
+# 2×1=2  2×2=4  2×3=6
+# 3×1=3  3×2=6  3×3=9</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — nested conditionals (FizzBuzz)</div>
+    <pre><code class="language-python">for n in range(1, 21):
+    if n % 15 == 0:
+        print("FizzBuzz")
+    elif n % 3 == 0:
+        print("Fizz")
+    elif n % 5 == 0:
+        print("Buzz")
+    else:
+        print(n)</code></pre>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="ch1.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 1: Python Fundamentals</span>
+    </a>
+    <a href="ch3.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 3: Data Structures</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

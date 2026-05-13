@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 3 — Data Structures | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="3">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 3</div>
+    <h1>Data Structures <span style="font-weight:300;color:var(--text-muted)">数据结构</span></h1>
+    <p class="lead">
+      Python ships four built-in collection types: <code>list</code>, <code>tuple</code>, <code>dict</code>, and <code>set</code>.
+      They cover the vast majority of what you'd reach for <code>std::vector</code>, <code>std::unordered_map</code>, or <code>std::set</code> to do in C++.
+      The key question about each one: is it mutable (可变) or immutable (不可变)?
+    </p>
+  </div>
+
+  <!-- ── list ── -->
+  <h2>list (列表) — Ordered, Mutable Sequence</h2>
+
+  <p>
+    A <code>list</code> is Python's workhorse container: ordered, zero-indexed, and mutable. It's the closest equivalent to <code>std::vector&lt;T&gt;</code>, except it can hold objects of different types in the same list.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — creating lists</div>
+    <pre><code class="language-python">nums    = [1, 2, 3, 4, 5]
+mixed   = [42, "hello", 3.14, True]   # different types in one list
+empty   = []
+from_range = list(range(5))           # [0, 1, 2, 3, 4]
+repeated   = [0] * 5                  # [0, 0, 0, 0, 0]</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — indexing and slicing</div>
+    <pre><code class="language-python">fruits = ["apple", "banana", "cherry", "date"]
+
+fruits[0]      # 'apple'   — first element
+fruits[-1]     # 'date'    — last element
+fruits[1:3]    # ['banana', 'cherry']  — slice [start, stop)
+fruits[:2]     # ['apple', 'banana']
+fruits[::2]    # ['apple', 'cherry']   — every other element
+
+# Modifying in-place
+fruits[0] = "avocado"          # replace
+fruits[1:3] = ["blueberry"]    # replace a slice with fewer items</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — list methods (CRUD)</div>
+    <pre><code class="language-python">nums = [3, 1, 4, 1, 5, 9]
+
+# Adding
+nums.append(2)           # add to end: [3,1,4,1,5,9,2]
+nums.insert(0, 99)       # insert at index: [99,3,1,4,1,5,9,2]
+nums.extend([6, 5])      # add multiple: appends another list
+
+# Removing
+nums.remove(1)           # removes FIRST occurrence of value 1
+popped = nums.pop()      # removes and returns last element
+popped2 = nums.pop(0)    # removes and returns element at index 0
+del nums[2]              # delete by index
+
+# Searching
+nums.index(5)            # index of first occurrence (raises ValueError if missing)
+nums.count(1)            # count occurrences
+
+# Sorting
+nums.sort()              # in-place sort (modifies nums)
+nums.sort(reverse=True)  # in-place descending
+sorted_copy = sorted(nums)   # returns NEW sorted list, original unchanged
+nums.reverse()           # reverse in-place
+
+# Other
+len(nums)                # number of elements
+nums.copy()              # shallow copy
+nums.clear()             # empty the list</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    <ul>
+      <li><code>list.append(x)</code> ≈ <code>vec.push_back(x)</code></li>
+      <li><code>list.pop()</code> ≈ <code>vec.pop_back()</code> — but Python's returns the value</li>
+      <li><code>list.insert(i, x)</code> ≈ <code>vec.insert(vec.begin()+i, x)</code></li>
+      <li><code>sorted(lst)</code> ≈ <code>std::sort</code> on a copy — Python's sort is Timsort, stable and O(n log n)</li>
+      <li>Unlike <code>std::vector</code>, Python lists are dynamically typed — no template parameter needed</li>
+    </ul>
+  </div>
+
+  <h3>Sorting with a key function</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">words = ["banana", "fig", "apple", "elderberry"]
+
+# Sort by length
+words.sort(key=len)
+# ['fig', 'apple', 'banana', 'elderberry']
+
+# Sort by last character
+words.sort(key=lambda w: w[-1])
+
+# Sort a list of dicts by a field
+people = [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
+people.sort(key=lambda p: p["age"])
+# Bob comes first now</code></pre>
+  </div>
+
+  <!-- ── tuple ── -->
+  <h2>tuple (元组) — Ordered, Immutable Sequence</h2>
+
+  <p>
+    A <code>tuple</code> is like a <code>list</code> but immutable — once created, you can't change its contents. Use tuples when the data shouldn't change: coordinates, RGB colours, function return values, dictionary keys.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — tuples</div>
+    <pre><code class="language-python">point  = (3, 7)
+color  = (255, 128, 0)     # RGB — semantically fixed
+single = (42,)             # single-element tuple needs trailing comma!
+empty  = ()
+
+# Immutable — this raises TypeError:
+# point[0] = 99
+
+# Tuple unpacking (元组解包)
+x, y = point               # x=3, y=7
+r, g, b = color
+
+# Functions returning multiple values — it's just a tuple
+def min_max(nums):
+    return min(nums), max(nums)   # returns a tuple
+
+lo, hi = min_max([3, 1, 4, 1, 5, 9])
+print(lo, hi)   # 1 9
+
+# Swap using tuple unpacking
+a, b = 10, 20
+a, b = b, a     # no temp variable needed</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Python tuples map well to C++17's <code>std::tuple</code> and structured bindings:
+    <code>auto [lo, hi] = min_max(nums);</code> is the C++ equivalent of <code>lo, hi = min_max(nums)</code>.
+    Python tuples can be used as dictionary keys (because they're hashable and immutable); <code>std::vector</code> cannot be a <code>std::unordered_map</code> key for the same reason.
+  </div>
+
+  <!-- ── dict ── -->
+  <h2>dict (字典) — Key-Value Map</h2>
+
+  <p>
+    Python's <code>dict</code> is a hash map: O(1) average lookup, insertion, and deletion. As of Python 3.7+, dicts preserve insertion order.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — creating and accessing dicts</div>
+    <pre><code class="language-python">person = {"name": "Alice", "age": 30, "city": "Beijing"}
+empty  = {}
+from_keys = dict(name="Bob", age=25)   # keyword-argument form
+
+# Access
+person["name"]          # 'Alice' — raises KeyError if missing
+person.get("name")      # 'Alice' — returns None if missing (safe)
+person.get("email", "N/A")  # 'N/A' — default value if missing
+
+# Modify
+person["age"] = 31      # update existing key
+person["email"] = "a@b.com"  # add new key
+del person["city"]      # delete key
+
+# Check membership (成员测试)
+"name" in person        # True
+"salary" in person      # False</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — iterating dicts</div>
+    <pre><code class="language-python">person = {"name": "Alice", "age": 30}
+
+# Iterate keys (默认)
+for key in person:
+    print(key)           # name, age
+
+# Iterate values
+for val in person.values():
+    print(val)           # Alice, 30
+
+# Iterate key-value pairs
+for key, val in person.items():
+    print(f"{key}: {val}")
+
+# Useful methods
+list(person.keys())      # ['name', 'age']
+list(person.values())    # ['Alice', 30]
+list(person.items())     # [('name', 'Alice'), ('age', 30)]
+
+# Merge two dicts (Python 3.9+)
+defaults = {"color": "red", "size": "M"}
+custom   = {"size": "L", "weight": 1.5}
+merged   = defaults | custom   # custom values win on conflict
+# {'color': 'red', 'size': 'L', 'weight': 1.5}</code></pre>
+  </div>
+
+  <h3>Dict comprehension</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">words = ["apple", "fig", "banana"]
+
+# Map each word to its length
+lengths = {w: len(w) for w in words}
+# {'apple': 5, 'fig': 3, 'banana': 6}
+
+# Invert a dict (swap keys and values)
+original = {"a": 1, "b": 2, "c": 3}
+inverted = {v: k for k, v in original.items()}
+# {1: 'a', 2: 'b', 3: 'c'}</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Python <code>dict</code> ≈ <code>std::unordered_map</code> (hash table, O(1) average).
+    Python <code>dict</code> preserves insertion order; <code>std::unordered_map</code> does not.
+    If you need sorted-key iteration, use <code>sorted(d.keys())</code> or Python's <code>collections.OrderedDict</code> (mostly redundant now) — or in C++ use <code>std::map</code>.
+  </div>
+
+  <!-- ── set ── -->
+  <h2>set (集合) — Unordered, Unique Values</h2>
+
+  <p>
+    A <code>set</code> stores unique values with no guaranteed order. Fast membership testing (O(1)), and supports the full suite of mathematical set operations.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — sets</div>
+    <pre><code class="language-python">primes = {2, 3, 5, 7, 11}
+empty  = set()    # NOT {} — that makes an empty dict!
+
+# Deduplication — convert a list with duplicates
+nums = [1, 2, 2, 3, 3, 3, 4]
+unique = set(nums)    # {1, 2, 3, 4}
+
+# Membership (O(1))
+3 in primes           # True
+4 in primes           # False
+
+# Modification
+primes.add(13)
+primes.discard(2)     # remove if present (no error if missing)
+primes.remove(3)      # remove — raises KeyError if missing
+
+# Set operations (集合运算)
+a = {1, 2, 3, 4}
+b = {3, 4, 5, 6}
+
+a | b     # union (并集):        {1, 2, 3, 4, 5, 6}
+a & b     # intersection (交集): {3, 4}
+a - b     # difference (差集):   {1, 2}  — in a but not b
+a ^ b     # symmetric diff:      {1, 2, 5, 6}  — in either, not both
+
+a.issubset(b)       # a ⊆ b ?
+a.issuperset(b)     # a ⊇ b ?</code></pre>
+  </div>
+
+  <!-- ── Mutability ── -->
+  <h2>Mutability Explained (可变性)</h2>
+
+  <p>
+    This distinction is critical, especially once you start passing containers into functions.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Mutable?</th><th>Hashable?</th><th>Typical Use</th></tr></thead>
+      <tbody>
+        <tr><td><code>list</code></td><td>Yes ✓</td><td>No</td><td>Ordered collection you'll modify</td></tr>
+        <tr><td><code>tuple</code></td><td>No</td><td>Yes ✓</td><td>Fixed record; dict key; return value</td></tr>
+        <tr><td><code>dict</code></td><td>Yes ✓</td><td>No</td><td>Key-value lookup</td></tr>
+        <tr><td><code>set</code></td><td>Yes ✓</td><td>No</td><td>Unique items; membership tests</td></tr>
+        <tr><td><code>frozenset</code></td><td>No</td><td>Yes ✓</td><td>Immutable set; can be a dict key</td></tr>
+        <tr><td><code>str</code></td><td>No</td><td>Yes ✓</td><td>Text</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — mutation in functions (important!)</div>
+    <pre><code class="language-python">def double_all(lst):
+    for i in range(len(lst)):
+        lst[i] *= 2   # mutates the original list!
+
+numbers = [1, 2, 3]
+double_all(numbers)
+print(numbers)   # [2, 4, 6] — the list was changed in place
+
+# To avoid mutation, pass a copy:
+double_all(numbers[:])   # or numbers.copy()</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    In C++, passing by value copies the container; passing by reference or pointer allows mutation.
+    In Python, <em>all arguments are passed by object reference</em>. Mutable objects (list, dict, set) can be mutated inside functions. Immutable objects (int, str, tuple) cannot. This is similar to C++ <code>const&amp;</code> vs mutable <code>&amp;</code> but implicit — Python gives you no <code>const</code> keyword to enforce immutability at the type level.
+  </div>
+
+  <!-- ── Nested ── -->
+  <h2>Nested Structures — Foreshadowing DataFrames</h2>
+
+  <p>
+    Real data rarely lives in flat arrays. A list of dicts is one of the most common patterns in Python data work — it maps directly to a spreadsheet or database table, and it's exactly the internal representation of a pandas DataFrame.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — list of dicts (table-like data)</div>
+    <pre><code class="language-python">students = [
+    {"name": "Alice",   "score": 92, "grade": "A"},
+    {"name": "Bob",     "score": 78, "grade": "C"},
+    {"name": "Charlie", "score": 85, "grade": "B"},
+]
+
+# Access a field
+students[0]["name"]    # 'Alice'
+
+# Iterate rows
+for s in students:
+    print(f"{s['name']}: {s['score']}")
+
+# Filter with comprehension
+honor_roll = [s for s in students if s["score"] >= 90]
+
+# Extract a column
+names  = [s["name"]  for s in students]
+scores = [s["score"] for s in students]
+
+# Sort by score
+students.sort(key=lambda s: s["score"], reverse=True)
+
+# In Chapter 8, you'll replace all of this with:
+# import pandas as pd
+# df = pd.DataFrame(students)
+# df.sort_values("score", ascending=False)</code></pre>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="ch2.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 2: Control Flow</span>
+    </a>
+    <a href="ch4.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 4: Functions &amp; Scope</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>

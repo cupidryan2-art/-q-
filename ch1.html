@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 1 — Python Fundamentals | Python for C++ Devs</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body data-chapter="1">
+
+<button class="menu-toggle" aria-label="Open menu">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div class="sidebar-overlay"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="site-title">Python for C++ Devs</div>
+      <div class="site-subtitle">Zero to Data Science</div>
+    </a>
+  </div>
+  <ul class="chapter-list"></ul>
+</nav>
+
+<main class="main">
+
+  <div class="chapter-header">
+    <div class="chapter-label">Chapter 1</div>
+    <h1>Python Fundamentals</h1>
+    <p class="lead">
+      Everything in Python is an object (对象). Integers, strings, functions, even <code>None</code> — they all live on the heap with a type, a value, and a reference count.
+      This chapter gives you the ground floor: variables, types, strings, and operators.
+    </p>
+  </div>
+
+  <!-- ── Section 1: Variables ── -->
+  <h2>Variables and Dynamic Typing (动态类型)</h2>
+
+  <p>
+    A Python variable is a <em>name</em> bound to an object. Assignment creates the binding; it doesn't allocate typed storage the way a C++ declaration does.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">x = 42          # x is now a name pointing at the integer object 42
+x = "hello"     # x now points at a string — perfectly valid
+x = [1, 2, 3]   # now a list
+
+# Multiple assignment
+a = b = c = 0   # all three names point to the same integer 0
+
+# Tuple unpacking (元组解包) — swap without a temp variable
+a, b = 10, 20
+a, b = b, a     # now a=20, b=10</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    <p>In C++, <code>int x = 5;</code> reserves a typed memory slot. Assigning a string to it later is a compile error.</p>
+    <p>In Python, <code>x = 5</code> creates an integer object on the heap and makes <code>x</code> point to it. <code>x = "hello"</code> creates a string object and re-points <code>x</code>. The integer object still exists until its reference count drops to zero and the GC reclaims it.</p>
+    <p>Think of Python variables as <code>std::any</code> or a typed pointer that can be reassigned to any type.</p>
+  </div>
+
+  <h3>Naming conventions (命名规范)</h3>
+  <p>
+    Python uses <code>snake_case</code> for variables and functions (not <code>camelCase</code>).
+    Names starting with <code>_</code> are conventionally "private." Names like <code>__dunder__</code> (double underscores) are reserved for Python's own protocols.
+  </p>
+
+  <!-- ── Section 2: Types ── -->
+  <h2>Core Data Types (核心数据类型)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — the five scalar types</div>
+    <pre><code class="language-python">age    = 30          # int   (整数) — arbitrary precision, no overflow
+price  = 19.99       # float (浮点数) — 64-bit IEEE 754, same as C++ double
+name   = "Alice"     # str   (字符串) — immutable Unicode text
+active = True        # bool  (布尔值) — True or False (capital T/F!)
+empty  = None        # NoneType — Python's null / void equivalent</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Noteworthy</div>
+    Python's <code>int</code> has <strong>arbitrary precision</strong> (任意精度) — it can hold numbers as large as your memory allows.
+    There's no <code>int32_t</code> overflow: <code>2 ** 1000</code> is a valid integer.
+    If you need fixed-width integers for interfacing with C, use the <code>ctypes</code> or <code>struct</code> module.
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    <ul>
+      <li>Python <code>int</code> ≈ C++ bignum (not <code>int32_t</code>)</li>
+      <li>Python <code>float</code> ≈ C++ <code>double</code></li>
+      <li>Python <code>bool</code>: <code>True</code>/<code>False</code> are actually subclasses of <code>int</code> — <code>True == 1</code> and <code>False == 0</code></li>
+      <li>Python <code>None</code> ≈ C++ <code>nullptr</code> or <code>std::nullopt</code> — but it's a real object with a type</li>
+    </ul>
+  </div>
+
+  <h3>Type literals</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python"># Integer bases
+dec = 255
+hex_val = 0xFF     # hexadecimal
+oct_val = 0o377    # octal
+bin_val = 0b11111111  # binary — all equal 255
+
+# Underscores in numbers (readability, ignored by Python)
+million = 1_000_000
+pi = 3.141_592_653
+
+# String delimiters — single or double quotes, both work
+s1 = 'hello'
+s2 = "world"
+s3 = '''multi
+line
+string'''          # triple quotes span newlines</code></pre>
+  </div>
+
+  <!-- ── Section 3: Type Checking ── -->
+  <h2>Checking Types at Runtime (类型检查)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">x = 42
+
+# type() returns the exact type object
+print(type(x))           # &lt;class 'int'&gt;
+print(type(x) is int)    # True
+
+# isinstance() checks for a type or its base classes — prefer this
+print(isinstance(x, int))         # True
+print(isinstance(x, (int, float))) # True — checks multiple types at once
+
+# bool is a subclass of int — isinstance catches it
+print(isinstance(True, int))   # True  ← might surprise you
+print(type(True) is int)       # False — exact type check distinguishes them</code></pre>
+  </div>
+
+  <div class="tip-box">
+    <div class="callout-label">Best Practice</div>
+    Use <code>isinstance()</code> over <code>type() ==</code> checks. It respects inheritance and is the idiomatic Python way. You'll see it constantly in library code.
+  </div>
+
+  <h3>Type conversion (类型转换)</h3>
+  <div class="code-block">
+    <div class="code-label">Python — explicit casting</div>
+    <pre><code class="language-python">int("42")         # 42    — string to int
+float("3.14")     # 3.14
+str(100)          # "100" — int to string
+bool(0)           # False — zero is falsy
+bool("hello")     # True  — non-empty string is truthy
+
+int(3.9)          # 3     — truncates, does NOT round
+round(3.9)        # 4     — rounds to nearest int</code></pre>
+  </div>
+
+  <!-- ── Section 4: Strings ── -->
+  <h2>String Operations (字符串操作)</h2>
+
+  <h3>f-strings (格式化字符串字面量)</h3>
+  <p>
+    Introduced in Python 3.6, f-strings are the modern way to embed expressions in strings. Prefix the string with <code>f</code> and put any expression inside <code>{}</code>.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — f-strings</div>
+    <pre><code class="language-python">name  = "Alice"
+score = 98.6
+
+# Basic embedding
+print(f"Hello, {name}!")               # Hello, Alice!
+
+# Expressions work inside {}
+print(f"Score: {score:.1f}%")          # Score: 98.6%
+print(f"2 + 2 = {2 + 2}")             # 2 + 2 = 4
+print(f"Upper: {name.upper()}")        # Upper: ALICE
+
+# Padding and alignment
+print(f"{'left':<10}|")               # 'left      |'
+print(f"{'right':>10}|")              # '     right|'
+print(f"{42:05d}")                     # '00042'
+print(f"{3.14159:.2f}")               # '3.14'
+
+# Debug shorthand (Python 3.8+)
+x = 42
+print(f"{x=}")                         # x=42</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    f-strings are essentially Python's version of C++20 <code>std::format("{}", value)</code> or the older <code>sprintf</code>, but inline and evaluated at runtime. Unlike <code>printf</code>, there's no separate format string — the expression is <em>inside</em> the string literal.
+  </div>
+
+  <h3>Common string methods</h3>
+  <div class="code-block">
+    <div class="code-label">Python — string methods (strings are immutable — all methods return new strings)</div>
+    <pre><code class="language-python">s = "  Hello, World!  "
+
+s.strip()           # "Hello, World!"   — remove leading/trailing whitespace
+s.lower()           # "  hello, world!  "
+s.upper()           # "  HELLO, WORLD!  "
+s.replace("World", "Python")  # "  Hello, Python!  "
+s.split(",")        # ['  Hello', ' World!  ']
+", ".join(["a", "b", "c"])    # "a, b, c"
+
+s.startswith("  H")  # True
+s.endswith("  ")     # True
+s.strip().find("World")  # 7  — index of first match, -1 if not found
+"hello" in s.lower() # True  — membership test</code></pre>
+  </div>
+
+  <h3>String slicing (切片)</h3>
+  <p>
+    Python's slice syntax <code>s[start:stop:step]</code> is one of its most expressive features. All indices are optional.
+  </p>
+
+  <div class="code-block">
+    <div class="code-label">Python — slicing</div>
+    <pre><code class="language-python">s = "Hello, World!"
+#    0123456789...
+
+s[0]       # 'H'          — index from start
+s[-1]      # '!'          — index from end
+s[7:12]    # 'World'      — [start, stop)
+s[:5]      # 'Hello'      — from beginning to index 5
+s[7:]      # 'World!'     — from index 7 to end
+s[::2]     # 'Hlo ol!'    — every other character (step=2)
+s[::-1]    # '!dlroW ,olleH'  — reverse the string</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Python slicing is similar to <code>std::string::substr(start, length)</code>, but more powerful: negative indices, step parameter, and the stop index is exclusive (like STL iterators). Note that Python strings are <em>immutable</em> — <code>s[0] = 'h'</code> raises a <code>TypeError</code>. Use <code>s = 'h' + s[1:]</code> or convert to a list first.
+  </div>
+
+  <!-- ── Section 5: Operators ── -->
+  <h2>Operators (运算符)</h2>
+
+  <h3>Arithmetic operators (算术运算符)</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python">10 + 3    # 13   — addition
+10 - 3    # 7    — subtraction
+10 * 3    # 30   — multiplication
+10 / 3    # 3.333...  — TRUE division (always returns float)
+10 // 3   # 3    — FLOOR division (integer result, truncates toward -inf)
+10 % 3    # 1    — modulo (remainder)
+2 ** 10   # 1024 — exponentiation (no std::pow needed)</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Watch Out</div>
+    In Python 3, <code>/</code> is always true division — <code>7 / 2</code> is <code>3.5</code>, not <code>3</code>.
+    Use <code>//</code> for integer (floor) division. This is different from C++, where <code>7 / 2 == 3</code> for integer operands.
+  </div>
+
+  <h3>Comparison and logical operators</h3>
+  <div class="code-block">
+    <div class="code-label">Python</div>
+    <pre><code class="language-python"># Comparison (比较运算符)
+5 == 5     # True
+5 != 4     # True
+5 > 3      # True
+5 <= 5     # True
+
+# Python allows chained comparisons — very readable
+1 < x < 10       # equivalent to x > 1 and x < 10
+0 <= age < 120   # range check in one expression
+
+# Logical (逻辑运算符) — English keywords, not symbols
+True and False   # False
+True or False    # True
+not True         # False
+
+# Identity vs equality
+a = [1, 2, 3]
+b = [1, 2, 3]
+a == b     # True  — same VALUE
+a is b     # False — different OBJECTS in memory
+a is None  # False
+x = None
+x is None  # True  — use 'is' for None checks, not ==</code></pre>
+  </div>
+
+  <div class="cpp-callout">
+    <div class="callout-label">C++ Comparison</div>
+    Python's <code>and</code>/<code>or</code>/<code>not</code> are equivalent to C++'s <code>&amp;&amp;</code>/<code>||</code>/<code>!</code>. Python's <code>is</code> operator checks pointer equality (like comparing addresses), similar to <code>ptr1 == ptr2</code> for raw pointers, not the values they point to.
+  </div>
+
+  <!-- ── Section 6: I/O ── -->
+  <h2>Input and Output (输入输出)</h2>
+
+  <div class="code-block">
+    <div class="code-label">Python — print()</div>
+    <pre><code class="language-python">print("Hello")                    # Hello\n (newline by default)
+print("a", "b", "c")             # a b c   (space separator by default)
+print("a", "b", "c", sep="-")    # a-b-c
+print("no newline", end="")       # suppress the trailing \n
+print()                           # just prints a newline
+
+# Printing multiple types — no conversion needed
+x = 42
+print("Value:", x, "type:", type(x))  # Value: 42 type: &lt;class 'int'&gt;</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">Python — input()</div>
+    <pre><code class="language-python">name = input("Enter your name: ")   # always returns a str
+age  = int(input("Enter your age: "))   # cast immediately if you need int
+
+print(f"Hello {name}, you are {age} years old.")</code></pre>
+  </div>
+
+  <div class="note-box">
+    <div class="callout-label">Key Takeaway</div>
+    <code>input()</code> <strong>always</strong> returns a string (字符串). If you expect a number, wrap it: <code>int(input(...))</code> or <code>float(input(...))</code>. Forgetting this is one of the most common beginner errors.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="ch0.html" class="nav-btn">
+      <span class="nav-direction">← Previous</span>
+      <span class="nav-title">Chapter 0: Why Python?</span>
+    </a>
+    <a href="ch2.html" class="nav-btn next">
+      <span class="nav-direction">Next →</span>
+      <span class="nav-title">Chapter 2: Control Flow</span>
+    </a>
+  </div>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>
