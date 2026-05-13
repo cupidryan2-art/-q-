@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 2 — Control Flow | Python for C++ Devs</title>
+<title>第 2 章 — 控制流 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="2">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,48 +30,46 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 2</div>
-    <h1>Control Flow <span style="font-weight:300;color:var(--text-muted)">控制流</span></h1>
+    <div class="chapter-label">第 2 章</div>
+    <h1>控制流</h1>
     <p class="lead">
-      Python's control flow will feel familiar — <code>if</code>, <code>for</code>, <code>while</code> all exist. The difference is what replaces the braces: <em>indentation</em>. And tucked at the end is one of Python's genuine delights: the list comprehension.
+      Python 的控制流看起来很熟悉——<code>if</code>、<code>for</code>、<code>while</code> 都有。区别在于什么东西替代了花括号：<em>缩进</em>。然后在最后还藏着一个 Python 真正的惊喜：列表推导式。
     </p>
   </div>
 
-  <!-- ── Section 1: Indentation ── -->
-  <h2>Indentation is Syntax (缩进即结构)</h2>
+  <h2>缩进即结构</h2>
 
   <p>
-    In C++, braces <code>{}</code> define blocks. Indentation is optional — just a convention enforced by linters.
-    In Python, indentation <em>is</em> the syntax. There are no braces. The interpreter uses whitespace to determine block boundaries.
+    C++ 里，花括号 <code>{}</code> 定义代码块。缩进只是可选的——是靠 linter 强制执行的约定。
+    Python 里，缩进<em>就是</em>语法本身。没有花括号。解释器用空白符来判断代码块的边界。
   </p>
 
   <div class="code-block">
-    <div class="code-label">C++ — braces define blocks</div>
+    <div class="code-label">C++ — 花括号定义代码块</div>
     <pre><code class="language-cpp">if (x > 0) {
-    std::cout << "positive" << std::endl;
-    std::cout << "still in the block" << std::endl;
+    std::cout << "正数" << std::endl;
+    std::cout << "还在代码块里" << std::endl;
 }
-std::cout << "outside the block" << std::endl;</code></pre>
+std::cout << "代码块外面" << std::endl;</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — indentation defines blocks</div>
+    <div class="code-label">Python — 缩进定义代码块</div>
     <pre><code class="language-python">if x > 0:
-    print("positive")
-    print("still in the block")   # same indent = same block
-print("outside the block")        # back to column 0 = exits block</code></pre>
+    print("正数")
+    print("还在代码块里")   # 同样的缩进 = 同一个代码块
+print("代码块外面")         # 回到第 0 列 = 退出代码块</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">The Rule</div>
-    Use <strong>4 spaces</strong> per indent level. Never mix tabs and spaces — Python 3 raises a <code>TabError</code>. Configure your editor to insert spaces when you press Tab. Every modern Python editor does this by default.
+    <div class="callout-label">规则</div>
+    每级缩进用 <strong>4 个空格</strong>。永远不要混用 tab 和空格——Python 3 会抛 <code>TabError</code>。配置你的编辑器在按 Tab 时插入空格，现代 Python 编辑器默认都这样。
   </div>
 
-  <!-- ── Section 2: if/elif/else ── -->
   <h2>if / elif / else</h2>
 
   <p>
-    Notice the colon <code>:</code> at the end of each condition. This is not optional — it's part of the syntax that signals the start of an indented block.
+    注意每个条件后面的冒号 <code>:</code>——这不是可选的，它是语法的一部分，标志着缩进代码块的开始。
   </p>
 
   <div class="code-block">
@@ -87,61 +85,60 @@ elif score >= 70:
 else:
     grade = "F"
 
-print(f"Grade: {grade}")   # Grade: B</code></pre>
+print(f"等级：{grade}")   # 等级：B</code></pre>
   </div>
 
-  <h3>Truthiness (真值)</h3>
+  <h3>真值（truthiness）</h3>
   <p>
-    Python evaluates any value in a boolean context. You don't need <code>== True</code> or <code>!= None</code> for most checks.
+    Python 在布尔上下文里会对任何值求值。大多数检查不需要 <code>== True</code> 或 <code>!= None</code>。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — falsy values</div>
-    <pre><code class="language-python"># These are all falsy (假值) — evaluate to False in boolean context:
+    <div class="code-label">Python — 假值（falsy）</div>
+    <pre><code class="language-python"># 这些都是假值——在布尔上下文里相当于 False：
 False
 None
-0          # zero integer
-0.0        # zero float
-""         # empty string
-[]         # empty list
-{}         # empty dict
-()         # empty tuple
-set()      # empty set
+0          # 零整数
+0.0        # 零浮点
+""         # 空字符串
+[]         # 空列表
+{}         # 空字典
+()         # 空元组
+set()      # 空集合
 
-# Everything else is truthy (真值)
-if []:                # False — empty list
-    print("has items")
+# 其他所有值都是真值（truthy）
+if []:                # False——空列表
+    print("有元素")
 
 items = [1, 2, 3]
-if items:             # True — non-empty list
-    print("has items")   # prints this</code></pre>
+if items:             # True——非空列表
+    print("有元素")   # 会打印这个</code></pre>
   </div>
 
-  <h3>Ternary expression (三元表达式)</h3>
+  <h3>三元表达式（ternary expression）</h3>
   <div class="code-block">
-    <div class="code-label">Python — inline conditional</div>
-    <pre><code class="language-python"># Python's ternary: value_if_true if condition else value_if_false
+    <div class="code-label">Python — 内联条件</div>
+    <pre><code class="language-python"># Python 三元式：条件为真时的值 if 条件 else 条件为假时的值
 x = 10
-label = "even" if x % 2 == 0 else "odd"
-print(label)  # even
+label = "偶数" if x % 2 == 0 else "奇数"
+print(label)  # 偶数
 
-# C++ equivalent: label = (x % 2 == 0) ? "even" : "odd";</code></pre>
+# C++ 等价：label = (x % 2 == 0) ? "偶数" : "奇数";</code></pre>
   </div>
 
-  <!-- ── Section 3: for loops ── -->
-  <h2>for Loops — Iterate Over Anything</h2>
+  <h2>for 循环 — 遍历任何东西</h2>
 
   <p>
-    Python's <code>for</code> loop iterates over any <em>iterable</em> (可迭代对象) — a list, string, range, dictionary, file, or custom object. There is no index-based <code>for (int i=0; i&lt;n; i++)</code> style loop. You use <code>range()</code> instead.
+    Python 的 <code>for</code> 循环遍历任何<em>可迭代对象（iterable）</em>——列表、字符串、range、字典、文件或自定义对象。没有 <code>for (int i=0; i&lt;n; i++)</code> 这种基于索引的写法，用 <code>range()</code> 代替。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — range-based for</div>
-    <pre><code class="language-python"># range(stop) — 0 to stop-1
+    <div class="code-label">Python — 基于 range 的 for 循环</div>
+    <pre><code class="language-python"># range(stop) — 0 到 stop-1
 for i in range(5):
     print(i)      # 0 1 2 3 4
 
-# range(start, stop) — start to stop-1
+# range(start, stop) — start 到 stop-1
 for i in range(2, 6):
     print(i)      # 2 3 4 5
 
@@ -149,194 +146,190 @@ for i in range(2, 6):
 for i in range(0, 10, 2):
     print(i)      # 0 2 4 6 8
 
-# Counting down
+# 倒数
 for i in range(5, 0, -1):
     print(i)      # 5 4 3 2 1</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    <code>for i in range(n)</code> is the Python equivalent of <code>for (int i = 0; i &lt; n; i++)</code>.
-    <code>for item in collection</code> is like C++11's range-based for: <code>for (auto&amp; item : collection)</code>.
-    Python's <code>range()</code> is lazy — it doesn't actually create a list of numbers; it generates them on demand. This is similar to a C++ generator or lazy view.
+    <div class="callout-label">C++ 对比</div>
+    <code>for i in range(n)</code> 是 Python 版的 <code>for (int i = 0; i &lt; n; i++)</code>。
+    <code>for item in collection</code> 类似 C++11 的范围 for：<code>for (auto&amp; item : collection)</code>。
+    Python 的 <code>range()</code> 是惰性的——它不会真的创建一个数字列表，而是按需生成。类似 C++ 的生成器或惰性 view。
   </div>
 
-  <h3>Iterating over collections</h3>
+  <h3>遍历集合</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python">fruits = ["apple", "banana", "cherry"]
+    <pre><code class="language-python">fruits = ["苹果", "香蕉", "樱桃"]
 
-# Direct iteration — cleanest
+# 直接遍历——最简洁
 for fruit in fruits:
     print(fruit)
 
-# With index — use enumerate() (枚举)
+# 带索引——用 enumerate()
 for i, fruit in enumerate(fruits):
-    print(f"{i}: {fruit}")    # 0: apple, 1: banana, 2: cherry
+    print(f"{i}: {fruit}")    # 0: 苹果, 1: 香蕉, 2: 樱桃
 
-# Iterate two lists in parallel — use zip()
-prices = [1.2, 0.8, 2.5]
+# 并行遍历两个列表——用 zip()
+prices = [3.5, 2.0, 8.0]
 for fruit, price in zip(fruits, prices):
-    print(f"{fruit}: ${price}")
+    print(f"{fruit}: ¥{price}")
 
-# Iterate dict items
+# 遍历字典
 ages = {"Alice": 30, "Bob": 25}
 for name, age in ages.items():
-    print(f"{name} is {age}")</code></pre>
+    print(f"{name} 今年 {age} 岁")</code></pre>
   </div>
 
-  <!-- ── Section 4: while ── -->
-  <h2>while Loops</h2>
+  <h2>while 循环</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">count = 0
 while count < 5:
     print(count)
-    count += 1    # note: Python has no ++ or -- operators!
+    count += 1    # 注意：Python 没有 ++ 或 -- 运算符！
 
-# Reading until sentinel value
+# 读取直到哨兵值
 total = 0
 while True:
-    val = int(input("Enter number (0 to stop): "))
+    val = int(input("输入数字（0 退出）："))
     if val == 0:
         break
     total += val
-print(f"Total: {total}")</code></pre>
+print(f"总计：{total}")</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">No ++ in Python</div>
-    Python has no increment (<code>++</code>) or decrement (<code>--</code>) operators. Use <code>x += 1</code> and <code>x -= 1</code>. This was a deliberate design choice — <code>++x</code> and <code>x++</code> being different was considered a source of confusion.
+    <div class="callout-label">Python 没有 ++</div>
+    Python 没有自增（<code>++</code>）或自减（<code>--</code>）运算符。用 <code>x += 1</code> 和 <code>x -= 1</code>。这是刻意的设计选择——<code>++x</code> 和 <code>x++</code> 的差异被认为是困惑之源。
   </div>
 
-  <!-- ── Section 5: break/continue/pass ── -->
-  <h2>break, continue, pass</h2>
+  <h2>break、continue、pass</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># break — exit the loop entirely
+    <pre><code class="language-python"># break — 完全退出循环
 for i in range(10):
     if i == 5:
         break
-    print(i)          # prints 0 1 2 3 4
+    print(i)          # 打印 0 1 2 3 4
 
-# continue — skip to the next iteration
+# continue — 跳过当前迭代
 for i in range(10):
     if i % 2 == 0:
-        continue      # skip even numbers
-    print(i)          # prints 1 3 5 7 9
+        continue      # 跳过偶数
+    print(i)          # 打印 1 3 5 7 9
 
-# pass — do nothing (placeholder for empty blocks)
+# pass — 什么都不做（空代码块占位符）
 for i in range(5):
-    pass              # syntactically required, does nothing
+    pass              # 语法需要，什么也不做
 
-# Also used for empty class/function bodies during development
+# 也用于空的类/函数体
 def todo_function():
-    pass              # implement later</code></pre>
+    pass              # 稍后实现</code></pre>
   </div>
 
-  <h3>else on loops — a Python peculiarity</h3>
+  <h3>循环的 else 子句 — Python 的独特之处</h3>
   <p>
-    Python loops have an optional <code>else</code> clause that runs <em>only if the loop completed without hitting a <code>break</code></em>. This is unusual and not present in C++, but it's genuinely useful for search patterns.
+    Python 循环有一个可选的 <code>else</code> 子句，<em>只有在循环没有碰到 <code>break</code> 正常结束时才会执行</em>。C++ 里没有这个东西，但它对搜索模式确实很有用。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — loop else (循环的 else 子句)</div>
+    <div class="code-label">Python — 循环的 else 子句</div>
     <pre><code class="language-python">target = 7
 numbers = [1, 3, 5, 9, 11]
 
 for n in numbers:
     if n == target:
-        print(f"Found {target}!")
+        print(f"找到 {target}！")
         break
 else:
-    # Runs only if we never hit 'break'
-    print(f"{target} not found")   # prints this
+    # 只有在从未执行 break 时才运行
+    print(f"没找到 {target}")   # 会打印这个
 
-# Equivalent C++ pattern requires a flag variable — Python avoids that</code></pre>
+# 等价的 C++ 写法需要一个 flag 变量——Python 避免了这一点</code></pre>
   </div>
 
-  <!-- ── Section 6: List Comprehensions ── -->
-  <h2>List Comprehensions (列表推导式)</h2>
+  <h2>列表推导式（list comprehension）</h2>
 
   <p>
-    List comprehensions are one of Python's most elegant features. They let you construct a list by expressing a transformation and optional filter in a single readable line. If you find yourself writing a <code>for</code> loop that just builds a list, a comprehension is almost always cleaner.
+    列表推导式是 Python 最优雅的特性之一。它让你用一行可读的代码，通过表达变换和可选过滤来构建列表。如果你发现自己在写一个 <code>for</code> 循环，只是为了把结果塞进一个列表，推导式几乎总是更简洁的选择。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — comprehension vs. loop</div>
-    <pre><code class="language-python"># C++ style — build a vector of squares
-# std::vector<int> squares;
-# for (int i = 0; i < 10; i++) squares.push_back(i * i);
+    <div class="code-label">Python — 推导式 vs. 普通循环</div>
+    <pre><code class="language-python"># C++ 风格——构建一个平方数的 vector
+# std::vector&lt;int&gt; squares;
+# for (int i = 0; i &lt; 10; i++) squares.push_back(i * i);
 
-# Python loop style
+# Python 循环风格
 squares = []
 for i in range(10):
     squares.append(i ** 2)
 
-# Python comprehension style — same result, one line
+# Python 推导式——同样的结果，一行搞定
 squares = [i ** 2 for i in range(10)]
 # [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — comprehensions with conditions</div>
-    <pre><code class="language-python"># Filter: only even squares
+    <div class="code-label">Python — 带条件的推导式</div>
+    <pre><code class="language-python"># 过滤：只要偶数的平方
 even_squares = [x**2 for x in range(10) if x % 2 == 0]
 # [0, 4, 16, 36, 64]
 
-# Transform strings
+# 变换字符串
 words = ["hello", "world", "python"]
 upper = [w.upper() for w in words]
 # ['HELLO', 'WORLD', 'PYTHON']
 
-# Nested comprehension — flatten a 2D list
+# 嵌套推导式——展平二维列表
 matrix = [[1,2,3],[4,5,6],[7,8,9]]
 flat = [n for row in matrix for n in row]
 # [1, 2, 3, 4, 5, 6, 7, 8, 9]</code></pre>
   </div>
 
-  <h3>Dict and set comprehensions</h3>
+  <h3>字典和集合推导式</h3>
   <div class="code-block">
-    <div class="code-label">Python — other comprehension forms</div>
-    <pre><code class="language-python"># Dict comprehension (字典推导式)
+    <div class="code-label">Python — 其他推导式形式</div>
+    <pre><code class="language-python"># 字典推导式（dict comprehension）
 words = ["cat", "elephant", "dog"]
 lengths = {word: len(word) for word in words}
 # {'cat': 3, 'elephant': 8, 'dog': 3}
 
-# Set comprehension (集合推导式) — removes duplicates automatically
+# 集合推导式（set comprehension）——自动去重
 nums = [1, 2, 2, 3, 3, 3]
 unique_squares = {x**2 for x in nums}
 # {1, 4, 9}
 
-# Generator expression (生成器表达式) — lazy, no list created
-total = sum(x**2 for x in range(1000))   # no [] brackets!</code></pre>
+# 生成器表达式（generator expression）——惰性求值，不创建列表
+total = sum(x**2 for x in range(1000))   # 注意没有 []！</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">When to Use Comprehensions</div>
-    Use comprehensions when: you're building a new collection by transforming or filtering an existing one, the logic fits comfortably on one line, and the intent is clear. If you need multiple statements per iteration or complex nesting, a regular loop is more readable.
+    <div class="callout-label">什么时候用推导式</div>
+    适合推导式的情形：你在通过变换或过滤一个现有集合来构建新集合，逻辑能舒适地放在一行里，意图清晰。如果每次迭代需要多条语句，或者嵌套很复杂，普通循环更易读。
   </div>
 
-  <!-- ── Section 7: Nested ── -->
-  <h2>Nested Loops and Conditionals</h2>
+  <h2>嵌套循环与条件</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — multiplication table</div>
+    <div class="code-label">Python — 乘法口诀表</div>
     <pre><code class="language-python">for i in range(1, 4):
     for j in range(1, 4):
         print(f"{i}×{j}={i*j}", end="  ")
-    print()   # newline after each row
+    print()   # 每行结束后换行
 
-# Output:
+# 输出：
 # 1×1=1  1×2=2  1×3=3
 # 2×1=2  2×2=4  2×3=6
 # 3×1=3  3×2=6  3×3=9</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — nested conditionals (FizzBuzz)</div>
+    <div class="code-label">Python — 嵌套条件（FizzBuzz）</div>
     <pre><code class="language-python">for n in range(1, 21):
     if n % 15 == 0:
         print("FizzBuzz")
@@ -348,14 +341,58 @@ total = sum(x**2 for x in range(1000))   # no [] brackets!</code></pre>
         print(n)</code></pre>
   </div>
 
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "下面哪段 Python 代码能正确打印 0 到 4 这五个数字？",
+      "options": [
+        "for i in range(1, 5): print(i)",
+        "for i in range(5): print(i)",
+        "for i in range(0, 4): print(i)",
+        "for i in range(5, 0): print(i)"
+      ],
+      "answer": 1,
+      "explanation": "range(5) 生成 0, 1, 2, 3, 4——从 0 开始，到 5（不含）结束。range(1,5) 从 1 开始，range(0,4) 到 4（不含），range(5,0) 步长为正时不生成任何数。"
+    },
+    {
+      "q": "Python 的列表推导式 <code>[x**2 for x in range(5) if x % 2 != 0]</code> 的结果是什么？",
+      "options": [
+        "[0, 1, 4, 9, 16]",
+        "[1, 9]",
+        "[1, 4, 9]",
+        "[0, 4, 16]"
+      ],
+      "answer": 1,
+      "explanation": "range(5) 是 0,1,2,3,4。条件 x % 2 != 0 过滤出奇数：1 和 3。它们的平方分别是 1 和 9，所以结果是 [1, 9]。"
+    },
+    {
+      "q": "Python 循环的 else 子句什么时候会执行？",
+      "options": [
+        "循环体内发生异常时",
+        "每次循环迭代结束时",
+        "循环正常结束（没有触发 break）时",
+        "循环一次也没执行时"
+      ],
+      "answer": 2,
+      "explanation": "Python 循环的 else 子句只在循环正常完成（没有执行 break）时运行。如果 break 被触发，else 会被跳过。这个特性非常适合"搜索，找不到就执行某操作"的场景。"
+    }
+  ]
+  </script>
+
   <div class="chapter-nav">
     <a href="ch1.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 1: Python Fundamentals</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 1 章：Python 基础语法</span>
     </a>
     <a href="ch3.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 3: Data Structures</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 3 章：内置数据结构</span>
     </a>
   </div>
 

@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 1 — Python Fundamentals | Python for C++ Devs</title>
+<title>第 1 章 — Python 基础语法 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="1">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,179 +30,174 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 1</div>
-    <h1>Python Fundamentals</h1>
+    <div class="chapter-label">第 1 章</div>
+    <h1>Python 基础语法</h1>
     <p class="lead">
-      Everything in Python is an object (对象). Integers, strings, functions, even <code>None</code> — they all live on the heap with a type, a value, and a reference count.
-      This chapter gives you the ground floor: variables, types, strings, and operators.
+      Python 里的一切都是对象（object）——整数、字符串、函数，甚至 <code>None</code>，它们全都活在堆上，有各自的类型、值和引用计数。
+      这一章打地基：变量、类型、字符串和运算符。
     </p>
   </div>
 
-  <!-- ── Section 1: Variables ── -->
-  <h2>Variables and Dynamic Typing (动态类型)</h2>
+  <h2>变量与动态类型</h2>
 
   <p>
-    A Python variable is a <em>name</em> bound to an object. Assignment creates the binding; it doesn't allocate typed storage the way a C++ declaration does.
+    Python 变量是一个绑定到对象的<em>名字</em>。赋值创建这个绑定，并不像 C++ 声明那样分配有类型的存储空间。
   </p>
 
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python">x = 42          # x is now a name pointing at the integer object 42
-x = "hello"     # x now points at a string — perfectly valid
-x = [1, 2, 3]   # now a list
+    <pre><code class="language-python">x = 42          # x 现在是指向整数对象 42 的名字
+x = "hello"     # x 现在指向字符串——完全合法
+x = [1, 2, 3]   # 现在是个 list
 
-# Multiple assignment
-a = b = c = 0   # all three names point to the same integer 0
+# 多重赋值
+a = b = c = 0   # 三个名字都指向同一个整数 0
 
-# Tuple unpacking (元组解包) — swap without a temp variable
+# 元组解包（tuple unpacking）——不需要临时变量就能交换
 a, b = 10, 20
-a, b = b, a     # now a=20, b=10</code></pre>
+a, b = b, a     # 现在 a=20, b=10</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    <p>In C++, <code>int x = 5;</code> reserves a typed memory slot. Assigning a string to it later is a compile error.</p>
-    <p>In Python, <code>x = 5</code> creates an integer object on the heap and makes <code>x</code> point to it. <code>x = "hello"</code> creates a string object and re-points <code>x</code>. The integer object still exists until its reference count drops to zero and the GC reclaims it.</p>
-    <p>Think of Python variables as <code>std::any</code> or a typed pointer that can be reassigned to any type.</p>
+    <div class="callout-label">C++ 对比</div>
+    <p>C++ 里，<code>int x = 5;</code> 保留了一个有类型的内存槽。之后再赋字符串给它是编译报错。</p>
+    <p>Python 里，<code>x = 5</code> 在堆上创建一个整数对象，让 <code>x</code> 指向它。<code>x = "hello"</code> 创建字符串对象，重新指向它。整数对象依然存在，直到引用计数降到零被 GC 回收。</p>
+    <p>把 Python 变量想成 <code>std::any</code>，或者一个可以重新指向任意类型的有类型指针。</p>
   </div>
 
-  <h3>Naming conventions (命名规范)</h3>
+  <h3>命名规范</h3>
   <p>
-    Python uses <code>snake_case</code> for variables and functions (not <code>camelCase</code>).
-    Names starting with <code>_</code> are conventionally "private." Names like <code>__dunder__</code> (double underscores) are reserved for Python's own protocols.
+    Python 用 <code>snake_case</code> 命名变量和函数（不用 <code>camelCase</code>）。
+    以 <code>_</code> 开头的名字按惯例是"私有"的。像 <code>__dunder__</code>（双下划线）这样的名字是 Python 自身协议保留的。
   </p>
 
-  <!-- ── Section 2: Types ── -->
-  <h2>Core Data Types (核心数据类型)</h2>
+  <h2>核心数据类型</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — the five scalar types</div>
-    <pre><code class="language-python">age    = 30          # int   (整数) — arbitrary precision, no overflow
-price  = 19.99       # float (浮点数) — 64-bit IEEE 754, same as C++ double
-name   = "Alice"     # str   (字符串) — immutable Unicode text
-active = True        # bool  (布尔值) — True or False (capital T/F!)
-empty  = None        # NoneType — Python's null / void equivalent</code></pre>
+    <div class="code-label">Python — 五种标量类型</div>
+    <pre><code class="language-python">age    = 30          # int   — 任意精度整数，不会溢出
+price  = 19.99       # float — 64 位 IEEE 754，等同于 C++ double
+name   = "Alice"     # str   — 不可变的 Unicode 文本
+active = True        # bool  — True 或 False（首字母大写！）
+empty  = None        # NoneType — Python 的 null / void 等价物</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Noteworthy</div>
-    Python's <code>int</code> has <strong>arbitrary precision</strong> (任意精度) — it can hold numbers as large as your memory allows.
-    There's no <code>int32_t</code> overflow: <code>2 ** 1000</code> is a valid integer.
-    If you need fixed-width integers for interfacing with C, use the <code>ctypes</code> or <code>struct</code> module.
+    <div class="callout-label">值得关注</div>
+    Python 的 <code>int</code> 有<strong>任意精度</strong>——它能存下内存允许的任何大数。
+    不存在 <code>int32_t</code> 溢出：<code>2 ** 1000</code> 是一个合法的整数。
+    如果需要定宽整数来和 C 代码对接，用 <code>ctypes</code> 或 <code>struct</code> 模块。
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
+    <div class="callout-label">C++ 对比</div>
     <ul>
-      <li>Python <code>int</code> ≈ C++ bignum (not <code>int32_t</code>)</li>
+      <li>Python <code>int</code> ≈ C++ 大数（不是 <code>int32_t</code>）</li>
       <li>Python <code>float</code> ≈ C++ <code>double</code></li>
-      <li>Python <code>bool</code>: <code>True</code>/<code>False</code> are actually subclasses of <code>int</code> — <code>True == 1</code> and <code>False == 0</code></li>
-      <li>Python <code>None</code> ≈ C++ <code>nullptr</code> or <code>std::nullopt</code> — but it's a real object with a type</li>
+      <li>Python <code>bool</code>：<code>True</code>/<code>False</code> 其实是 <code>int</code> 的子类——<code>True == 1</code>，<code>False == 0</code></li>
+      <li>Python <code>None</code> ≈ C++ <code>nullptr</code> 或 <code>std::nullopt</code>——但它是一个真实的对象，有自己的类型</li>
     </ul>
   </div>
 
-  <h3>Type literals</h3>
+  <h3>数字字面量</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># Integer bases
+    <pre><code class="language-python"># 整数进制
 dec = 255
-hex_val = 0xFF     # hexadecimal
-oct_val = 0o377    # octal
-bin_val = 0b11111111  # binary — all equal 255
+hex_val = 0xFF     # 十六进制
+oct_val = 0o377    # 八进制
+bin_val = 0b11111111  # 二进制——以上都等于 255
 
-# Underscores in numbers (readability, ignored by Python)
+# 数字里的下划线（增加可读性，Python 忽略它）
 million = 1_000_000
 pi = 3.141_592_653
 
-# String delimiters — single or double quotes, both work
+# 字符串分隔符——单引号或双引号都行
 s1 = 'hello'
 s2 = "world"
-s3 = '''multi
-line
-string'''          # triple quotes span newlines</code></pre>
+s3 = '''多行
+字符串'''          # 三引号可以跨行</code></pre>
   </div>
 
-  <!-- ── Section 3: Type Checking ── -->
-  <h2>Checking Types at Runtime (类型检查)</h2>
+  <h2>运行时类型检查</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">x = 42
 
-# type() returns the exact type object
+# type() 返回精确的类型对象
 print(type(x))           # &lt;class 'int'&gt;
 print(type(x) is int)    # True
 
-# isinstance() checks for a type or its base classes — prefer this
+# isinstance() 检查类型或其父类——优先用这个
 print(isinstance(x, int))         # True
-print(isinstance(x, (int, float))) # True — checks multiple types at once
+print(isinstance(x, (int, float))) # True——可以同时检查多种类型
 
-# bool is a subclass of int — isinstance catches it
-print(isinstance(True, int))   # True  ← might surprise you
-print(type(True) is int)       # False — exact type check distinguishes them</code></pre>
+# bool 是 int 的子类——isinstance 会捕获到它
+print(isinstance(True, int))   # True  ← 可能让你意外
+print(type(True) is int)       # False——精确类型检查能区分它们</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">Best Practice</div>
-    Use <code>isinstance()</code> over <code>type() ==</code> checks. It respects inheritance and is the idiomatic Python way. You'll see it constantly in library code.
+    <div class="callout-label">最佳实践</div>
+    用 <code>isinstance()</code> 而不是 <code>type() ==</code> 检查。它尊重继承关系，是 Python 惯用写法。你在库代码里到处都能看到它。
   </div>
 
-  <h3>Type conversion (类型转换)</h3>
+  <h3>类型转换</h3>
   <div class="code-block">
-    <div class="code-label">Python — explicit casting</div>
-    <pre><code class="language-python">int("42")         # 42    — string to int
+    <div class="code-label">Python — 显式类型转换</div>
+    <pre><code class="language-python">int("42")         # 42    — 字符串转整数
 float("3.14")     # 3.14
-str(100)          # "100" — int to string
-bool(0)           # False — zero is falsy
-bool("hello")     # True  — non-empty string is truthy
+str(100)          # "100" — 整数转字符串
+bool(0)           # False — 零是假值（falsy）
+bool("hello")     # True  — 非空字符串是真值（truthy）
 
-int(3.9)          # 3     — truncates, does NOT round
-round(3.9)        # 4     — rounds to nearest int</code></pre>
+int(3.9)          # 3     — 截断，不是四舍五入
+round(3.9)        # 4     — 四舍五入到最近整数</code></pre>
   </div>
 
-  <!-- ── Section 4: Strings ── -->
-  <h2>String Operations (字符串操作)</h2>
+  <h2>字符串操作</h2>
 
-  <h3>f-strings (格式化字符串字面量)</h3>
+  <h3>f-string（格式化字符串字面量）</h3>
   <p>
-    Introduced in Python 3.6, f-strings are the modern way to embed expressions in strings. Prefix the string with <code>f</code> and put any expression inside <code>{}</code>.
+    Python 3.6 引入的 f-string 是现代嵌入表达式的方式。在字符串前加 <code>f</code>，把任何表达式放进 <code>{}</code> 里就行。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — f-strings</div>
+    <div class="code-label">Python — f-string</div>
     <pre><code class="language-python">name  = "Alice"
 score = 98.6
 
-# Basic embedding
-print(f"Hello, {name}!")               # Hello, Alice!
+# 基本嵌入
+print(f"你好，{name}！")               # 你好，Alice！
 
-# Expressions work inside {}
-print(f"Score: {score:.1f}%")          # Score: 98.6%
+# {} 里可以写表达式
+print(f"分数：{score:.1f}%")           # 分数：98.6%
 print(f"2 + 2 = {2 + 2}")             # 2 + 2 = 4
-print(f"Upper: {name.upper()}")        # Upper: ALICE
+print(f"大写：{name.upper()}")         # 大写：ALICE
 
-# Padding and alignment
+# 对齐与填充
 print(f"{'left':<10}|")               # 'left      |'
 print(f"{'right':>10}|")              # '     right|'
 print(f"{42:05d}")                     # '00042'
 print(f"{3.14159:.2f}")               # '3.14'
 
-# Debug shorthand (Python 3.8+)
+# 调试简写（Python 3.8+）
 x = 42
 print(f"{x=}")                         # x=42</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    f-strings are essentially Python's version of C++20 <code>std::format("{}", value)</code> or the older <code>sprintf</code>, but inline and evaluated at runtime. Unlike <code>printf</code>, there's no separate format string — the expression is <em>inside</em> the string literal.
+    <div class="callout-label">C++ 对比</div>
+    f-string 本质上是 Python 版的 C++20 <code>std::format("{}", value)</code> 或旧版 <code>sprintf</code>，但是内联的，在运行时求值。和 <code>printf</code> 不同，格式说明和表达式在同一个字符串字面量里。
   </div>
 
-  <h3>Common string methods</h3>
+  <h3>常用字符串方法</h3>
   <div class="code-block">
-    <div class="code-label">Python — string methods (strings are immutable — all methods return new strings)</div>
+    <div class="code-label">Python — 字符串方法（字符串是不可变的——所有方法返回新字符串）</div>
     <pre><code class="language-python">s = "  Hello, World!  "
 
-s.strip()           # "Hello, World!"   — remove leading/trailing whitespace
+s.strip()           # "Hello, World!"   — 去掉首尾空白
 s.lower()           # "  hello, world!  "
 s.upper()           # "  HELLO, WORLD!  "
 s.replace("World", "Python")  # "  Hello, Python!  "
@@ -211,125 +206,167 @@ s.split(",")        # ['  Hello', ' World!  ']
 
 s.startswith("  H")  # True
 s.endswith("  ")     # True
-s.strip().find("World")  # 7  — index of first match, -1 if not found
-"hello" in s.lower() # True  — membership test</code></pre>
+s.strip().find("World")  # 7  — 第一个匹配的索引，-1 表示未找到
+"hello" in s.lower() # True  — 成员测试</code></pre>
   </div>
 
-  <h3>String slicing (切片)</h3>
+  <h3>字符串切片（slicing）</h3>
   <p>
-    Python's slice syntax <code>s[start:stop:step]</code> is one of its most expressive features. All indices are optional.
+    Python 的切片语法 <code>s[start:stop:step]</code> 是最具表现力的特性之一。所有索引都是可选的。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — slicing</div>
+    <div class="code-label">Python — 切片</div>
     <pre><code class="language-python">s = "Hello, World!"
 #    0123456789...
 
-s[0]       # 'H'          — index from start
-s[-1]      # '!'          — index from end
+s[0]       # 'H'          — 从头部索引
+s[-1]      # '!'          — 从尾部索引
 s[7:12]    # 'World'      — [start, stop)
-s[:5]      # 'Hello'      — from beginning to index 5
-s[7:]      # 'World!'     — from index 7 to end
-s[::2]     # 'Hlo ol!'    — every other character (step=2)
-s[::-1]    # '!dlroW ,olleH'  — reverse the string</code></pre>
+s[:5]      # 'Hello'      — 从头到索引 5
+s[7:]      # 'World!'     — 从索引 7 到末尾
+s[::2]     # 'Hlo ol!'    — 每隔一个字符（步长=2）
+s[::-1]    # '!dlroW ,olleH'  — 反转字符串</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Python slicing is similar to <code>std::string::substr(start, length)</code>, but more powerful: negative indices, step parameter, and the stop index is exclusive (like STL iterators). Note that Python strings are <em>immutable</em> — <code>s[0] = 'h'</code> raises a <code>TypeError</code>. Use <code>s = 'h' + s[1:]</code> or convert to a list first.
+    <div class="callout-label">C++ 对比</div>
+    Python 切片类似于 <code>std::string::substr(start, length)</code>，但更强大：负索引、步长参数，而且 stop 索引是排他的（就像 STL 迭代器）。注意 Python 字符串是<em>不可变的</em>——<code>s[0] = 'h'</code> 会抛 <code>TypeError</code>。要修改，用 <code>s = 'h' + s[1:]</code> 或先转成 list。
   </div>
 
-  <!-- ── Section 5: Operators ── -->
-  <h2>Operators (运算符)</h2>
+  <h2>运算符</h2>
 
-  <h3>Arithmetic operators (算术运算符)</h3>
+  <h3>算术运算符</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python">10 + 3    # 13   — addition
-10 - 3    # 7    — subtraction
-10 * 3    # 30   — multiplication
-10 / 3    # 3.333...  — TRUE division (always returns float)
-10 // 3   # 3    — FLOOR division (integer result, truncates toward -inf)
-10 % 3    # 1    — modulo (remainder)
-2 ** 10   # 1024 — exponentiation (no std::pow needed)</code></pre>
+    <pre><code class="language-python">10 + 3    # 13   — 加
+10 - 3    # 7    — 减
+10 * 3    # 30   — 乘
+10 / 3    # 3.333...  — 真除法（总是返回 float）
+10 // 3   # 3    — 整除（向下取整）
+10 % 3    # 1    — 取模（求余数）
+2 ** 10   # 1024 — 幂运算（不需要 std::pow）</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Watch Out</div>
-    In Python 3, <code>/</code> is always true division — <code>7 / 2</code> is <code>3.5</code>, not <code>3</code>.
-    Use <code>//</code> for integer (floor) division. This is different from C++, where <code>7 / 2 == 3</code> for integer operands.
+    <div class="callout-label">注意</div>
+    Python 3 里，<code>/</code> 永远是真除法——<code>7 / 2</code> 是 <code>3.5</code>，不是 <code>3</code>。
+    用 <code>//</code> 做整除。这和 C++ 不同——C++ 里整数操作数的 <code>7 / 2 == 3</code>。
   </div>
 
-  <h3>Comparison and logical operators</h3>
+  <h3>比较与逻辑运算符</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># Comparison (比较运算符)
+    <pre><code class="language-python"># 比较
 5 == 5     # True
 5 != 4     # True
 5 > 3      # True
 5 <= 5     # True
 
-# Python allows chained comparisons — very readable
-1 < x < 10       # equivalent to x > 1 and x < 10
-0 <= age < 120   # range check in one expression
+# Python 支持链式比较——非常易读
+1 < x < 10       # 等价于 x > 1 and x < 10
+0 <= age < 120   # 一个表达式搞定范围检查
 
-# Logical (逻辑运算符) — English keywords, not symbols
+# 逻辑运算符——用英文关键字，不用符号
 True and False   # False
 True or False    # True
 not True         # False
 
-# Identity vs equality
+# 身份 vs 相等
 a = [1, 2, 3]
 b = [1, 2, 3]
-a == b     # True  — same VALUE
-a is b     # False — different OBJECTS in memory
+a == b     # True  — 值相同
+a is b     # False — 内存里是不同对象
 a is None  # False
 x = None
-x is None  # True  — use 'is' for None checks, not ==</code></pre>
+x is None  # True  — 检查 None 用 is，不用 ==</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Python's <code>and</code>/<code>or</code>/<code>not</code> are equivalent to C++'s <code>&amp;&amp;</code>/<code>||</code>/<code>!</code>. Python's <code>is</code> operator checks pointer equality (like comparing addresses), similar to <code>ptr1 == ptr2</code> for raw pointers, not the values they point to.
+    <div class="callout-label">C++ 对比</div>
+    Python 的 <code>and</code>/<code>or</code>/<code>not</code> 等价于 C++ 的 <code>&amp;&amp;</code>/<code>||</code>/<code>!</code>。Python 的 <code>is</code> 运算符检查指针相等（类似比较两个裸指针的地址），而不是指针指向的值。
   </div>
 
-  <!-- ── Section 6: I/O ── -->
-  <h2>Input and Output (输入输出)</h2>
+  <h2>输入与输出</h2>
 
   <div class="code-block">
     <div class="code-label">Python — print()</div>
-    <pre><code class="language-python">print("Hello")                    # Hello\n (newline by default)
-print("a", "b", "c")             # a b c   (space separator by default)
+    <pre><code class="language-python">print("Hello")                    # Hello\n（默认有换行）
+print("a", "b", "c")             # a b c  （默认空格分隔）
 print("a", "b", "c", sep="-")    # a-b-c
-print("no newline", end="")       # suppress the trailing \n
-print()                           # just prints a newline
+print("没有换行", end="")          # 去掉末尾的 \n
+print()                           # 只打印一个换行
 
-# Printing multiple types — no conversion needed
+# 打印多种类型——不需要手动转换
 x = 42
-print("Value:", x, "type:", type(x))  # Value: 42 type: &lt;class 'int'&gt;</code></pre>
+print("值：", x, "类型：", type(x))  # 值：42 类型：&lt;class 'int'&gt;</code></pre>
   </div>
 
   <div class="code-block">
     <div class="code-label">Python — input()</div>
-    <pre><code class="language-python">name = input("Enter your name: ")   # always returns a str
-age  = int(input("Enter your age: "))   # cast immediately if you need int
+    <pre><code class="language-python">name = input("请输入你的名字：")   # 总是返回 str
+age  = int(input("请输入你的年龄："))   # 如果需要整数，立即转换
 
-print(f"Hello {name}, you are {age} years old.")</code></pre>
+print(f"你好 {name}，你今年 {age} 岁。")</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Key Takeaway</div>
-    <code>input()</code> <strong>always</strong> returns a string (字符串). If you expect a number, wrap it: <code>int(input(...))</code> or <code>float(input(...))</code>. Forgetting this is one of the most common beginner errors.
+    <div class="callout-label">关键点</div>
+    <code>input()</code> <strong>总是</strong>返回字符串。如果你想要数字，记得套一层：<code>int(input(...))</code> 或 <code>float(input(...))</code>。忘记这一点是最常见的初学错误之一。
   </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "在 Python 中，<code>7 / 2</code> 的结果是什么？",
+      "options": [
+        "3（整除）",
+        "3.5（真除法，返回 float）",
+        "3.0（自动转为 float 但截断）",
+        "报错，整数之间不能用 /"
+      ],
+      "answer": 1,
+      "explanation": "Python 3 里，/ 永远是真除法，结果是 3.5。如果你想要整除，用 //，即 7 // 2 == 3。这和 C++ 不同——C++ 里两个整数相除会截断。"
+    },
+    {
+      "q": "下面哪种写法是检查变量 x 是否为 None 的正确姿势？",
+      "options": [
+        "if x == None:",
+        "if x is None:",
+        "if type(x) == NoneType:",
+        "if x.isNone():"
+      ],
+      "answer": 1,
+      "explanation": "检查 None 应该用 is，不用 ==。is 检查对象身份（内存地址），None 是单例，所以 x is None 是正确且惯用的写法。== 在理论上可能被子类重写。"
+    },
+    {
+      "q": "Python 的 f-string 是什么？",
+      "options": [
+        "一种用于文件操作的特殊字符串",
+        "在字符串前加 f 前缀，允许在 {} 里直接嵌入表达式",
+        "一种只能包含数字的格式化字符串",
+        "Python 2 中旧版 % 格式化的新名字"
+      ],
+      "answer": 1,
+      "explanation": "f-string（格式化字符串字面量）在 Python 3.6 引入，在字符串前加 f，花括号 {} 里可以放任意 Python 表达式，运行时会被求值并插入字符串中。类似 C++20 的 std::format，但更简洁。"
+    }
+  ]
+  </script>
 
   <div class="chapter-nav">
     <a href="ch0.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 0: Why Python?</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 0 章：为什么学 Python？</span>
     </a>
     <a href="ch2.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 2: Control Flow</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 2 章：控制流</span>
     </a>
   </div>
 

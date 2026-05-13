@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 10 — Transform & Aggregate | Python for C++ Devs</title>
+<title>第 10 章 — 数据变换与聚合 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="10">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,120 +30,116 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 10</div>
-    <h1>Transform &amp; Aggregate <span style="font-weight:300;color:var(--text-muted)">数据变换</span></h1>
+    <div class="chapter-label">第 10 章</div>
+    <h1>数据变换与聚合</h1>
     <p class="lead">
-      Once your data is clean, you need to reshape it — grouping rows by category, merging tables, pivoting summaries, and engineering new features. This chapter covers the transformation toolkit that bridges raw data and model-ready features.
+      数据清洗完毕后，你需要重塑它——按类别分组、合并表格、透视汇总、构造新特征。这一章覆盖连接原始数据和模型就绪特征之间的变换工具箱。
     </p>
   </div>
 
-  <!-- ── groupby ── -->
-  <h2>Grouping Data with <code>.groupby()</code></h2>
+  <h2>用 .groupby() 分组数据</h2>
 
   <p>
-    <code>.groupby()</code> is pandas' implementation of the SQL <code>GROUP BY</code> clause. The pattern is always: <strong>split</strong> the DataFrame into groups, <strong>apply</strong> a function to each group, <strong>combine</strong> the results. This is the Split-Apply-Combine (分割-应用-合并) paradigm.
+    <code>.groupby()</code> 是 pandas 对 SQL <code>GROUP BY</code> 子句的实现。模式永远是：<strong>分割</strong> DataFrame 为各组，<strong>应用</strong>函数到每组，<strong>合并</strong>结果。这就是分割-应用-合并（Split-Apply-Combine）范式。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — groupby basics</div>
+    <div class="code-label">Python — groupby 基础</div>
     <pre><code class="language-python">import pandas as pd
 
 df = pd.read_csv("employees.csv")
-# columns: name, dept, salary, years_exp, score
+# 列：name, dept, salary, years_exp, score
 
-# Single-column group + single aggregation
+# 单列分组 + 单个聚合
 df.groupby("dept")["salary"].mean()
 # dept
-# Engineering    95000.0
-# HR             62000.0
-# Sales          71000.0
-# Name: salary, dtype: float64
+# 工程部    95000.0
+# 人事部    62000.0
+# 销售部    71000.0
 
-# Multiple aggregations on one column — .agg()
+# 对一列做多个聚合——.agg()
 df.groupby("dept")["salary"].agg(["mean", "median", "std", "count"])
 
-# Multiple columns
+# 多列聚合
 df.groupby("dept")[["salary", "score"]].mean()
 
-# Group by multiple columns
+# 按多列分组
 df.groupby(["dept", "level"])["salary"].mean()</code></pre>
   </div>
 
-  <h3>Named aggregations (Python 3.8+)</h3>
+  <h3>具名聚合（Python 3.8+）</h3>
   <div class="code-block">
-    <div class="code-label">Python — named agg for clean output</div>
-    <pre><code class="language-python"># Named aggregation: output_col_name = pd.NamedAgg(column, aggfunc)
+    <div class="code-label">Python — 具名聚合输出更整洁</div>
+    <pre><code class="language-python"># 具名聚合：输出列名 = pd.NamedAgg(列名, 聚合函数)
 summary = df.groupby("dept").agg(
-    avg_salary  = ("salary", "mean"),
-    max_salary  = ("salary", "max"),
-    headcount   = ("name",   "count"),
+    avg_salary  = ("salary",    "mean"),
+    max_salary  = ("salary",    "max"),
+    headcount   = ("name",      "count"),
     avg_tenure  = ("years_exp", "median"),
 )
-# Returns a clean DataFrame with intuitive column names
+# 返回列名直观的干净 DataFrame
 
-# Custom aggregation functions
+# 自定义聚合函数
 def cv(series):
-    """Coefficient of variation (变异系数)."""
+    """变异系数（Coefficient of Variation）。"""
     return series.std() / series.mean()
 
 df.groupby("dept")["salary"].agg(["mean", cv])
 
-# Transform — returns same-length Series (for adding group stats back)
+# transform——返回等长 Series（用于把组统计加回原 DataFrame）
 df["dept_avg_salary"] = df.groupby("dept")["salary"].transform("mean")
 df["salary_ratio"] = df["salary"] / df["dept_avg_salary"]</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Analogy</div>
-    <code>groupby + agg</code> is roughly equivalent to iterating over a sorted vector, detecting group boundaries, and computing a running aggregate — but pandas does all the bookkeeping, sorting, and result assembly for you. In SQL terms it's <code>SELECT dept, AVG(salary) FROM employees GROUP BY dept</code>. No temporary containers, no manual iteration.
+    <div class="callout-label">C++ 类比</div>
+    <code>groupby + agg</code> 大致等价于遍历一个已排序的 vector，检测组边界，并计算滚动聚合——但 pandas 帮你处理了所有的记账、排序和结果组装。用 SQL 来说就是 <code>SELECT dept, AVG(salary) FROM employees GROUP BY dept</code>。没有临时容器，没有手动迭代。
   </div>
 
-  <!-- ── pivot_table ── -->
-  <h2>Pivot Tables (透视表)</h2>
+  <h2>透视表（pivot table）</h2>
 
   <p>
-    A pivot table (透视表) reshapes data by spreading one column's values across new columns — turning "long" format into "wide" format. Think of it as a two-dimensional groupby.
+    透视表通过把一列的值铺展成新列来重塑数据——把"长"格式变成"宽"格式。把它想成二维的 groupby。
   </p>
 
   <div class="code-block">
     <div class="code-label">Python — pd.pivot_table</div>
     <pre><code class="language-python">df = pd.read_csv("sales.csv")
-# columns: region, product, quarter, revenue
+# 列：region, product, quarter, revenue
 
-# Mean revenue by region (rows) × product (columns)
+# 按地区（行）× 产品（列）的平均收入
 pivot = pd.pivot_table(
     df,
-    values  = "revenue",      # what to aggregate
-    index   = "region",       # rows
-    columns = "product",      # new columns
-    aggfunc = "mean",         # how to aggregate (default: mean)
-    fill_value = 0,           # replace NaN with 0
+    values  = "revenue",      # 聚合什么
+    index   = "region",       # 行
+    columns = "product",      # 新列
+    aggfunc = "mean",         # 如何聚合（默认：mean）
+    fill_value = 0,           # 用 0 替换 NaN
 )
 
-# Multi-level: rows = region × quarter, columns = product
+# 多层级：行 = 地区 × 季度，列 = 产品
 pd.pivot_table(df,
                values="revenue",
                index=["region", "quarter"],
                columns="product",
                aggfunc="sum",
-               margins=True)    # add row/column totals (汇总行)
+               margins=True)    # 添加行/列汇总
 
-# Reverse operation: pd.melt — wide → long format (用于机器学习)
+# 反向操作：pd.melt——宽格式 → 长格式（机器学习常用）
 long = pd.melt(pivot.reset_index(),
                id_vars="region",
                var_name="product",
                value_name="avg_revenue")</code></pre>
   </div>
 
-  <!-- ── merge ── -->
-  <h2>Merging DataFrames (连接)</h2>
+  <h2>合并 DataFrame（pd.merge）</h2>
 
   <p>
-    <code>pd.merge()</code> joins two DataFrames on a key column — exactly like SQL JOINs. Understanding the four join types is essential for any multi-table data work.
+    <code>pd.merge()</code> 在键列上连接两个 DataFrame——和 SQL JOIN 完全一样。理解四种连接类型是多表数据工作的必备基础。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — pd.merge join types</div>
+    <div class="code-label">Python — pd.merge 连接类型</div>
     <pre><code class="language-python">employees = pd.DataFrame({
     "emp_id": [1, 2, 3, 4],
     "name":   ["Alice", "Bob", "Charlie", "Dave"],
@@ -152,223 +148,220 @@ long = pd.melt(pivot.reset_index(),
 
 departments = pd.DataFrame({
     "dept_id": [10, 20, 40],
-    "dept_name": ["Engineering", "Sales", "Marketing"],
+    "dept_name": ["工程部", "销售部", "市场部"],
 })
 
-# INNER JOIN — only rows with matching keys in BOTH tables
+# INNER JOIN——只保留两表都有匹配键的行
 pd.merge(employees, departments, on="dept_id", how="inner")
-# Alice, Bob, Charlie (Dave's dept_id=30 has no match → dropped)
+# Alice, Bob, Charlie（Dave 的 dept_id=30 无匹配 → 被删除）
 
-# LEFT JOIN — all rows from left, matched from right, NaN for no match
+# LEFT JOIN——保留左表所有行，右表无匹配的填 NaN
 pd.merge(employees, departments, on="dept_id", how="left")
-# All 4 employees; Dave gets dept_name = NaN
+# 4 名员工都在；Dave 的 dept_name = NaN
 
-# RIGHT JOIN — all rows from right
+# RIGHT JOIN——保留右表所有行
 pd.merge(employees, departments, on="dept_id", how="right")
-# Engineering, Sales appear; Marketing included but no employees match
+# 工程部、销售部出现；市场部包含但没有员工匹配
 
-# OUTER JOIN — all rows from both, NaN where no match
+# OUTER JOIN——保留两表所有行，无匹配的填 NaN
 pd.merge(employees, departments, on="dept_id", how="outer")
 
-# Merge on columns with different names
+# 合并不同列名的键
 pd.merge(employees, departments,
          left_on="dept_id", right_on="id")
 
-# Merge on index
+# 按索引合并
 pd.merge(df1, df2, left_index=True, right_index=True)</code></pre>
   </div>
 
-  <h3>Concatenating DataFrames (pd.concat)</h3>
+  <h3>纵向拼接（pd.concat）</h3>
   <div class="code-block">
-    <div class="code-label">Python</div>
-    <pre><code class="language-python"># Stack rows (axis=0, default) — append DataFrames vertically
+    <div name="code-label">Python</div>
+    <pre><code class="language-python"># 纵向堆叠行（axis=0，默认）——垂直追加 DataFrame
 q1 = pd.read_csv("q1_sales.csv")
 q2 = pd.read_csv("q2_sales.csv")
 q3 = pd.read_csv("q3_sales.csv")
 
 all_quarters = pd.concat([q1, q2, q3], ignore_index=True)
-# ignore_index=True gives clean 0,1,2,... index instead of duplicates
+# ignore_index=True 给一个干净的 0,1,2,... 索引，避免重复
 
-# Add a key to track origin
+# 添加键来追踪来源
 all_quarters = pd.concat(
     [q1, q2, q3],
     keys=["Q1", "Q2", "Q3"],
     names=["quarter", "original_idx"]
 )
 
-# Stack columns (axis=1) — join side by side on shared index
+# 横向堆叠列（axis=1）——在共享索引上并排拼接
 combined = pd.concat([df_features, df_labels], axis=1)</code></pre>
   </div>
 
-  <!-- ── apply ── -->
-  <h2>Applying Functions: <code>.apply()</code> and <code>.map()</code></h2>
+  <h2>应用函数：.apply() 与 .map()</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># .map() — element-wise on a Series (fastest for simple transforms)
-df["grade"] = df["score"].map({90: "A", 80: "B", 70: "C"})  # dict mapping
-df["score_str"] = df["score"].map(str)   # call a function on each element
+    <pre><code class="language-python"># .map()——对 Series 逐元素操作（简单变换最快）
+df["grade"]    = df["score"].map({90: "A", 80: "B", 70: "C"})  # 字典映射
+df["score_str"] = df["score"].map(str)   # 对每个元素调用函数
 
-# .apply() on a Series — like .map() but for functions returning non-scalar
+# .apply() 在 Series 上——类似 .map()，但可以返回非标量
 df["name_parts"] = df["full_name"].apply(lambda n: n.split())
 
-# .apply() on a DataFrame — row-wise (axis=1) or column-wise (axis=0)
+# .apply() 在 DataFrame 上——逐行（axis=1）或逐列（axis=0）
 def categorise_employee(row):
     if row["score"] >= 90 and row["years_exp"] >= 5:
-        return "Senior High Performer"
+        return "资深高绩效"
     elif row["score"] >= 75:
-        return "Solid Contributor"
+        return "稳定贡献者"
     else:
-        return "Needs Support"
+        return "需要支持"
 
 df["category"] = df.apply(categorise_employee, axis=1)
 
-# Vectorized alternative — usually MUCH faster than apply for math
-# Bad:  df["tax"] = df["salary"].apply(lambda x: x * 0.2)
-# Good: df["tax"] = df["salary"] * 0.2
+# 向量化替代——数学运算通常比 apply 快得多
+# 差：df["tax"] = df["salary"].apply(lambda x: x * 0.2)
+# 好：df["tax"] = df["salary"] * 0.2
 
-# Use .apply() when you need multi-column logic or non-vectorizable operations</code></pre>
+# 需要多列逻辑或无法向量化的操作时才用 .apply()</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Performance Note</div>
-    <code>.apply()</code> with <code>axis=1</code> (row-by-row) runs a Python loop under the hood — it's slow on large DataFrames. Always prefer vectorized operations (<code>df["col"] * 2</code>, <code>np.where</code>, <code>pd.cut</code>) when possible. Use <code>.apply()</code> only when the logic genuinely requires row context or external function calls.
+    <div class="callout-label">性能注记</div>
+    <code>.apply()</code> 加 <code>axis=1</code>（逐行）在底层跑的是 Python 循环——在大 DataFrame 上很慢。尽量优先用向量化操作（<code>df["col"] * 2</code>、<code>np.where</code>、<code>pd.cut</code>）。只有当逻辑确实需要行上下文或外部函数调用时，才用 <code>.apply()</code>。
   </div>
 
-  <!-- ── Feature engineering ── -->
-  <h2>Feature Engineering Basics (特征工程)</h2>
+  <h2>特征工程基础</h2>
 
   <p>
-    Feature engineering means creating new informative columns from existing ones. It's often the single highest-leverage step in an ML project — better features beat better algorithms.
+    特征工程意味着从已有列创造新的有信息量的列。这往往是 ML 项目里杠杆最大的单一步骤——更好的特征胜过更好的算法。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — common feature engineering patterns</div>
+    <div class="code-label">Python — 常见特征工程模式</div>
     <pre><code class="language-python">import pandas as pd
 import numpy as np
 
-# 1. Ratio features
+# 1. 比率特征
 df["price_per_sqft"] = df["price"] / df["sqft"]
 df["score_per_year"]  = df["total_score"] / df["years_exp"].replace(0, np.nan)
 
-# 2. Binning continuous variables (discretisation 离散化)
+# 2. 对连续变量分箱（离散化）
 df["age_group"] = pd.cut(df["age"],
                           bins=[0, 18, 35, 55, 100],
-                          labels=["Youth", "Adult", "Middle", "Senior"])
+                          labels=["青少年", "成年", "中年", "老年"])
 
-# 3. Date/time features from datetime columns
+# 3. 从 datetime 列提取时间特征
 df["created_at"] = pd.to_datetime(df["created_at"])
 df["hour"]        = df["created_at"].dt.hour
-df["day_of_week"] = df["created_at"].dt.dayofweek  # 0=Mon, 6=Sun
+df["day_of_week"] = df["created_at"].dt.dayofweek  # 0=周一，6=周日
 df["is_weekend"]  = df["day_of_week"].isin([5, 6]).astype(int)
 df["days_since"]  = (pd.Timestamp.now() - df["created_at"]).dt.days
 
-# 4. Text-derived features
-df["name_length"]    = df["name"].str.len()
-df["word_count"]     = df["description"].str.split().str.len()
-df["has_email"]      = df["contact"].str.contains("@").astype(int)
+# 4. 文本衍生特征
+df["name_length"]   = df["name"].str.len()
+df["word_count"]    = df["description"].str.split().str.len()
+df["has_email"]     = df["contact"].str.contains("@").astype(int)
 
-# 5. Interaction features (combining two columns)
-df["exp_score"]  = df["years_exp"] * df["performance_score"]
+# 5. 交互特征（组合两列）
+df["exp_score"] = df["years_exp"] * df["performance_score"]
 
-# 6. Log transform — stabilise skewed distributions
-df["log_salary"] = np.log1p(df["salary"])   # log(1+x), safe for zero</code></pre>
+# 6. 对数变换——稳定偏斜分布
+df["log_salary"] = np.log1p(df["salary"])   # log(1+x)，对零值安全</code></pre>
   </div>
 
-  <!-- ── get_dummies ── -->
-  <h2>Encoding Categorical Variables (类别变量编码)</h2>
+  <h2>类别变量编码</h2>
 
   <p>
-    Most ML algorithms require numerical input. Categorical columns (strings like "Eng", "Sales") need to be encoded as numbers. The two main approaches:
+    大多数 ML 算法要求数值输入。分类列（"工程部"、"销售部" 这样的字符串）需要编码成数字。两种主要方式：
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — one-hot encoding with pd.get_dummies</div>
+    <div class="code-label">Python — 用 pd.get_dummies 做独热编码</div>
     <pre><code class="language-python">df = pd.DataFrame({
     "name": ["Alice", "Bob", "Charlie"],
-    "dept": ["Eng", "Sales", "Eng"],
-    "city": ["NY", "LA", "NY"],
+    "dept": ["工程", "销售", "工程"],
+    "city": ["北京", "上海", "北京"],
 })
 
-# One-hot encoding (独热编码) — creates binary columns for each category
+# 独热编码（one-hot encoding）——为每个类别创建二进制列
 encoded = pd.get_dummies(df, columns=["dept", "city"])
-#    name  dept_Eng  dept_Sales  city_LA  city_NY
-#   Alice         1           0        0        1
-#     Bob         0           1        1        0
-# Charlie         1           0        0        1
+#    name  dept_工程  dept_销售  city_上海  city_北京
+#   Alice         1          0          0          1
+#     Bob         0          1          1          0
+# Charlie         1          0          0          1
 
-# drop_first=True — drop one category to avoid multicollinearity
-# (necessary for linear models that require independent features)
+# drop_first=True——删除一个类别以避免多重共线性
+# （线性模型需要独立特征时必要）
 pd.get_dummies(df, columns=["dept"], drop_first=True)
 
-# Label encoding — ordinal or when cardinality is high
+# 标签编码——有序类别或基数高时
 from sklearn.preprocessing import LabelEncoder
 le = LabelEncoder()
 df["dept_encoded"] = le.fit_transform(df["dept"])
-# Eng→0, Sales→1 (alphabetical) — only meaningful for ordinal data!
+# 工程→0, 销售→1（按字母顺序）——只对有序数据有意义！
 
-# Ordinal encoding with defined order
+# 有定义顺序的序数编码
 size_order = {"S": 0, "M": 1, "L": 2, "XL": 3}
 df["size_num"] = df["size"].map(size_order)</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">One-Hot vs Label Encoding</div>
-    Use <strong>one-hot encoding</strong> for nominal categories with no inherent order (city, colour, department). Use <strong>label/ordinal encoding</strong> only when there is a meaningful order (small &lt; medium &lt; large). For high-cardinality categories (hundreds of unique values), consider target encoding or embeddings — one-hot creates too many columns.
+    <div class="callout-label">独热编码 vs 标签编码</div>
+    对没有内在顺序的名义类别（城市、颜色、部门）用<strong>独热编码</strong>。只有存在有意义顺序时（小 &lt; 中 &lt; 大）才用<strong>标签/序数编码</strong>。对高基数类别（数百个唯一值），考虑目标编码（target encoding）或 embedding——独热编码会产生太多列。
   </div>
 
   <div class="done-btn-wrap">
-    <button id="mark-done-btn">Mark as complete</button>
-    <span class="done-hint">Saves your progress locally.</span>
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
   </div>
 
   <div id="quiz"></div>
   <script id="quiz-data" type="application/json">
   [
     {
-      "q": "Which method is the pandas equivalent of SQL's GROUP BY + aggregate?",
+      "q": "哪个方法是 pandas 里 SQL GROUP BY + 聚合的等价物？",
       "options": [
         "df.aggregate()",
-        "df.groupby() combined with an aggregation like .mean() or .agg()",
+        "df.groupby() 结合 .mean() 或 .agg() 等聚合方法",
         "df.pivot()",
         "df.cluster()"
       ],
       "answer": 1,
-      "explanation": "<code>df.groupby('dept')['salary'].mean()</code> is directly equivalent to <code>SELECT dept, AVG(salary) FROM df GROUP BY dept</code>. The <code>.agg()</code> method lets you apply multiple or custom aggregation functions in one call."
+      "explanation": "df.groupby('dept')['salary'].mean() 直接等价于 SQL 的 SELECT dept, AVG(salary) FROM df GROUP BY dept。.agg() 方法让你在一次调用里应用多个或自定义聚合函数。"
     },
     {
-      "q": "What does <code>pd.merge(left, right, on='id', how='left')</code> return?",
+      "q": "<code>pd.merge(left, right, on='id', how='left')</code> 返回什么？",
       "options": [
-        "Only rows where 'id' exists in both DataFrames (inner join)",
-        "All rows from 'left', with matching rows from 'right'; non-matches become NaN",
-        "All rows from 'right', filling unmatched left rows with NaN",
-        "A concatenation of both DataFrames stacked vertically"
+        "只保留两个 DataFrame 里 'id' 都存在的行（inner join）",
+        "保留 'left' 的所有行，加上 'right' 的匹配行；无匹配的变成 NaN",
+        "保留 'right' 的所有行，左表无匹配的填 NaN",
+        "把两个 DataFrame 垂直拼接在一起"
       ],
       "answer": 1,
-      "explanation": "A LEFT JOIN keeps every row from the left DataFrame. For rows where the key doesn't exist in the right DataFrame, the right-side columns are filled with NaN. This is the most common join type in data engineering because you start with your primary table and enrich it with optional lookups."
+      "explanation": "LEFT JOIN 保留左 DataFrame 的每一行。当键在右 DataFrame 里不存在时，右侧的列填 NaN。这是数据工程里最常用的连接类型，因为你从主表出发，用可选的查找表来丰富它。"
     },
     {
-      "q": "What does <code>pd.get_dummies(df, columns=['color'])</code> do to a column with values ['red', 'blue', 'green']?",
+      "q": "对一列含有 ['红', '蓝', '绿'] 的列做 <code>pd.get_dummies(df, columns=['color'])</code>，会发生什么？",
       "options": [
-        "Replaces the column with integer codes (red=0, blue=1, green=2)",
-        "Creates three binary columns: color_red, color_blue, color_green, each containing 0 or 1",
-        "Converts the column to a pandas Categorical type",
-        "Removes the column and adds its unique values as row indices"
+        "用整数代码替换该列（红=0，蓝=1，绿=2）",
+        "创建三个二进制列：color_红、color_蓝、color_绿，每列只含 0 或 1",
+        "把该列转换为 pandas Categorical 类型",
+        "删除该列，并把唯一值添加为行索引"
       ],
       "answer": 1,
-      "explanation": "One-hot encoding creates a separate 0/1 column for each unique value. A row that was 'red' gets color_red=1, color_blue=0, color_green=0. This is required by most ML algorithms which can't accept string inputs. Use <code>drop_first=True</code> with linear models to avoid the dummy variable trap."
+      "explanation": "独热编码为每个唯一值创建一个单独的 0/1 列。原来是"红"的行得到 color_红=1，color_蓝=0，color_绿=0。大多数 ML 算法无法接受字符串输入，所以需要这个步骤。在线性模型里使用 drop_first=True 以避免虚拟变量陷阱。"
     }
   ]
   </script>
 
   <div class="chapter-nav">
     <a href="ch9.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 9: Data Cleaning</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 9 章：数据清洗</span>
     </a>
     <a href="ch11.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 11: Data Visualization</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 11 章：数据可视化</span>
     </a>
   </div>
 

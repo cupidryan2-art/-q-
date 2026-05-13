@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 7 — NumPy | Python for C++ Devs</title>
+<title>第 7 章 — NumPy 数值计算 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="7">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,26 +30,25 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 7</div>
-    <h1>NumPy <span style="font-weight:300;color:var(--text-muted)">数值计算基础</span></h1>
+    <div class="chapter-label">第 7 章</div>
+    <h1>NumPy 数值计算</h1>
     <p class="lead">
-      NumPy is the reason scientific Python is fast. Its core object — the <code>ndarray</code> (N-dimensional array) — stores data as a contiguous block of typed bytes in memory, just like a C array.
-      Once you understand why that matters, everything else falls into place.
+      NumPy 是科学 Python 之所以快的原因。它的核心对象——<code>ndarray</code>（N 维数组）——把数据作为连续的有类型字节块存储在内存里，就像 C 数组一样。
+      一旦你理解了这为什么重要，剩下的一切就都顺理成章了。
     </p>
   </div>
 
-  <!-- ── Why ndarray ── -->
-  <h2>Why ndarray is Faster Than a Python List</h2>
+  <h2>为什么 ndarray 比 Python list 快</h2>
 
   <p>
-    A Python <code>list</code> is an array of <em>pointers</em> to Python objects scattered across the heap. To add two lists of a million numbers, Python must loop in the interpreter — fetching each object, reading its type tag, extracting the value, performing the add, boxing the result, and storing the pointer. That's roughly 10–20 operations per element, all in slow Python bytecode.
+    Python <code>list</code> 是一个指向堆上分散 Python 对象的<em>指针数组</em>。要把两个百万元素的 list 相加，Python 必须在解释器里循环——取每个对象、读类型标记、提取值、相加、装箱结果、存储指针。每个元素大概需要 10–20 个操作，全都在慢吞吞的 Python 字节码里跑。
   </p>
   <p>
-    A NumPy <code>ndarray</code> stores values as raw bytes in a contiguous block — like a C array. When you write <code>a + b</code>, NumPy dispatches to a compiled C loop that runs at full hardware speed with no Python overhead. For a million-element array, this is typically <strong>100–1000× faster</strong>.
+    NumPy <code>ndarray</code> 把值作为原始字节存在连续内存块里——就像 C 数组。当你写 <code>a + b</code>，NumPy 调度到编译好的 C 循环，以全硬件速度运行，没有任何 Python 开销。对于百万元素数组，这通常快 <strong>100–1000 倍</strong>。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — the speed difference</div>
+    <div class="code-label">Python — 速度差距</div>
     <pre><code class="language-python">import numpy as np
 import time
 
@@ -57,302 +56,295 @@ n = 1_000_000
 py_list = list(range(n))
 np_arr  = np.arange(n)
 
-# Python list — pure Python loop
+# Python list — 纯 Python 循环
 t0 = time.perf_counter()
 result = [x * 2 for x in py_list]
-print(f"List comprehension: {time.perf_counter()-t0:.4f}s")
+print(f"列表推导式：{time.perf_counter()-t0:.4f}s")
 
-# NumPy — vectorized C loop
+# NumPy — 向量化 C 循环
 t0 = time.perf_counter()
-result = np_arr * 2        # one line, no Python loop at all
-print(f"NumPy vectorized:   {time.perf_counter()-t0:.4f}s")
-# NumPy is typically 50-200x faster for this operation</code></pre>
+result = np_arr * 2        # 一行，根本没有 Python 循环
+print(f"NumPy 向量化：{time.perf_counter()-t0:.4f}s")
+# NumPy 对这个操作通常快 50-200 倍</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Analogy</div>
-    NumPy arrays are the Python equivalent of a <code>std::vector&lt;double&gt;</code> stored as contiguous memory — except operations on them are <em>already written for you</em> in highly optimised BLAS/LAPACK routines. You get the performance of C++ numerical code without writing any C++.
+    <div class="callout-label">C++ 类比</div>
+    NumPy 数组是 <code>std::vector&lt;double&gt;</code> 连续内存存储的 Python 等价物——只不过对它们的操作<em>已经帮你写好了</em>，在高度优化的 BLAS/LAPACK 例程里。你能拿到 C++ 数值代码的性能，却不需要写任何 C++。
   </div>
 
-  <h3>Key constraint: one dtype per array</h3>
+  <h3>关键约束：每个数组只有一种 dtype</h3>
   <p>
-    Unlike Python lists, every element in an ndarray must be the same type — called the <code>dtype</code> (数据类型). Common dtypes: <code>float64</code>, <code>int64</code>, <code>bool</code>, <code>complex128</code>. NumPy will infer the dtype from your input or you can specify it.
+    和 Python list 不同，ndarray 里的每个元素必须是同一种类型——叫做 <code>dtype</code>（数据类型）。常见的 dtype：<code>float64</code>、<code>int64</code>、<code>bool</code>、<code>complex128</code>。NumPy 会从输入推断 dtype，你也可以显式指定。
   </p>
 
-  <!-- ── Creating arrays ── -->
-  <h2>Creating Arrays (创建数组)</h2>
+  <h2>创建数组</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — array construction</div>
+    <div class="code-label">Python — 数组构造</div>
     <pre><code class="language-python">import numpy as np
 
-# From a Python list
-a = np.array([1, 2, 3, 4, 5])           # dtype inferred: int64
+# 从 Python list 创建
+a = np.array([1, 2, 3, 4, 5])           # dtype 推断为 int64
 b = np.array([1.0, 2.0, 3.0])           # float64
-c = np.array([1, 2, 3], dtype=np.float32)  # explicit dtype
+c = np.array([1, 2, 3], dtype=np.float32)  # 显式 dtype
 
-# Filled arrays
-np.zeros(5)              # [0. 0. 0. 0. 0.]  — float64 by default
-np.ones((3, 4))          # 3×4 matrix of 1.0
-np.full((2, 3), 7.5)     # 2×3 matrix of 7.5
-np.eye(3)                # 3×3 identity matrix
+# 填充数组
+np.zeros(5)              # [0. 0. 0. 0. 0.]  — 默认 float64
+np.ones((3, 4))          # 3×4 全 1.0 矩阵
+np.full((2, 3), 7.5)     # 2×3 全 7.5 矩阵
+np.eye(3)                # 3×3 单位矩阵
 
-# Range and linspace (线性空间)
-np.arange(0, 10, 2)      # [0, 2, 4, 6, 8]  — like range() but returns ndarray
+# range 和 linspace（线性空间）
+np.arange(0, 10, 2)      # [0, 2, 4, 6, 8]  — 类似 range()，但返回 ndarray
 np.arange(10)            # [0,1,2,...,9]
-np.linspace(0, 1, 5)     # [0., 0.25, 0.5, 0.75, 1.0]  — 5 evenly-spaced points
+np.linspace(0, 1, 5)     # [0., 0.25, 0.5, 0.75, 1.0]  — 5 个等间距点
 
-# 2D array from nested lists
+# 从嵌套 list 创建 2D 数组
 matrix = np.array([[1, 2, 3],
                    [4, 5, 6]])           # shape (2, 3)</code></pre>
   </div>
 
   <div class="tip-box">
     <div class="callout-label">arange vs linspace</div>
-    Use <code>np.arange(start, stop, step)</code> when you know the <em>step size</em> (like Python's <code>range</code>).
-    Use <code>np.linspace(start, stop, n)</code> when you know the <em>number of points</em> — it always includes both endpoints and is safer for floating-point ranges.
+    当你知道<em>步长</em>时用 <code>np.arange(start, stop, step)</code>（像 Python 的 <code>range</code>）。
+    当你知道<em>点的数量</em>时用 <code>np.linspace(start, stop, n)</code>——它总是包含两端点，对浮点范围更安全。
   </div>
 
-  <!-- ── Array attributes ── -->
-  <h2>Array Attributes and Basic Operations</h2>
+  <h2>数组属性与基础运算</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — shape, dtype, ndim</div>
+    <div class="code-label">Python — shape、dtype、ndim</div>
     <pre><code class="language-python">a = np.array([[1, 2, 3], [4, 5, 6]])
 
-a.shape    # (2, 3)   — rows × cols
+a.shape    # (2, 3)   — 行 × 列
 a.dtype    # dtype('int64')
-a.ndim     # 2        — number of dimensions
-a.size     # 6        — total number of elements
-a.nbytes   # 48       — bytes in memory (6 × 8 bytes each)
+a.ndim     # 2        — 维度数
+a.size     # 6        — 总元素个数
+a.nbytes   # 48       — 内存字节数（6 × 8 字节）
 
-# Arithmetic — all element-wise (逐元素)
-a + 10          # add 10 to every element
-a * 2           # multiply every element by 2
-a ** 2          # square every element
-np.sqrt(a)      # square root element-wise
-a + a           # element-wise addition (requires same shape)</code></pre>
+# 算术——全部逐元素（element-wise）
+a + 10          # 每个元素加 10
+a * 2           # 每个元素乘以 2
+a ** 2          # 每个元素平方
+np.sqrt(a)      # 逐元素开方
+a + a           # 逐元素加（要求 shape 相同）</code></pre>
   </div>
 
-  <h3>Reshaping (重塑)</h3>
+  <h3>重塑（reshape）</h3>
   <div class="code-block">
-    <div class="code-label">Python — reshape, flatten, transpose</div>
+    <div class="code-label">Python — reshape、flatten、transpose</div>
     <pre><code class="language-python">a = np.arange(12)    # [0,1,2,...,11]
 
-a.reshape(3, 4)      # 3×4 matrix  — total elements must match
-a.reshape(2, 2, 3)   # 3D: 2×2×3
-a.reshape(-1, 3)     # -1 means "infer this dimension" → shape (4,3)
+a.reshape(3, 4)      # 3×4 矩阵——总元素数必须一致
+a.reshape(2, 2, 3)   # 3D：2×2×3
+a.reshape(-1, 3)     # -1 表示"推断这个维度" → shape (4,3)
 
 m = np.arange(6).reshape(2, 3)
-m.T              # transpose: shape (3, 2)
-m.flatten()      # always returns a copy: [0,1,2,3,4,5]
-m.ravel()        # returns a view (faster): [0,1,2,3,4,5]</code></pre>
+m.T              # 转置：shape (3, 2)
+m.flatten()      # 总是返回副本：[0,1,2,3,4,5]
+m.ravel()        # 返回视图（更快）：[0,1,2,3,4,5]</code></pre>
   </div>
 
-  <!-- ── Indexing ── -->
-  <h2>Indexing and Slicing (索引与切片)</h2>
+  <h2>索引与切片</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — 1D and 2D indexing</div>
+    <div class="code-label">Python — 1D 和 2D 索引</div>
     <pre><code class="language-python">a = np.array([10, 20, 30, 40, 50])
 a[0]       # 10
 a[-1]      # 50
 a[1:4]     # [20, 30, 40]
 a[::2]     # [10, 30, 50]
 
-# 2D — [row, col]
+# 2D — [行, 列]
 m = np.array([[1,  2,  3],
               [4,  5,  6],
               [7,  8,  9]])
 
-m[0, 0]    # 1        — top-left
-m[1, 2]    # 6        — row 1, col 2
-m[0, :]    # [1,2,3]  — entire first row
-m[:, 1]    # [2,5,8]  — entire second column
-m[1:, :2]  # [[4,5],[7,8]]  — bottom-left 2×2 block</code></pre>
+m[0, 0]    # 1        — 左上角
+m[1, 2]    # 6        — 第 1 行，第 2 列
+m[0, :]    # [1,2,3]  — 整个第一行
+m[:, 1]    # [2,5,8]  — 整个第二列
+m[1:, :2]  # [[4,5],[7,8]]  — 左下角 2×2 块</code></pre>
   </div>
 
-  <h3>Boolean indexing (布尔索引) — your workhorse</h3>
+  <h3>布尔索引（boolean indexing）— 你的主力工具</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">scores = np.array([72, 88, 45, 95, 60, 83])
 
-# Create a boolean mask
+# 创建布尔掩码（mask）
 mask = scores >= 80
 # [False, True, False, True, False, True]
 
-# Use mask to filter
+# 用 mask 过滤
 scores[mask]          # [88, 95, 83]
 
-# Shorthand — inline condition
-scores[scores >= 80]  # same result
+# 简写——内联条件
+scores[scores >= 80]  # 结果相同
 
-# Combine conditions — use & and | (not 'and'/'or'!)
+# 组合条件——用 & 和 |（不是 'and'/'or'！）
 scores[(scores >= 60) & (scores < 90)]  # [72, 88, 60, 83]
 
-# np.where — vectorized if/else (向量化条件)
-grades = np.where(scores >= 60, "pass", "fail")
-# ['pass', 'pass', 'fail', 'pass', 'pass', 'pass']</code></pre>
+# np.where——向量化条件（vectorized if/else）
+grades = np.where(scores >= 60, "通过", "不通过")
+# ['通过', '通过', '不通过', '通过', '通过', '通过']</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Boolean indexing has no direct C++ equivalent in the standard library. The closest approach is <code>std::copy_if</code> with a predicate, but that requires writing the loop. NumPy's mask-based selection is declarative — you describe <em>which elements</em>, not <em>how to iterate</em>. You'll find this pattern everywhere in pandas too (Chapter 8 builds directly on it).
+    <div class="callout-label">C++ 对比</div>
+    布尔索引在标准库里没有直接等价物。最接近的做法是带谓词的 <code>std::copy_if</code>，但那需要你写循环。NumPy 的基于 mask 的选取是声明式的——你描述<em>哪些元素</em>，不描述<em>怎么迭代</em>。你在 pandas 里（第 8 章）也会到处看到这个模式。
   </div>
 
-  <!-- ── Broadcasting ── -->
-  <h2>Broadcasting (广播机制)</h2>
+  <h2>广播机制（broadcasting）</h2>
 
   <p>
-    Broadcasting is NumPy's rule for applying operations on arrays of <em>compatible but different shapes</em> without copying data. It's one of NumPy's most powerful and initially confusing features.
+    广播是 NumPy 在<em>形状兼容但不完全相同</em>的数组之间执行运算的规则，无需复制数据。这是 NumPy 最强大、也是最初最令人困惑的特性之一。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — broadcasting in action</div>
+    <div class="code-label">Python — 广播实战</div>
     <pre><code class="language-python">a = np.array([1, 2, 3, 4])   # shape (4,)
 
-# Scalar broadcasting — scalar is "stretched" to match array
-a + 10       # [11, 12, 13, 14]  — scalar treated as shape (4,)
+# 标量广播——标量被"拉伸"以匹配数组
+a + 10       # [11, 12, 13, 14]  — 标量被当作 shape (4,)
 a * 2        # [2, 4, 6, 8]
 
-# 2D + 1D broadcasting
+# 2D + 1D 广播
 m = np.ones((3, 4))       # shape (3, 4)
 row = np.array([1,2,3,4]) # shape (4,)
 m + row
-# row is broadcast along the first axis (copied 3 times):
+# row 沿第一个轴广播（复制 3 次）：
 # [[2,3,4,5],
 #  [2,3,4,5],
 #  [2,3,4,5]]
 
-# Column vector broadcasting
+# 列向量广播
 col = np.array([[10], [20], [30]])  # shape (3, 1)
 m + col
 # [[11,11,11,11],
 #  [21,21,21,21],
 #  [31,31,31,31]]
 
-# Real-world example: zero-mean normalisation
+# 实际应用：零均值归一化
 data = np.array([[1,2,3],[4,5,6],[7,8,9]], dtype=float)
-means = data.mean(axis=0)    # mean of each column: [4, 5, 6]
-normalised = data - means    # broadcast: means subtracted from each row</code></pre>
+means = data.mean(axis=0)    # 每列均值：[4, 5, 6]
+normalised = data - means    # 广播：从每行减去 means</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Broadcasting Rule</div>
-    Two dimensions are compatible if they are equal, or one of them is 1. NumPy aligns shapes from the right: <code>(3,4)</code> and <code>(4,)</code> → treated as <code>(3,4)</code> and <code>(1,4)</code> → compatible. If shapes don't align, you get a <code>ValueError</code>.
+    <div class="callout-label">广播规则</div>
+    两个维度兼容，当且仅当它们相等，或其中一个是 1。NumPy 从右对齐 shape：<code>(3,4)</code> 和 <code>(4,)</code> → 被视为 <code>(3,4)</code> 和 <code>(1,4)</code> → 兼容。如果 shape 不对齐，你会得到 <code>ValueError</code>。
   </div>
 
-  <!-- ── Key operations ── -->
-  <h2>Key Aggregation Operations (聚合运算)</h2>
+  <h2>关键聚合运算</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">a = np.array([[1, 2, 3],
               [4, 5, 6]])
 
-# Global aggregations
+# 全局聚合
 a.sum()          # 21
 a.mean()         # 3.5
 a.std()          # 1.708...
 a.min()          # 1
 a.max()          # 6
-a.argmin()       # 0  — index of minimum element (flattened)
-a.argmax()       # 5  — index of maximum element
+a.argmin()       # 0  — 最小元素的索引（展平后）
+a.argmax()       # 5  — 最大元素的索引
 
-# Axis-wise operations — axis=0 operates DOWN rows (along columns)
-a.sum(axis=0)    # [5, 7, 9]   — column sums
-a.sum(axis=1)    # [6, 15]     — row sums
+# 按轴运算——axis=0 沿行方向操作（纵向）
+a.sum(axis=0)    # [5, 7, 9]   — 列求和
+a.sum(axis=1)    # [6, 15]     — 行求和
 a.mean(axis=0)   # [2.5, 3.5, 4.5]
 a.mean(axis=1)   # [2.0, 5.0]
 
-# Linear algebra (线性代数)
+# 线性代数（linear algebra）
 v1 = np.array([1, 2, 3])
 v2 = np.array([4, 5, 6])
-np.dot(v1, v2)       # 32  — dot product
-v1 @ v2              # 32  — same, using @ operator (Python 3.5+)
+np.dot(v1, v2)       # 32  — 点积
+v1 @ v2              # 32  — 同上，用 @ 运算符（Python 3.5+）
 
 m = np.array([[1,2],[3,4]])
-np.linalg.det(m)     # -2.0  — determinant
-np.linalg.inv(m)     # matrix inverse
-np.linalg.norm(v1)   # 3.742... — Euclidean norm</code></pre>
+np.linalg.det(m)     # -2.0  — 行列式
+np.linalg.inv(m)     # 矩阵求逆
+np.linalg.norm(v1)   # 3.742... — 欧几里得范数</code></pre>
   </div>
 
-  <!-- ── Random ── -->
-  <h2>Random Module (随机数)</h2>
+  <h2>随机数</h2>
 
   <div class="code-block">
     <div class="code-label">Python — np.random</div>
-    <pre><code class="language-python">rng = np.random.default_rng(seed=42)   # modern API (NumPy 1.17+)
+    <pre><code class="language-python">rng = np.random.default_rng(seed=42)   # 现代 API（NumPy 1.17+）
 
-rng.random((3, 4))          # 3×4 uniform floats in [0, 1)
-rng.integers(0, 10, size=5) # 5 random ints in [0, 10)
-rng.normal(0, 1, size=1000) # 1000 samples from N(0,1)
-rng.choice([1,2,3,4,5], size=3)  # sample without replacement
+rng.random((3, 4))          # 3×4 的均匀分布 float，范围 [0, 1)
+rng.integers(0, 10, size=5) # 5 个 [0, 10) 内的随机整数
+rng.normal(0, 1, size=1000) # 从 N(0,1) 取 1000 个样本
+rng.choice([1,2,3,4,5], size=3)  # 无放回采样
 
-# Legacy API (still very common — you'll see it everywhere)
+# 旧版 API（依然非常常见——到处都能看到）
 np.random.seed(42)
-np.random.rand(3, 4)        # uniform [0, 1)
-np.random.randn(3, 4)       # standard normal N(0,1)
-np.random.randint(0, 10, 5) # random integers
+np.random.rand(3, 4)        # 均匀分布 [0, 1)
+np.random.randn(3, 4)       # 标准正态 N(0,1)
+np.random.randint(0, 10, 5) # 随机整数
 
-# Data science tip: always fix a seed for reproducibility (可重复性)
+# 数据科学提示：始终固定 seed 以保证可复现性
 rng = np.random.default_rng(seed=2024)
-X = rng.normal(0, 1, (100, 5))   # 100 samples, 5 features — simulated dataset</code></pre>
+X = rng.normal(0, 1, (100, 5))   # 100 个样本，5 个特征——模拟数据集</code></pre>
   </div>
 
-  <!-- ── done + quiz ── -->
   <div class="done-btn-wrap">
-    <button id="mark-done-btn">Mark as complete</button>
-    <span class="done-hint">Saves your progress locally.</span>
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
   </div>
 
   <div id="quiz"></div>
   <script id="quiz-data" type="application/json">
   [
     {
-      "q": "What is the key performance advantage of NumPy arrays over Python lists for numerical computing?",
+      "q": "NumPy 数组在数值计算上比 Python list 快的根本原因是什么？",
       "options": [
-        "They use less memory",
-        "Operations are vectorized and execute in compiled C code, avoiding Python loop overhead",
-        "They support any data type in the same array",
-        "They are automatically parallelized across CPU cores"
+        "NumPy 数组占用更少内存",
+        "NumPy 操作是向量化的，在编译好的 C 代码里执行，避免了 Python 循环的解释器开销",
+        "NumPy 数组可以在同一个数组里存放不同类型的数据",
+        "NumPy 操作会自动并行化到多个 CPU 核心"
       ],
       "answer": 1,
-      "explanation": "NumPy stores elements as contiguous typed bytes and dispatches operations to compiled C/Fortran loops. A Python list stores object pointers, and any loop runs in the interpreter with type-checking overhead on every iteration."
+      "explanation": "NumPy 把元素存储为连续的有类型字节，并把操作分派到编译好的 C/Fortran 循环。Python list 存储的是对象指针，任何循环都在解释器里跑，每次迭代都有类型检查开销。对一百万元素数组，差距通常是 100–1000 倍。"
     },
     {
-      "q": "What does NumPy broadcasting allow you to do?",
+      "q": "NumPy 的广播（broadcasting）能做什么？",
       "options": [
-        "Send arrays between different Python processes",
-        "Apply operations on arrays of compatible but different shapes without copying data",
-        "Automatically detect and remove NaN values",
-        "Broadcast results to multiple output files"
+        "把数组从一个 Python 进程发送到另一个",
+        "在形状兼容但不同的数组之间执行运算，无需复制数据",
+        "自动检测并删除 NaN 值",
+        "把运算结果广播到多个输出文件"
       ],
       "answer": 1,
-      "explanation": "Broadcasting lets you write <code>matrix - mean_row</code> where mean_row has shape (n,) and matrix has shape (m,n) — NumPy conceptually 'stretches' the smaller array to match the larger one without actually copying memory."
+      "explanation": "广播让你能写 <code>matrix - mean_row</code>，其中 mean_row 的 shape 是 (n,)，matrix 的 shape 是 (m,n)——NumPy 在概念上把较小的数组"拉伸"以匹配较大的，实际上不复制内存。"
     },
     {
-      "q": "What does <code>np.arange(0, 10, 2)</code> produce?",
+      "q": "<code>np.arange(0, 10, 2)</code> 的结果是什么？",
       "options": [
         "[0, 2, 4, 6, 8, 10]",
         "[0, 2, 4, 6, 8]",
-        "[0, 2, 4, 6, 8, 10] with dtype float",
+        "[0, 2, 4, 6, 8, 10]，dtype 为 float",
         "[2, 4, 6, 8]"
       ],
       "answer": 1,
-      "explanation": "<code>np.arange(start, stop, step)</code> generates values from start up to (but NOT including) stop, with the given step. So 0, 2, 4, 6, 8 — and 10 is excluded. This mirrors Python's built-in <code>range()</code> convention."
+      "explanation": "<code>np.arange(start, stop, step)</code> 从 start 生成到 stop（不含）的值，步长为 step。所以是 0, 2, 4, 6, 8——10 被排除在外。这和 Python 内置的 <code>range()</code> 惯例一致。"
     }
   ]
   </script>
 
   <div class="chapter-nav">
     <a href="ch6.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 6: File I/O &amp; Data Formats</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 6 章：文件 I/O 与数据格式</span>
     </a>
     <a href="ch8.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 8: Pandas — Working with Data</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 8 章：Pandas 数据处理</span>
     </a>
   </div>
 

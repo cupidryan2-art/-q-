@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 9 — Data Cleaning | Python for C++ Devs</title>
+<title>第 9 章 — 数据清洗 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="9">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,34 +30,32 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 9</div>
-    <h1>Data Cleaning <span style="font-weight:300;color:var(--text-muted)">数据清洗</span></h1>
+    <div class="chapter-label">第 9 章</div>
+    <h1>数据清洗</h1>
     <p class="lead">
-      Real-world data is messy. Missing values, wrong types, duplicate rows, inconsistent strings, and impossible outliers are the norm, not the exception.
-      Data cleaning is where you spend the most time in any actual project — and where a systematic approach pays the biggest dividends.
+      真实世界的数据是一团乱麻。缺失值、错误类型、重复行、格式不一致的字符串、不可能出现的异常值——这些是常态，不是例外。
+      数据清洗是你在实际项目里花时间最多的地方，也是系统化方法回报最丰厚的地方。
     </p>
   </div>
 
-  <!-- ── Why ── -->
-  <h2>Why Data Cleaning Matters</h2>
+  <h2>为什么数据清洗如此重要</h2>
   <p>
-    A model trained on dirty data learns the dirt. A statistic computed from a column that mixes integers and "N/A" strings gives nonsense. Before any analysis or modelling, you need to understand and resolve data quality issues. The usual workflow:
+    用脏数据训练的模型，学到的就是脏规律。对一列混杂了整数和字符串 "N/A" 的数据求统计，得到的是无意义的结果。在任何分析或建模之前，你需要理解并解决数据质量问题。通常的工作流：
   </p>
   <ol>
-    <li>Detect the problem (missing? duplicated? wrong type? outlier?)</li>
-    <li>Understand why it exists (collection error? intentional? system artifact?)</li>
-    <li>Decide how to handle it (drop, fill, fix, flag)</li>
-    <li>Apply the fix and verify the result</li>
+    <li>发现问题（缺失？重复？类型错误？异常值？）</li>
+    <li>理解原因（采集错误？故意留空？系统产生的？）</li>
+    <li>决定处理方式（删除、填充、修正、标记）</li>
+    <li>应用修复并验证结果</li>
   </ol>
 
-  <!-- ── Missing values ── -->
-  <h2>Handling Missing Values (缺失值)</h2>
+  <h2>处理缺失值（missing values）</h2>
 
   <p>
-    pandas uses <code>NaN</code> (Not a Number, from NumPy) as its sentinel for missing data in numeric columns, and <code>None</code> / <code>pd.NA</code> / <code>pd.NaT</code> for other types. They all propagate through operations — adding 5 to a NaN gives NaN — which is how you want missing data to behave.
+    pandas 用 <code>NaN</code>（Not a Number，来自 NumPy）作为数值列缺失数据的哨兵值，其他类型用 <code>None</code> / <code>pd.NA</code> / <code>pd.NaT</code>。它们在运算中会传播——给 NaN 加 5 得到的还是 NaN——这正是你希望缺失数据表现的方式。
   </p>
 
-  <h3>Detecting missing values</h3>
+  <h3>检测缺失值</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">import pandas as pd
@@ -65,190 +63,182 @@ import numpy as np
 
 df = pd.read_csv("survey.csv")
 
-# Per-column null counts
+# 每列空值计数
 df.isnull().sum()
 # name        0
 # age         3
 # income     12
 # city        1
-# dtype: int64
 
-# Percentage missing — great for quick triage
+# 缺失百分比——快速分类用
 (df.isnull().sum() / len(df) * 100).round(1)
 
-# Which rows have ANY missing value?
+# 有任意缺失值的行
 df[df.isnull().any(axis=1)]
 
-# Which rows are COMPLETELY empty? (rare but possible)
-df[df.isnull().all(axis=1)]
-
-# Heatmap of missing data (install missingno for a nice visualisation)
-# import missingno as msno; msno.matrix(df)</code></pre>
+# 完全为空的行（罕见但可能出现）
+df[df.isnull().all(axis=1)]</code></pre>
   </div>
 
-  <h3>Dropping missing values — <code>.dropna()</code></h3>
+  <h3>删除缺失值 — .dropna()</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># Drop ANY row that has at least one NaN
+    <pre><code class="language-python"># 删除有任何 NaN 的行
 df.dropna()
 
-# Drop rows where a specific column is NaN (most common)
+# 删除特定列为 NaN 的行（最常用）
 df.dropna(subset=["income"])
 
-# Drop rows where ALL columns are NaN
+# 删除所有列都是 NaN 的行
 df.dropna(how="all")
 
-# Only drop if more than thresh values are non-null
-df.dropna(thresh=4)    # keep rows with at least 4 non-null values
+# 只有非空值不足 thresh 个时才删除
+df.dropna(thresh=4)    # 保留至少有 4 个非空值的行
 
-# Drop COLUMNS with too many missing values
-df.dropna(axis=1, thresh=int(0.8 * len(df)))  # keep cols ≥80% complete
+# 删除缺失太多的列
+df.dropna(axis=1, thresh=int(0.8 * len(df)))  # 保留 ≥80% 完整的列
 
-# Important: dropna() returns a NEW DataFrame; use inplace=True or reassign
+# 重要：dropna() 返回新 DataFrame；用 inplace=True 或重新赋值
 df = df.dropna(subset=["income"])</code></pre>
   </div>
 
-  <h3>Filling missing values — <code>.fillna()</code></h3>
+  <h3>填充缺失值 — .fillna()</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># Fill with a constant
+    <pre><code class="language-python"># 用常数填充
 df["age"].fillna(0)
-df["city"].fillna("Unknown")
+df["city"].fillna("未知")
 
-# Fill with column statistics — common imputation strategies
-df["income"].fillna(df["income"].mean())     # mean imputation (均值填充)
-df["income"].fillna(df["income"].median())   # median — robust to outliers
-df["category"].fillna(df["category"].mode()[0])  # most frequent value
+# 用列统计量填充——常见的插补策略
+df["income"].fillna(df["income"].mean())     # 均值填充（mean imputation）
+df["income"].fillna(df["income"].median())   # 中位数——对异常值更鲁棒
+df["category"].fillna(df["category"].mode()[0])  # 最频繁的值
 
-# Fill with group means — better than global mean
+# 用分组均值填充——比全局均值更合理
 group_means = df.groupby("dept")["salary"].transform("mean")
 df["salary"] = df["salary"].fillna(group_means)
 
-# Forward fill (前向填充) — propagate last valid value forward
-# Useful for time series: if Monday's price is known, use it for Tuesday
-df["price"].ffill()   # or df["price"].fillna(method="ffill")
+# 前向填充（forward fill）——用上一个有效值填充
+# 时间序列很有用：如果周一价格已知，就用它填周二
+df["price"].ffill()
 
-# Backward fill
+# 后向填充（backward fill）
 df["price"].bfill()
 
-# Interpolate — linear interpolation between surrounding values
+# 插值——在前后相邻值之间线性插值
 df["temperature"].interpolate(method="linear")</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Which Strategy to Choose?</div>
-    <strong>Drop</strong> when missing data is rare (&lt;5%) and likely random. <strong>Mean/median fill</strong> for numerical columns when data is roughly symmetric. <strong>Median</strong> when there are outliers. <strong>Mode</strong> for categorical columns. <strong>Group-based fill</strong> when missingness correlates with another column (e.g., missing salary is different in "Intern" vs "Director"). <strong>Forward fill</strong> for time series.
+    <div class="callout-label">该选哪种策略？</div>
+    <strong>删除</strong>：缺失数据很少（&lt;5%）且可能是随机的。<strong>均值/中位数填充</strong>：数值列且数据大致对称。<strong>中位数</strong>：有异常值时。<strong>众数</strong>：分类列。<strong>分组填充</strong>：缺失与另一列相关时（如"实习生"和"总监"的缺失薪资含义不同）。<strong>前向填充</strong>：时间序列数据。
   </div>
 
-  <!-- ── Duplicates ── -->
-  <h2>Duplicate Detection (重复值)</h2>
+  <h2>重复值检测</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># How many duplicate rows?
+    <pre><code class="language-python"># 有多少重复行？
 df.duplicated().sum()
 
-# Which rows are duplicates? (all columns must match by default)
+# 哪些行是重复的？（默认要求所有列都匹配）
 df[df.duplicated()]
 
-# Check duplicates on specific columns (e.g., same user_id = duplicate)
+# 按特定列检查重复（例如同一 user_id = 重复）
 df.duplicated(subset=["user_id"])
 
-# keep='first' (default): mark all duplicates except first occurrence
-# keep='last':  mark all except last
-# keep=False:   mark ALL occurrences (including originals)
-df[df.duplicated(keep=False)]   # see all rows that have a twin
+# keep='first'（默认）：标记除第一个以外的所有重复
+# keep='last'：标记除最后一个以外的所有重复
+# keep=False：标记所有出现过的重复（包括原始行）
+df[df.duplicated(keep=False)]   # 看所有有孪生行的记录
 
-# Drop duplicates
+# 删除重复行
 df = df.drop_duplicates()
 df = df.drop_duplicates(subset=["user_id"], keep="last")</code></pre>
   </div>
 
-  <!-- ── Type conversion ── -->
-  <h2>Type Conversion (类型转换)</h2>
+  <h2>类型转换</h2>
 
   <p>
-    When pandas reads a CSV, it infers types. This goes wrong in predictable ways: numeric columns read as strings when they contain "N/A", dates read as strings, boolean columns read as integers. Type conversion is usually the first cleaning step after loading.
+    pandas 读 CSV 时会推断类型。这会以可预期的方式出错：数值列因为含有 "N/A" 而被读成字符串，日期被读成字符串，布尔列被读成整数。类型转换通常是加载后的第一个清洗步骤。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — astype() and pd.to_*</div>
-    <pre><code class="language-python"># Check current types
+    <div class="code-label">Python — astype() 和 pd.to_*</div>
+    <pre><code class="language-python"># 检查当前类型
 df.dtypes
 
-# Cast with .astype()
-df["score"]  = df["score"].astype(float)
+# 用 .astype() 转换
+df["score"]   = df["score"].astype(float)
 df["user_id"] = df["user_id"].astype(str)
 df["active"]  = df["active"].astype(bool)
 
-# pd.to_numeric — robust conversion with error handling
-# errors='coerce' turns unparseable values into NaN instead of raising
+# pd.to_numeric——带错误处理的鲁棒转换
+# errors='coerce' 把无法解析的值变成 NaN 而不是抛出异常
 df["income"] = pd.to_numeric(df["income"], errors="coerce")
 
-# pd.to_datetime — date and time parsing
+# pd.to_datetime——日期时间解析
 df["created_at"] = pd.to_datetime(df["created_at"])
 df["created_at"] = pd.to_datetime(df["date_str"], format="%Y-%m-%d")
 
-# Once a column is datetime, you unlock the .dt accessor:
-df["year"]  = df["created_at"].dt.year
-df["month"] = df["created_at"].dt.month
-df["day_of_week"] = df["created_at"].dt.day_name()   # 'Monday', etc.
+# 一旦列变成 datetime，就解锁了 .dt 访问器：
+df["year"]       = df["created_at"].dt.year
+df["month"]      = df["created_at"].dt.month
+df["day_of_week"] = df["created_at"].dt.day_name()   # 'Monday' 等
 
-# Categorical type — saves memory + unlocks ordering
+# 分类类型——节省内存 + 解锁排序
 df["size"] = pd.Categorical(df["size"],
                              categories=["S","M","L","XL"],
                              ordered=True)</code></pre>
   </div>
 
-  <!-- ── String cleaning ── -->
-  <h2>String Cleaning (字符串清洗)</h2>
+  <h2>字符串清洗</h2>
 
   <p>
-    Text columns are almost always dirty. The <code>.str</code> accessor (字符串访问器) on a Series lets you apply any string method vectorially across all rows — no loop needed.
+    文本列几乎总是有脏数据。Series 上的 <code>.str</code> 访问器让你对所有行向量化地应用任何字符串方法——不需要循环。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — .str accessor</div>
-    <pre><code class="language-python">df["name"] = df["name"].str.strip()          # remove leading/trailing spaces
-df["name"] = df["name"].str.title()          # 'alice bob' → 'Alice Bob'
-df["email"] = df["email"].str.lower()        # normalise case
-df["phone"] = df["phone"].str.replace("-", "", regex=False)  # remove dashes
+    <div class="code-label">Python — .str 访问器</div>
+    <pre><code class="language-python">df["name"]  = df["name"].str.strip()          # 去除首尾空格
+df["name"]  = df["name"].str.title()          # 'alice bob' → 'Alice Bob'
+df["email"] = df["email"].str.lower()         # 统一小写
+df["phone"] = df["phone"].str.replace("-", "", regex=False)  # 删除破折号
 
-# Extract parts of strings
-df["domain"] = df["email"].str.split("@").str[1]   # get domain from email
+# 提取字符串的一部分
+df["domain"] = df["email"].str.split("@").str[1]   # 从邮件里取域名
 df["first"]  = df["full_name"].str.split(" ").str[0]
 
-# Check for patterns
-df[df["email"].str.contains("@", na=False)]   # na=False avoids NaN crash
-df[df["code"].str.match(r"^\d{4}$")]          # exactly 4 digits
+# 检查模式
+df[df["email"].str.contains("@", na=False)]   # na=False 避免 NaN 报错
+df[df["code"].str.match(r"^\d{4}$")]          # 恰好 4 位数字
 
-# Padding and zero-fill
+# 补零填充
 df["id_padded"] = df["id"].astype(str).str.zfill(6)  # "42" → "000042"
 
-# Replace with regex
-df["text"] = df["text"].str.replace(r"\s+", " ", regex=True)  # collapse whitespace
+# 用正则替换
+df["text"] = df["text"].str.replace(r"\s+", " ", regex=True)  # 合并多余空格
 
-# String cleaning pipeline — chain it all
+# 字符串清洗管道——链式调用
 df["city"] = (df["city"]
               .str.strip()
               .str.lower()
-              .str.replace(r"[^\w\s]", "", regex=True)  # remove punctuation
+              .str.replace(r"[^\w\s]", "", regex=True)  # 去除标点
               .str.title())</code></pre>
   </div>
 
-  <!-- ── Outliers ── -->
-  <h2>Outlier Detection with IQR (异常值检测)</h2>
+  <h2>用 IQR 检测异常值</h2>
 
   <p>
-    The IQR (Interquartile Range, 四分位距) method is a robust, distribution-free way to flag outliers. A value is suspicious if it falls more than 1.5 × IQR below Q1 or above Q3. You can tune the multiplier (some fields use 3.0 for "extreme" outliers).
+    IQR（四分位距，Interquartile Range）方法是一种鲁棒、无分布假设的异常值标记方式。如果一个值低于 Q1 − 1.5×IQR 或高于 Q3 + 1.5×IQR，它就值得怀疑。乘数可以调整（有些领域用 3.0 标记"极端"异常值）。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — IQR outlier detection</div>
+    <div class="code-label">Python — IQR 异常值检测</div>
     <pre><code class="language-python">import pandas as pd
 
 def flag_outliers_iqr(series: pd.Series, k: float = 1.5) -> pd.Series:
-    """Return a boolean mask: True where the value is an outlier."""
+    """返回布尔掩码：True 表示该值是异常值。"""
     Q1  = series.quantile(0.25)
     Q3  = series.quantile(0.75)
     IQR = Q3 - Q1
@@ -256,106 +246,105 @@ def flag_outliers_iqr(series: pd.Series, k: float = 1.5) -> pd.Series:
     upper = Q3 + k * IQR
     return (series < lower) | (series > upper)
 
-# Apply to the 'salary' column
+# 应用到 'salary' 列
 mask = flag_outliers_iqr(df["salary"])
-print(f"Outliers found: {mask.sum()} ({mask.mean()*100:.1f}%)")
-df[mask]    # inspect them before deciding what to do
+print(f"发现异常值：{mask.sum()} 个（{mask.mean()*100:.1f}%）")
+df[mask]    # 决定怎么处理之前先检查一下
 
-# Options for handling outliers:
+# 处理异常值的几种方式：
 
-# 1. Remove them
+# 1. 直接删除
 df_clean = df[~mask]
 
-# 2. Winsorise (cap, 截断) — replace with boundary value
+# 2. 截断（Winsorisation）——用边界值替换
 lower = df["salary"].quantile(0.25) - 1.5 * (df["salary"].quantile(0.75) - df["salary"].quantile(0.25))
 upper = df["salary"].quantile(0.75) + 1.5 * (df["salary"].quantile(0.75) - df["salary"].quantile(0.25))
 df["salary_capped"] = df["salary"].clip(lower, upper)
 
-# 3. Log transform — compresses large values
+# 3. 对数变换——压缩大值
 import numpy as np
-df["salary_log"] = np.log1p(df["salary"])   # log(1+x) handles zeros</code></pre>
+df["salary_log"] = np.log1p(df["salary"])   # log(1+x)，对零值安全</code></pre>
   </div>
 
-  <!-- ── Renaming ── -->
-  <h2>Renaming Columns and Reindexing</h2>
+  <h2>重命名列与重新索引</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># Rename specific columns
+    <pre><code class="language-python"># 重命名特定列
 df.rename(columns={"old_name": "new_name", "qty": "quantity"}, inplace=True)
 
-# Make all column names lowercase with underscores (common cleaning step)
+# 让所有列名变成小写加下划线（常见清洗步骤）
 df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_", regex=False)
 
-# Reorder columns
+# 重新排列列
 cols = ["id", "name", "score", "grade", "dept"]
-df   = df[cols]   # or df.reindex(columns=cols)
+df   = df[cols]
 
-# Reset the row index after filtering (avoids gaps like 0,2,5,7...)
-df = df.reset_index(drop=True)   # drop=True discards the old index
+# 过滤后重置行索引（避免 0,2,5,7... 这样的空洞）
+df = df.reset_index(drop=True)   # drop=True 丢弃旧索引
 
-# Set a column as the index
-df = df.set_index("id")   # rows are now keyed by 'id'
-df = df.reset_index()     # move index back to a column</code></pre>
+# 把某列设为索引
+df = df.set_index("id")   # 行现在以 'id' 为键
+df = df.reset_index()     # 把索引移回一列</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">Cleaning Checklist</div>
-    Before modelling, run through this in order: (1) <strong>shape and dtypes</strong> — do they make sense? (2) <strong>missing values</strong> — how many and why? (3) <strong>duplicates</strong> — any identical rows? (4) <strong>string columns</strong> — consistent casing and no leading spaces? (5) <strong>date columns</strong> — parsed as datetime? (6) <strong>numeric columns</strong> — any impossible values (negative age, 200% score)?
+    <div class="callout-label">数据清洗检查清单</div>
+    建模前按顺序过一遍：(1) <strong>shape 和 dtypes</strong>——有意义吗？ (2) <strong>缺失值</strong>——有多少，为什么？ (3) <strong>重复项</strong>——有完全相同的行吗？ (4) <strong>字符串列</strong>——大小写统一，没有前导空格？ (5) <strong>日期列</strong>——解析成 datetime 了吗？ (6) <strong>数值列</strong>——有不可能的值吗（负数年龄、200% 分数）？
   </div>
 
   <div class="done-btn-wrap">
-    <button id="mark-done-btn">Mark as complete</button>
-    <span class="done-hint">Saves your progress locally.</span>
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
   </div>
 
   <div id="quiz"></div>
   <script id="quiz-data" type="application/json">
   [
     {
-      "q": "What is the difference between <code>.dropna()</code> and <code>.fillna()</code>?",
+      "q": "<code>.dropna()</code> 和 <code>.fillna()</code> 的区别是什么？",
       "options": [
-        "dropna removes columns; fillna removes rows",
-        "dropna removes rows (or columns) with NaN values; fillna replaces NaN with a specified value",
-        "They do the same thing — both remove missing data",
-        "dropna works on integers; fillna works on strings"
+        "dropna 删除列，fillna 删除行",
+        "dropna 删除含有 NaN 的行（或列）；fillna 用指定值替换 NaN",
+        "两者功能相同，都是删除缺失数据",
+        "dropna 处理整数，fillna 处理字符串"
       ],
       "answer": 1,
-      "explanation": "<code>.dropna()</code> discards rows (default) or columns that contain NaN. <code>.fillna(value)</code> keeps all rows but substitutes a value for each NaN. Which you choose depends on how much data you can afford to lose and whether a reasonable substitute exists."
+      "explanation": ".dropna() 丢弃含有 NaN 的行（默认）或列。.fillna(value) 保留所有行，但把每个 NaN 替换成一个值。选哪个取决于你能承受丢失多少数据，以及是否存在合理的替代值。"
     },
     {
-      "q": "Using the IQR method, a value is considered an outlier if it is…",
+      "q": "用 IQR 方法，一个值被认为是异常值，当它……",
       "options": [
-        "More than 2 standard deviations from the mean",
-        "Below Q1 − 1.5×IQR  or  above Q3 + 1.5×IQR",
-        "In the bottom or top 5% of values",
-        "More than 3 standard deviations from the median"
+        "距离均值超过 2 个标准差",
+        "低于 Q1 − 1.5×IQR  或  高于 Q3 + 1.5×IQR",
+        "在数值的最低或最高 5% 范围内",
+        "距离中位数超过 3 个标准差"
       ],
       "answer": 1,
-      "explanation": "The IQR method defines bounds at Q1 − k×IQR and Q3 + k×IQR (k=1.5 by convention, or 3.0 for 'extreme' outliers). It's preferred over the standard deviation method when data isn't normally distributed, because IQR is robust to the very outliers you're trying to detect."
+      "explanation": "IQR 方法在 Q1 − k×IQR 和 Q3 + k×IQR 处定义边界（通常 k=1.5，极端异常值用 3.0）。当数据不是正态分布时，它优于标准差方法，因为 IQR 本身对你想检测的异常值具有鲁棒性。"
     },
     {
-      "q": "What does <code>pd.to_numeric(df['col'], errors='coerce')</code> do?",
+      "q": "<code>pd.to_numeric(df['col'], errors='coerce')</code> 做了什么？",
       "options": [
-        "Raises an error for any non-numeric value",
-        "Converts the column to numeric, turning unparseable values into NaN instead of raising",
-        "Coerces all values to integers by rounding",
-        "Returns only the numeric rows of the column"
+        "对任何非数值的值抛出错误",
+        "把列转换为数值，把无法解析的值变成 NaN 而不是抛出异常",
+        "通过四舍五入把所有值强制转为整数",
+        "只返回列中的数值行"
       ],
       "answer": 1,
-      "explanation": "With <code>errors='coerce'</code>, any value that can't be converted to a number (like the string 'N/A' or '—') becomes <code>NaN</code> instead of raising a <code>ValueError</code>. This is the safe way to clean a column that <em>should</em> be numeric but was read as object dtype due to stray strings."
+      "explanation": "使用 errors='coerce' 时，任何无法转换为数字的值（如字符串 'N/A' 或 '—'）会变成 NaN 而不是抛出 ValueError。当一列本应是数值，但因为混有杂乱字符串而被读成 object 类型时，这是安全的清洗方式。"
     }
   ]
   </script>
 
   <div class="chapter-nav">
     <a href="ch8.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 8: Pandas — Working with Data</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 8 章：Pandas 数据处理</span>
     </a>
     <a href="ch10.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 10: Transform &amp; Aggregate</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 10 章：数据变换与聚合</span>
     </a>
   </div>
 

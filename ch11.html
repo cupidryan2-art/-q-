@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hans">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 11 — Data Visualization | Python for C++ Devs</title>
+<title>第 11 章 — 数据可视化 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="11">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,305 +30,305 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 11</div>
-    <h1>Data Visualization <span style="font-weight:300;color:var(--text-muted)">数据可视化</span></h1>
+    <div class="chapter-label">第 11 章</div>
+    <h1>数据可视化 <span style="font-weight:300;color:var(--text-muted)">Data Visualization</span></h1>
     <p class="lead">
-      A chart communicates in seconds what a table takes minutes to parse. This chapter covers matplotlib's building blocks, then seaborn's statistical shorthand — and closes with a practical guide to choosing the right chart type for your data.
+      一张图表传递的信息，往往胜过一张密密麻麻的数据表。这一章先讲 matplotlib 的基础骨架，再介绍 seaborn 的统计图表高级接口——最后给你一份实用的"选图指南"，告诉你在什么场景下该选什么类型的图。
     </p>
   </div>
 
   <!-- ── Install ── -->
   <div class="code-block">
-    <div class="code-label">Terminal — install</div>
+    <div class="code-label">终端 — 安装</div>
     <pre><code class="language-bash">pip install matplotlib seaborn</code></pre>
   </div>
 
   <!-- ── matplotlib basics ── -->
-  <h2>Matplotlib Basics</h2>
+  <h2>matplotlib 基础</h2>
 
   <p>
-    matplotlib is Python's foundational plotting library. Its <code>pyplot</code> interface mimics MATLAB's state-machine API — you build a chart by calling functions that modify a global "current figure." This is fine for quick plots; for production-quality figures you'll want the object-oriented API (covered next).
+    matplotlib 是 Python 可视化的"地基"，历史悠久、功能强大。它的 <code>pyplot</code> 接口模仿了 MATLAB 的风格——调用一系列函数来修改一个全局的"当前图形"状态机。快速出图用这个接口就够了；如果你需要精细控制多子图布局，就要用面向对象的 API（下一节介绍）。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — the four core chart types</div>
+    <div class="code-label">Python — 四种核心图表类型</div>
     <pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x)
 
-# Line chart (折线图)
+# 折线图 (Line chart)
 plt.plot(x, y)
-plt.title("Sine Wave")
+plt.title("正弦波")
 plt.xlabel("x")
 plt.ylabel("sin(x)")
-plt.show()   # or plt.savefig("sine.png")
+plt.show()   # 或者 plt.savefig("sine.png")
 
-# Scatter plot (散点图)
+# 散点图 (Scatter plot)
 rng = np.random.default_rng(42)
 x2 = rng.normal(0, 1, 200)
 y2 = x2 * 0.8 + rng.normal(0, 0.5, 200)
 plt.scatter(x2, y2, alpha=0.5, color="steelblue", s=20)
-plt.title("Scatter: x vs y")
+plt.title("散点图：x vs y")
 plt.show()
 
-# Bar chart (柱状图)
-depts  = ["Engineering", "Sales", "HR", "Product"]
+# 柱状图 (Bar chart)
+depts  = ["工程", "销售", "HR", "产品"]
 counts = [42, 28, 15, 23]
 plt.bar(depts, counts, color="#CC785C")
-plt.title("Headcount by Department")
+plt.title("各部门人数")
 plt.xticks(rotation=30)
 plt.show()
 
-# Histogram (直方图)
+# 直方图 (Histogram)
 data = rng.normal(70, 15, 500)
 plt.hist(data, bins=30, edgecolor="white", color="steelblue")
-plt.title("Score Distribution")
-plt.xlabel("Score")
-plt.ylabel("Frequency")
+plt.title("分数分布")
+plt.xlabel("分数")
+plt.ylabel("频次")
 plt.show()</code></pre>
   </div>
 
   <!-- ── OO API ── -->
-  <h2>The Object-Oriented API: Figure and Axes</h2>
+  <h2>面向对象 API：Figure 与 Axes</h2>
 
   <p>
-    Every matplotlib plot consists of a <code>Figure</code> (图形) — the outer container — and one or more <code>Axes</code> (坐标系) objects — the individual plot areas. The OO API gives you explicit control over each element and is essential for subplots and publication-quality output.
+    每张 matplotlib 图都由两个层级组成：<code>Figure</code>（整张画布）和 <code>Axes</code>（画布上的一个绘图区域）。面向对象 API 让你可以精确控制每一个元素，对多子图和需要发表级别输出的场景来说不可或缺。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — Figure and Axes</div>
+    <div class="code-label">Python — Figure 与 Axes</div>
     <pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
-# Create Figure and Axes explicitly
-fig, ax = plt.subplots(figsize=(8, 5))   # figsize in inches
+# 显式创建 Figure 和 Axes
+fig, ax = plt.subplots(figsize=(8, 5))   # figsize 单位是英寸
 
 x = np.linspace(0, 10, 100)
 ax.plot(x, np.sin(x), label="sin(x)",  color="#CC785C",  linewidth=2)
 ax.plot(x, np.cos(x), label="cos(x)",  color="steelblue", linewidth=2, linestyle="--")
 
-# Every label, title, tick is set on the Axes object
-ax.set_title("Sine and Cosine",   fontsize=14, fontweight="bold")
-ax.set_xlabel("x",               fontsize=11)
-ax.set_ylabel("y",               fontsize=11)
+# 所有标签、标题、刻度都在 Axes 对象上设置
+ax.set_title("正弦与余弦",   fontsize=14, fontweight="bold")
+ax.set_xlabel("x",           fontsize=11)
+ax.set_ylabel("y",           fontsize=11)
 ax.legend(fontsize=10)
 ax.grid(True, alpha=0.3)
 ax.set_xlim(0, 10)
 ax.set_ylim(-1.5, 1.5)
 
-fig.tight_layout()   # prevent label clipping
+fig.tight_layout()   # 防止标签被截断
 plt.show()</code></pre>
   </div>
 
-  <h3>Multiple subplots (子图)</h3>
+  <h3>多子图 (subplots)</h3>
   <div class="code-block">
-    <div class="code-label">Python — subplots grid</div>
+    <div class="code-label">Python — 2×2 子图网格</div>
     <pre><code class="language-python">fig, axes = plt.subplots(2, 2, figsize=(10, 8))
-# axes is a 2×2 NumPy array of Axes objects
+# axes 是一个 2×2 的 NumPy 数组，每个元素都是一个 Axes 对象
 
 rng = np.random.default_rng(0)
 data = rng.normal(50, 15, 300)
 
 axes[0, 0].hist(data, bins=20, color="#CC785C", edgecolor="white")
-axes[0, 0].set_title("Histogram")
+axes[0, 0].set_title("直方图")
 
 axes[0, 1].boxplot(data, vert=True)
-axes[0, 1].set_title("Boxplot")
+axes[0, 1].set_title("箱线图")
 
 axes[1, 0].scatter(range(len(data)), data, alpha=0.4, s=10)
-axes[1, 0].set_title("Scatter (index vs value)")
+axes[1, 0].set_title("散点图（索引 vs 值）")
 
 axes[1, 1].plot(sorted(data))
-axes[1, 1].set_title("Sorted values")
+axes[1, 1].set_title("排序后的值")
 
-fig.suptitle("Distribution Explorer", fontsize=15, fontweight="bold")
+fig.suptitle("分布探索", fontsize=15, fontweight="bold")
 fig.tight_layout()
 plt.savefig("distribution_report.png", dpi=150, bbox_inches="tight")</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">Mental Model</div>
-    Think of <code>Figure</code> as a canvas (<code>sf::RenderWindow</code> if you know SFML) and each <code>Axes</code> as a viewport into that canvas. You can have multiple viewports with independent coordinate systems. <code>plt.subplots(2, 2)</code> creates a 2×2 grid of viewports for you.
+    <div class="callout-label">C++ 类比</div>
+    把 <code>Figure</code> 想成一张画布（类似 SFML 里的 <code>sf::RenderWindow</code>），每个 <code>Axes</code> 是这张画布上的一个视口，有自己独立的坐标系。<code>plt.subplots(2, 2)</code> 就是帮你在画布上划好 2×2 四个视口。
   </div>
 
   <!-- ── Customisation ── -->
-  <h2>Styling and Customisation</h2>
+  <h2>样式与自定义</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — colours, markers, annotations</div>
+    <div class="code-label">Python — 颜色、标记与注释</div>
     <pre><code class="language-python">fig, ax = plt.subplots(figsize=(8, 5))
 
-# Colours: named, hex, RGB tuple
+# 颜色：名称、十六进制、RGB 元组都支持
 ax.plot([1,2,3], color="tomato")
 ax.plot([1,2,3], color="#2E86AB")
 ax.plot([1,2,3], color=(0.2, 0.5, 0.8))
 
-# Line styles and markers
-ax.plot(x, y, linestyle="-",   marker="o", markersize=4)  # solid + circles
-ax.plot(x, y, linestyle="--",  marker="s", markersize=6)  # dashed + squares
-ax.plot(x, y, linestyle=":",   marker="^")                # dotted + triangles
-ax.plot(x, y, "r--o")    # shorthand: red dashed with circles
+# 线型与标记点
+ax.plot(x, y, linestyle="-",   marker="o", markersize=4)  # 实线 + 圆点
+ax.plot(x, y, linestyle="--",  marker="s", markersize=6)  # 虚线 + 方块
+ax.plot(x, y, linestyle=":",   marker="^")                # 点线 + 三角
+ax.plot(x, y, "r--o")    # 简写：红色虚线 + 圆点
 
-# Fill between two lines
+# 在两条线之间填色
 ax.fill_between(x, y1, y2, alpha=0.2, color="steelblue")
 
-# Annotations
-ax.annotate("Peak", xy=(1.57, 1.0), xytext=(2.5, 0.8),
+# 添加注释（带箭头）
+ax.annotate("峰值", xy=(1.57, 1.0), xytext=(2.5, 0.8),
             arrowprops=dict(arrowstyle="->", color="gray"),
             fontsize=10)
 
-# Global style sheets
-plt.style.use("seaborn-v0_8-whitegrid")   # clean academic style
-# Other options: "ggplot", "bmh", "dark_background", "seaborn-v0_8-poster"</code></pre>
+# 全局样式表
+plt.style.use("seaborn-v0_8-whitegrid")   # 干净的学术风格
+# 其他可选："ggplot"、"bmh"、"dark_background"、"seaborn-v0_8-poster"</code></pre>
   </div>
 
   <!-- ── Seaborn ── -->
-  <h2>Seaborn — Statistical Visualisation (统计可视化)</h2>
+  <h2>seaborn — 统计可视化神器</h2>
 
   <p>
-    seaborn is built on matplotlib and provides higher-level functions for statistical plots. It understands pandas DataFrames natively — you pass column names as strings and it handles the rest. Seaborn also has better default aesthetics.
+    seaborn 构建在 matplotlib 之上，专门为统计图表设计了更高级的接口。它原生理解 pandas DataFrame——你只需要传列名字符串，它自己处理剩下的事情。而且默认配色和布局比 matplotlib 好看多了。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — seaborn essentials</div>
+    <div class="code-label">Python — seaborn 核心用法</div>
     <pre><code class="language-python">import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# seaborn works directly with DataFrames — specify column names as strings
-df = pd.read_csv("titanic.csv")   # classic dataset
+# seaborn 直接吃 DataFrame，列名传字符串即可
+df = pd.read_csv("titanic.csv")   # 经典数据集
 
-# Distribution plot
-sns.histplot(df, x="age", kde=True, hue="survived")  # kde = density curve overlay
+# 分布图（带核密度估计曲线）
+sns.histplot(df, x="age", kde=True, hue="survived")
 
-# Box plot (箱线图) — distribution by group
+# 箱线图 — 按分组展示分布
 sns.boxplot(df, x="class", y="fare", hue="survived", palette="muted")
 
-# Violin plot — boxplot + distribution shape
+# 小提琴图 — 箱线图 + 分布形状
 sns.violinplot(df, x="class", y="age")
 
-# Count plot — categorical bar chart
+# 计数图 — 分类变量的柱状图
 sns.countplot(df, x="class", hue="survived")
 
-# Scatter with regression line
+# 散点图 + 回归线
 sns.regplot(df, x="age", y="fare", scatter_kws={"alpha":0.3})
 
-# Line plot with confidence interval (bootstrapped)
+# 折线图（自动计算置信区间）
 sales = pd.read_csv("monthly_sales.csv")
 sns.lineplot(sales, x="month", y="revenue", hue="region")</code></pre>
   </div>
 
-  <h3>Heatmap for correlation matrices</h3>
+  <h3>用热力图展示相关矩阵</h3>
   <div class="code-block">
-    <div class="code-label">Python — correlation heatmap</div>
+    <div class="code-label">Python — 相关性热力图</div>
     <pre><code class="language-python">import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 
 df = pd.read_csv("employees.csv")
 
-# Compute correlation matrix (only numeric columns)
+# 计算相关矩阵（只取数值列）
 corr = df.select_dtypes(include="number").corr()
 
 fig, ax = plt.subplots(figsize=(8, 6))
 sns.heatmap(
     corr,
-    annot=True,        # show values in cells
-    fmt=".2f",         # 2 decimal places
-    cmap="coolwarm",   # diverging colormap: blue=negative, red=positive
-    vmin=-1, vmax=1,   # fix scale to [-1, 1]
+    annot=True,        # 在格子里显示数值
+    fmt=".2f",         # 保留两位小数
+    cmap="coolwarm",   # 发散色图：蓝=负相关，红=正相关
+    vmin=-1, vmax=1,   # 固定色标范围
     linewidths=0.5,
     ax=ax,
 )
-ax.set_title("Feature Correlation Matrix")
+ax.set_title("特征相关性矩阵")
 fig.tight_layout()
 plt.savefig("correlation.png", dpi=150, bbox_inches="tight")</code></pre>
   </div>
 
-  <h3>Pair plot — all pairwise relationships at once</h3>
+  <h3>Pair plot — 一次看完所有两两关系</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">import seaborn as sns
 
-df = pd.read_csv("iris.csv")   # famous 4-feature flower dataset
+df = pd.read_csv("iris.csv")   # 经典鸢尾花数据集，4 个特征
 
-# Creates an n×n grid of scatter plots + diagonal histograms
-# hue colours each point by class — instantly shows separability
+# 生成 n×n 散点图网格，对角线是各特征的分布图
+# hue 按类别着色，一眼就能看出特征的可分性
 g = sns.pairplot(df, hue="species", diag_kind="kde", plot_kws={"alpha": 0.5})
-g.fig.suptitle("Iris: All Pairwise Feature Relationships", y=1.02)
+g.fig.suptitle("Iris：所有特征的两两关系", y=1.02)
 plt.savefig("pairplot.png", dpi=120, bbox_inches="tight")</code></pre>
   </div>
 
   <!-- ── Chart guide ── -->
-  <h2>Choosing the Right Chart Type (图表类型选择)</h2>
+  <h2>怎么选图表类型？</h2>
 
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Question you're asking</th><th>Best chart</th><th>Function</th></tr></thead>
+      <thead><tr><th>你想回答的问题</th><th>最佳图表</th><th>函数</th></tr></thead>
       <tbody>
-        <tr><td>How is this variable distributed?</td><td>Histogram / KDE</td><td><code>sns.histplot</code>, <code>sns.kdeplot</code></td></tr>
-        <tr><td>Distribution across categories?</td><td>Box / Violin plot</td><td><code>sns.boxplot</code>, <code>sns.violinplot</code></td></tr>
-        <tr><td>Relationship between two continuous variables?</td><td>Scatter plot</td><td><code>plt.scatter</code>, <code>sns.scatterplot</code></td></tr>
-        <tr><td>Linear trend between two variables?</td><td>Regression plot</td><td><code>sns.regplot</code></td></tr>
-        <tr><td>How do categories compare in size?</td><td>Bar chart</td><td><code>plt.bar</code>, <code>sns.barplot</code></td></tr>
-        <tr><td>Change over time?</td><td>Line chart</td><td><code>plt.plot</code>, <code>sns.lineplot</code></td></tr>
-        <tr><td>Correlation between many variables?</td><td>Heatmap</td><td><code>sns.heatmap</code></td></tr>
-        <tr><td>All pairwise relationships?</td><td>Pair plot</td><td><code>sns.pairplot</code></td></tr>
-        <tr><td>Part-to-whole composition?</td><td>Stacked bar / Pie</td><td><code>plt.pie</code> (use sparingly)</td></tr>
+        <tr><td>某个变量是怎么分布的？</td><td>直方图 / KDE</td><td><code>sns.histplot</code>、<code>sns.kdeplot</code></td></tr>
+        <tr><td>各分组的分布有何不同？</td><td>箱线图 / 小提琴图</td><td><code>sns.boxplot</code>、<code>sns.violinplot</code></td></tr>
+        <tr><td>两个连续变量之间有关系吗？</td><td>散点图</td><td><code>plt.scatter</code>、<code>sns.scatterplot</code></td></tr>
+        <tr><td>两个变量之间有线性趋势吗？</td><td>回归图</td><td><code>sns.regplot</code></td></tr>
+        <tr><td>各类别的数量/大小对比？</td><td>柱状图</td><td><code>plt.bar</code>、<code>sns.barplot</code></td></tr>
+        <tr><td>随时间的变化趋势？</td><td>折线图</td><td><code>plt.plot</code>、<code>sns.lineplot</code></td></tr>
+        <tr><td>很多变量之间的相关性？</td><td>热力图</td><td><code>sns.heatmap</code></td></tr>
+        <tr><td>所有特征的两两关系？</td><td>Pair plot</td><td><code>sns.pairplot</code></td></tr>
+        <tr><td>部分与整体的占比？</td><td>堆叠柱状图 / 饼图</td><td><code>plt.pie</code>（谨慎使用）</td></tr>
       </tbody>
     </table>
   </div>
 
   <!-- ── Saving ── -->
-  <h2>Saving Figures (保存图表)</h2>
+  <h2>保存图表</h2>
 
   <div class="code-block">
     <div class="code-label">Python — plt.savefig</div>
     <pre><code class="language-python">fig, ax = plt.subplots()
 ax.plot([1, 2, 3], [4, 5, 6])
 
-# Save before plt.show() — show() clears the figure
-fig.savefig("chart.png",                    # PNG (raster)
-            dpi=300,                         # 300 dpi = print quality
-            bbox_inches="tight",             # don't clip labels
-            facecolor="white",               # white background
+# 必须在 plt.show() 之前保存——show() 会清空图形
+fig.savefig("chart.png",                    # PNG（位图）
+            dpi=300,                         # 300 dpi = 印刷级分辨率
+            bbox_inches="tight",             # 自动裁剪，不截断标签
+            facecolor="white",               # 白色背景
             transparent=False)
 
-fig.savefig("chart.pdf", bbox_inches="tight")   # PDF (vector — scales losslessly)
-fig.savefig("chart.svg", bbox_inches="tight")   # SVG (vector — editable in Illustrator)
+fig.savefig("chart.pdf", bbox_inches="tight")   # PDF（矢量，无限缩放不模糊）
+fig.savefig("chart.svg", bbox_inches="tight")   # SVG（矢量，可用 Illustrator 编辑）
 
-# In Jupyter notebooks — just plt.show() or leave the figure as last cell output
-# For inline display: %matplotlib inline  (put in first cell)</code></pre>
+# Jupyter Notebook 里：直接 plt.show() 或把图形作为最后一行输出
+# 开启内联显示：%matplotlib inline（放在第一个 cell）</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">Jupyter Tip</div>
-    In a Jupyter notebook, add <code>%matplotlib inline</code> in your first cell to display plots inline. For interactive zoom/pan, use <code>%matplotlib widget</code> (requires <code>ipympl</code>). For reports and presentations, save as PDF or SVG — they scale losslessly and look sharp at any size.
+    <div class="callout-label">Jupyter 小贴士</div>
+    在 Jupyter Notebook 里，在第一个 cell 写 <code>%matplotlib inline</code> 就能让图表直接嵌入输出。想要交互式缩放/平移，用 <code>%matplotlib widget</code>（需要安装 <code>ipympl</code>）。写报告或做演讲，存成 PDF 或 SVG——矢量格式任意缩放都清晰。
   </div>
 
   <div class="done-btn-wrap">
-    <button id="mark-done-btn">Mark as complete</button>
-    <span class="done-hint">Saves your progress locally.</span>
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
   </div>
 
   <div id="quiz"></div>
   <script id="quiz-data" type="application/json">
   [
     {
-      "q": "In matplotlib's object-oriented API, what is the relationship between a Figure and Axes?",
+      "q": "在 matplotlib 的面向对象 API 中，Figure 和 Axes 是什么关系？",
       "options": [
-        "Figure and Axes are the same object — the terms are interchangeable",
-        "A Figure is the outer canvas that contains one or more Axes objects (individual plot areas)",
-        "An Axes contains one or more Figures as subplots",
-        "Figure controls colours and fonts; Axes controls data"
+        "Figure 和 Axes 是同一个对象，两个名字可以互换",
+        "Figure 是整张画布，Axes 是画布上的一个绘图区域；一个 Figure 可以包含多个 Axes",
+        "Axes 里面包含多个 Figure（子图）",
+        "Figure 控制颜色和字体，Axes 控制数据"
       ],
       "answer": 1,
-      "explanation": "A <code>Figure</code> is the top-level window or page — the whole canvas. An <code>Axes</code> is one plot within that canvas, with its own coordinate system, axis labels, and title. <code>plt.subplots(2, 2)</code> creates one Figure with four Axes objects arranged in a 2×2 grid."
+      "explanation": "<code>Figure</code> 是最顶层的容器，相当于整张画布。<code>Axes</code> 是画布上的一个具体绘图区域，有自己独立的坐标轴、标签和标题。<code>plt.subplots(2, 2)</code> 创建的是一个 Figure 加 4 个 Axes，排列成 2×2 网格。"
     },
     {
-      "q": "Which seaborn function is best suited for visualising the correlation between all pairs of numerical columns simultaneously?",
+      "q": "哪个 seaborn 函数最适合同时展示所有数值特征的两两关系？",
       "options": [
         "sns.heatmap()",
         "sns.pairplot()",
@@ -336,30 +336,30 @@ fig.savefig("chart.svg", bbox_inches="tight")   # SVG (vector — editable in Il
         "sns.lineplot()"
       ],
       "answer": 1,
-      "explanation": "<code>sns.pairplot()</code> creates an n×n grid where each off-diagonal cell is a scatter plot of two features, and each diagonal cell shows that feature's distribution. It's the fastest way to spot linear relationships and class separability across all feature pairs at once."
+      "explanation": "<code>sns.pairplot()</code> 会生成一个 n×n 的图表网格：非对角线的格子是两个特征的散点图，对角线是该特征自身的分布图。这是最快速发现特征间线性关系和类别可分性的方式。"
     },
     {
-      "q": "What does <code>plt.savefig('chart.png', dpi=300, bbox_inches='tight')</code> do?",
+      "q": "<code>plt.savefig('chart.png', dpi=300, bbox_inches='tight')</code> 的作用是？",
       "options": [
-        "Saves 300 copies of the chart to a folder",
-        "Saves the figure as a high-resolution (300 DPI) PNG, cropped tightly so axis labels aren't clipped",
-        "Saves only the first 300 data points",
-        "Sets the chart display size to 300×300 pixels on screen"
+        "把图表保存 300 份到某个文件夹",
+        "以 300 DPI 高分辨率保存 PNG，并自动裁剪边界以防止标签被截断",
+        "只保存前 300 个数据点",
+        "把图表在屏幕上的显示尺寸设为 300×300 像素"
       ],
       "answer": 1,
-      "explanation": "<code>dpi=300</code> sets the resolution to 300 dots-per-inch — standard for print-quality output (screen is typically 72–96 DPI). <code>bbox_inches='tight'</code> automatically adjusts the bounding box to include all labels and titles, preventing them from being cut off at the edges."
+      "explanation": "<code>dpi=300</code> 设置分辨率为每英寸 300 个像素点——这是印刷级标准（屏幕通常是 72–96 DPI）。<code>bbox_inches='tight'</code> 让 matplotlib 自动调整边界框，把所有标签和标题都包进去，不会在边缘处截断。"
     }
   ]
   </script>
 
   <div class="chapter-nav">
     <a href="ch10.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 10: Transform &amp; Aggregate</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 10 章：数据变换与聚合</span>
     </a>
     <a href="ch12.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 12: Machine Learning</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 12 章：机器学习基础</span>
     </a>
   </div>
 

@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 4 — Functions & Scope | Python for C++ Devs</title>
+<title>第 4 章 — 函数与作用域 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="4">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,89 +30,87 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 4</div>
-    <h1>Functions &amp; Scope <span style="font-weight:300;color:var(--text-muted)">函数与作用域</span></h1>
+    <div class="chapter-label">第 4 章</div>
+    <h1>函数与作用域</h1>
     <p class="lead">
-      In Python, functions are <em>first-class objects</em> (一等公民) — they can be stored in variables, passed as arguments, and returned from other functions. This single fact unlocks an enormous amount of expressive power, especially in data work.
+      Python 里，函数是<em>一等公民（first-class object）</em>——它们可以被存进变量、当作参数传递、从其他函数里返回。正是这一点，解锁了极其强大的表达能力，在数据工作里尤为如此。
     </p>
   </div>
 
-  <!-- ── Defining functions ── -->
-  <h2>Defining Functions with <code>def</code></h2>
+  <h2>用 <code>def</code> 定义函数</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — basic function</div>
+    <div class="code-label">Python — 基础函数</div>
     <pre><code class="language-python">def greet(name):
-    """Return a greeting string."""   # docstring (文档字符串) — optional but good practice
-    return f"Hello, {name}!"
+    """返回一个问候字符串。"""   # docstring（文档字符串）——可选但是好习惯
+    return f"你好，{name}！"
 
 result = greet("Alice")
-print(result)   # Hello, Alice!</code></pre>
+print(result)   # 你好，Alice！</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    <p>Python's <code>def</code> is like a C++ function definition, but with no return-type annotation required (though you can add type hints — more below). There's no function prototype / forward declaration — just define the function before you call it.</p>
-    <p>The docstring (triple-quoted string immediately after <code>def</code>) is Python's version of a doxygen comment. It's accessible at runtime via <code>help(greet)</code> or <code>greet.__doc__</code>.</p>
+    <div class="callout-label">C++ 对比</div>
+    <p>Python 的 <code>def</code> 类似 C++ 的函数定义，但不需要返回类型注解（虽然你可以加——见下文）。没有函数原型/前向声明——只要在调用前定义好函数就行。</p>
+    <p>docstring（<code>def</code> 后面紧跟的三引号字符串）是 Python 版的 doxygen 注释。可以通过 <code>help(greet)</code> 或 <code>greet.__doc__</code> 在运行时访问。</p>
   </div>
 
-  <h3>Type hints (类型注解) — optional but recommended</h3>
+  <h3>类型注解（type hints）— 可选但推荐</h3>
   <p>
-    Python 3.5+ supports optional type hints. They don't affect runtime behaviour — Python stays dynamically typed — but they enable IDE autocomplete and static analysis tools like <code>mypy</code>.
+    Python 3.5+ 支持可选的类型注解。它们不影响运行时行为——Python 依然是动态类型的——但能给 IDE 自动补全和 <code>mypy</code> 等静态分析工具提供信息。
   </p>
   <div class="code-block">
-    <div class="code-label">Python — type-annotated function</div>
+    <div class="code-label">Python — 带类型注解的函数</div>
     <pre><code class="language-python">def add(a: int, b: int) -> int:
     return a + b
 
 def greet(name: str, loud: bool = False) -> str:
-    msg = f"Hello, {name}!"
+    msg = f"你好，{name}！"
     return msg.upper() if loud else msg</code></pre>
   </div>
 
-  <!-- ── Parameters ── -->
-  <h2>Parameters and Arguments (参数)</h2>
+  <h2>参数（parameters）</h2>
 
-  <h3>Positional and keyword arguments</h3>
+  <h3>位置参数与关键字参数</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">def describe(name, age, city):
-    print(f"{name}, {age}, from {city}")
+    print(f"{name}，{age} 岁，来自 {city}")
 
-# Positional (位置参数) — order matters
-describe("Alice", 30, "Beijing")
+# 位置参数（positional）——顺序很重要
+describe("Alice", 30, "北京")
 
-# Keyword (关键字参数) — order doesn't matter
-describe(age=30, city="Beijing", name="Alice")
+# 关键字参数（keyword）——顺序无所谓
+describe(age=30, city="北京", name="Alice")
 
-# Mix — positional must come first
-describe("Alice", city="Beijing", age=30)</code></pre>
+# 混合——位置参数必须在前
+describe("Alice", city="北京", age=30)</code></pre>
   </div>
 
-  <h3>Default arguments (默认参数)</h3>
+  <h3>默认参数（default arguments）</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">def connect(host, port=5432, timeout=30):
-    print(f"Connecting to {host}:{port} (timeout={timeout}s)")
+    print(f"连接到 {host}:{port}（超时={timeout}s）")
 
-connect("localhost")               # uses defaults
-connect("db.prod.com", port=3306)  # override just port</code></pre>
+connect("localhost")               # 使用默认值
+connect("db.prod.com", port=3306)  # 只覆盖 port</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Classic Pitfall — Mutable Default Arguments</div>
-    <strong>Never</strong> use a mutable object (list, dict) as a default argument. The default is evaluated once at function definition time, not on each call.
+    <div class="callout-label">经典陷阱 — 可变默认参数</div>
+    <strong>永远不要</strong>用可变对象（list、dict）作为默认参数。默认值只在函数定义时求值一次，不是每次调用时求值。
     <div class="code-block" style="margin-top:0.75rem;">
-      <div class="code-label">Python — the trap and the fix</div>
-      <pre><code class="language-python"># WRONG — the list is shared across all calls
+      <div class="code-label">Python — 陷阱与正确写法</div>
+      <pre><code class="language-python"># 错误——所有调用共享同一个 list
 def add_item(item, lst=[]):
     lst.append(item)
     return lst
 
 add_item(1)   # [1]
-add_item(2)   # [1, 2]  ← NOT [2] — same list!
+add_item(2)   # [1, 2]  ← 不是 [2]——是同一个 list！
 
-# CORRECT — use None as sentinel, create inside the function
+# 正确——用 None 作哨兵，在函数内部创建
 def add_item(item, lst=None):
     if lst is None:
         lst = []
@@ -121,11 +119,11 @@ def add_item(item, lst=None):
     </div>
   </div>
 
-  <h3>*args — variable positional arguments</h3>
+  <h3>*args — 可变位置参数</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">def total(*args):
-    """Accept any number of positional arguments."""
+    """接受任意数量的位置参数。"""
     print(type(args))   # &lt;class 'tuple'&gt;
     return sum(args)
 
@@ -133,103 +131,101 @@ total(1, 2, 3)       # 6
 total(10, 20)         # 30
 total()               # 0
 
-# Unpack a list into positional args with *
+# 用 * 把 list 解包为位置参数
 nums = [1, 2, 3, 4]
-print(total(*nums))   # same as total(1, 2, 3, 4)</code></pre>
+print(total(*nums))   # 等同于 total(1, 2, 3, 4)</code></pre>
   </div>
 
-  <h3>**kwargs — variable keyword arguments</h3>
+  <h3>**kwargs — 可变关键字参数</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">def configure(**kwargs):
-    """Accept any number of keyword arguments."""
+    """接受任意数量的关键字参数。"""
     print(type(kwargs))   # &lt;class 'dict'&gt;
     for key, value in kwargs.items():
         print(f"  {key} = {value}")
 
 configure(host="localhost", port=5432, debug=True)
 
-# Combining everything — order must be: positional, *args, keyword, **kwargs
+# 组合所有形式——顺序必须是：位置参数, *args, 关键字参数, **kwargs
 def everything(a, b, *args, sep=" ", **kwargs):
     print(a, b, args, sep, kwargs)</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    <code>*args</code> is Python's equivalent of C variadic functions (<code>...</code> / <code>va_list</code>) or C++11's variadic templates, but far simpler — you just get a tuple. <code>**kwargs</code> has no direct C++ equivalent; the closest pattern is passing a <code>std::map&lt;std::string, std::any&gt;</code> or using a builder pattern.
+    <div class="callout-label">C++ 对比</div>
+    <code>*args</code> 是 Python 版的 C 可变参数（<code>...</code> / <code>va_list</code>）或 C++11 的变参模板，但简单得多——你直接拿到一个 tuple。<code>**kwargs</code> 在 C++ 里没有直接等价物；最接近的模式是传一个 <code>std::map&lt;std::string, std::any&gt;</code> 或用 Builder 模式。
   </div>
 
-  <!-- ── Return values ── -->
-  <h2>Return Values (返回值)</h2>
+  <h2>返回值</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># Implicit return — returns None
+    <pre><code class="language-python"># 隐式返回——返回 None
 def say_hi():
-    print("Hi!")
+    print("嗨！")
 
-result = say_hi()   # result is None
+result = say_hi()   # result 是 None
 
-# Single return
+# 单个返回值
 def square(x):
     return x ** 2
 
-# Multiple return values — actually returns a tuple
+# 多个返回值——实际上是返回一个 tuple
 def divmod_manual(a, b):
-    return a // b, a % b   # parentheses optional
+    return a // b, a % b   # 括号可选
 
 quotient, remainder = divmod_manual(17, 5)
 # quotient=3, remainder=2
 
-# Early return (guard clause pattern)
+# 提前返回（guard clause 模式）
 def safe_divide(a, b):
     if b == 0:
-        return None          # early exit
+        return None          # 提前退出
     return a / b</code></pre>
   </div>
 
-  <!-- ── Scope ── -->
-  <h2>Scope: LEGB Rule (作用域)</h2>
+  <h2>作用域：LEGB 规则</h2>
 
   <p>
-    When Python looks up a name, it searches four scopes in order: <strong>L</strong>ocal → <strong>E</strong>nclosing → <strong>G</strong>lobal → <strong>B</strong>uilt-in. This is the LEGB rule (LEGB 规则).
+    Python 查找一个名字时，按顺序搜索四个作用域：<strong>L</strong>ocal（局部）→ <strong>E</strong>nclosing（闭包）→ <strong>G</strong>lobal（全局）→ <strong>B</strong>uilt-in（内置）。这就是 LEGB 规则。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — scope lookup</div>
-    <pre><code class="language-python">x = "global"        # Global scope (全局作用域)
+    <div class="code-label">Python — 作用域查找</div>
+    <pre><code class="language-python">x = "全局"        # 全局作用域（Global）
 
 def outer():
-    x = "enclosing"  # Enclosing scope (闭包作用域)
+    x = "闭包"    # 闭包作用域（Enclosing）
 
     def inner():
-        x = "local"  # Local scope (局部作用域)
-        print(x)     # 'local'  — found in Local first
+        x = "局部"  # 局部作用域（Local）
+        print(x)   # '局部'——先在 Local 找到了
 
     inner()
-    print(x)         # 'enclosing'
+    print(x)       # '闭包'
 
 outer()
-print(x)             # 'global'</code></pre>
+print(x)           # '全局'</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — global and nonlocal keywords</div>
+    <div class="code-label">Python — global 和 nonlocal 关键字</div>
     <pre><code class="language-python">count = 0
 
 def increment():
-    global count        # declare intent to modify the global
+    global count        # 声明要修改全局变量
     count += 1
 
 increment()
 increment()
 print(count)   # 2
 
-# nonlocal — reach into enclosing (not global) scope
+# nonlocal——修改外层函数（而非全局）作用域的变量
 def make_counter():
     n = 0
     def tick():
-        nonlocal n      # modify n in the enclosing function
+        nonlocal n      # 修改外层函数里的 n
         n += 1
         return n
     return tick
@@ -241,25 +237,24 @@ counter()   # 3</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">Best Practice</div>
-    Avoid <code>global</code> in most code. It makes functions hard to test and reason about. Prefer passing values as arguments and returning results. <code>nonlocal</code> is fine inside closures.
+    <div class="callout-label">最佳实践</div>
+    大多数代码里要避免 <code>global</code>。它让函数难以测试和推理。优先把值作为参数传入、把结果返回出来。在闭包里用 <code>nonlocal</code> 是没问题的。
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Python's global scope ≈ C++ file-scope variables. Python's local scope ≈ C++ function-scope. The key difference: in C++ you can shadow an outer variable just by declaring a new one with the same name. In Python, if you assign to a name inside a function, Python treats it as local throughout that function — even before the assignment. Referencing it before the assignment gives <code>UnboundLocalError</code>, not the global value.
+    <div class="callout-label">C++ 对比</div>
+    Python 的全局作用域 ≈ C++ 的文件作用域变量。Python 的局部作用域 ≈ C++ 的函数作用域。关键区别：C++ 里你可以声明一个同名的新变量来遮蔽外层变量。Python 里，如果你在函数内对一个名字赋值，Python 会把它当作整个函数内的局部变量——包括赋值之前的地方。在赋值前引用它会得到 <code>UnboundLocalError</code>，而不是全局变量的值。
   </div>
 
-  <!-- ── Lambda ── -->
-  <h2>Lambda Functions (匿名函数)</h2>
+  <h2>lambda 匿名函数</h2>
 
   <p>
-    A <code>lambda</code> is a small anonymous function defined in a single expression. It can take any number of arguments but contains only one expression — its implicit return value.
+    <code>lambda</code> 是用单个表达式定义的小型匿名函数。可以接受任意数量的参数，但只能包含一个表达式——这就是它的隐式返回值。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — lambda syntax</div>
-    <pre><code class="language-python"># lambda arguments: expression
+    <div class="code-label">Python — lambda 语法</div>
+    <pre><code class="language-python"># lambda 参数: 表达式
 double  = lambda x: x * 2
 add     = lambda x, y: x + y
 clamp01 = lambda x: max(0.0, min(1.0, x))
@@ -268,108 +263,150 @@ double(5)     # 10
 add(3, 4)     # 7
 clamp01(1.5)  # 1.0
 
-# Primary use case: inline key/sort functions
+# 主要用途：内联 key/排序函数
 pairs = [(1, "b"), (3, "a"), (2, "c")]
-pairs.sort(key=lambda p: p[0])         # sort by first element
-pairs.sort(key=lambda p: p[1])         # sort by second element
+pairs.sort(key=lambda p: p[0])         # 按第一个元素排序
+pairs.sort(key=lambda p: p[1])         # 按第二个元素排序
 
-# With map() and filter() — functional style
+# 和 map()、filter() 配合——函数式风格
 nums = [1, 2, 3, 4, 5]
-doubled  = list(map(lambda x: x * 2, nums))       # [2, 4, 6, 8, 10]
+doubled  = list(map(lambda x: x * 2, nums))         # [2, 4, 6, 8, 10]
 evens    = list(filter(lambda x: x % 2 == 0, nums)) # [2, 4]
 
-# Modern Pythonic alternative — comprehensions are usually clearer:
+# 现代 Python 风格——推导式通常更清晰：
 doubled = [x * 2 for x in nums]
 evens   = [x for x in nums if x % 2 == 0]</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Python <code>lambda x: x * 2</code> ≈ C++ <code>[](int x) { return x * 2; }</code>. Python's lambdas are simpler (one expression only) but capture the enclosing scope automatically — no need to specify <code>[&amp;]</code> or <code>[=]</code>. For multi-statement logic, use a named <code>def</code> instead.
+    <div class="callout-label">C++ 对比</div>
+    Python <code>lambda x: x * 2</code> ≈ C++ <code>[](int x) { return x * 2; }</code>。Python 的 lambda 更简单（只能有一个表达式），但自动捕获外层作用域——不需要指定 <code>[&amp;]</code> 或 <code>[=]</code>。如果需要多条语句，用具名的 <code>def</code>。
   </div>
 
-  <!-- ── Pure functions ── -->
-  <h2>Pure Functions and Side Effects (纯函数)</h2>
+  <h2>纯函数与副作用</h2>
 
   <p>
-    A <em>pure function</em> (纯函数) always returns the same output for the same input, and causes no observable side effects (no modifying external state, no I/O, no printing). This concept matters in data work because pure functions are:
+    <em>纯函数（pure function）</em>对同样的输入总是返回同样的输出，且不产生可观察的副作用（不修改外部状态，不做 I/O，不打印）。这个概念在数据工作里很重要，因为纯函数：
   </p>
   <ul>
-    <li><strong>Predictable</strong> — easy to test, no hidden dependencies</li>
-    <li><strong>Composable</strong> — you can chain them safely</li>
-    <li><strong>Parallelisable</strong> — no shared mutable state</li>
+    <li><strong>可预测</strong>——易于测试，没有隐藏依赖</li>
+    <li><strong>可组合</strong>——可以安全地链式调用</li>
+    <li><strong>可并行</strong>——没有共享可变状态</li>
   </ul>
 
   <div class="code-block">
-    <div class="code-label">Python — pure vs impure</div>
-    <pre><code class="language-python"># IMPURE — modifies external state
+    <div class="code-label">Python — 纯函数 vs 非纯函数</div>
+    <pre><code class="language-python"># 非纯——修改外部状态
 total = 0
 def add_to_total(x):
     global total
-    total += x      # side effect: mutates global
+    total += x      # 副作用：变异全局变量
 
-# PURE — takes input, returns output, touches nothing else
+# 纯——接受输入，返回输出，不碰其他任何东西
 def running_total(previous, x):
     return previous + x
 
-# IMPURE — mutates its argument
+# 非纯——变异了参数
 def normalize_inplace(lst):
     max_val = max(lst)
     for i in range(len(lst)):
-        lst[i] /= max_val    # modifies the original list
+        lst[i] /= max_val    # 修改了原始 list
 
-# PURE — returns a new list
+# 纯——返回新 list
 def normalize(lst):
     max_val = max(lst)
     return [x / max_val for x in lst]
 
 data = [10, 20, 50, 100]
-scaled = normalize(data)   # data is untouched
+scaled = normalize(data)   # data 不受影响
 print(data)    # [10, 20, 50, 100]
 print(scaled)  # [0.1, 0.2, 0.5, 1.0]</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Data Science Note</div>
-    Pandas and NumPy are built around this pattern. Most DataFrame operations return a <em>new</em> DataFrame rather than mutating the original — <code>df.dropna()</code>, <code>df.sort_values()</code>, <code>df.rename()</code> all return copies by default. Embrace this: it makes your data pipelines reproducible and debuggable.
+    <div class="callout-label">数据科学注记</div>
+    pandas 和 NumPy 都围绕这个模式构建。大多数 DataFrame 操作默认返回<em>新的</em> DataFrame 而不变异原始对象——<code>df.dropna()</code>、<code>df.sort_values()</code>、<code>df.rename()</code> 都返回副本。拥抱这一点：它让你的数据管道可重现、可调试。
   </div>
 
-  <!-- ── Higher-order ── -->
-  <h2>Higher-Order Functions (高阶函数)</h2>
+  <h2>高阶函数（higher-order functions）</h2>
 
   <p>
-    Since functions are first-class objects, you can pass them as arguments to other functions. This is a pattern you'll encounter constantly in Python data libraries.
+    既然函数是一等公民，你就可以把它们作为参数传给其他函数。这是你在 Python 数据库里会反复遇到的模式。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — functions as arguments</div>
+    <div class="code-label">Python — 函数作为参数</div>
     <pre><code class="language-python">def apply_twice(f, x):
-    """Apply function f to x, then apply f to the result."""
+    """把函数 f 应用于 x，然后再对结果应用 f。"""
     return f(f(x))
 
 apply_twice(lambda x: x * 2, 3)   # 12  →  3→6→12
-apply_twice(str.upper, "hello")    # 'HELLO' (idempotent)
+apply_twice(str.upper, "hello")    # 'HELLO'（幂等函数）
 
-# Returning a function — factory pattern (工厂模式)
+# 返回函数——工厂模式（factory pattern）
 def make_multiplier(n):
     def multiply(x):
-        return x * n      # n is captured from enclosing scope
+        return x * n      # n 从外层作用域捕获
     return multiply
 
 triple = make_multiplier(3)
 triple(7)     # 21
 
-# This is a closure (闭包) — triple "remembers" that n=3</code></pre>
+# 这是一个闭包（closure）——triple "记住"了 n=3</code></pre>
   </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "下面代码的输出是什么？<br><code>def add_item(item, lst=[]):<br>&nbsp;&nbsp;&nbsp;&nbsp;lst.append(item)<br>&nbsp;&nbsp;&nbsp;&nbsp;return lst<br>print(add_item(1))<br>print(add_item(2))</code>",
+      "options": [
+        "[1] 然后 [2]",
+        "[1] 然后 [1, 2]",
+        "两次都是 []",
+        "抛出 TypeError"
+      ],
+      "answer": 1,
+      "explanation": "这是经典的可变默认参数陷阱！默认值 [] 只在函数定义时创建一次，后续所有调用共享同一个 list 对象。第一次调用后 lst 是 [1]，第二次调用时继续向同一个 list 追加，变成 [1, 2]。正确做法是用 lst=None，在函数内部创建新 list。"
+    },
+    {
+      "q": "Python 的 LEGB 规则描述的是什么？",
+      "options": [
+        "一种列表排序算法",
+        "Python 查找变量名时搜索作用域的顺序：局部→闭包→全局→内置",
+        "函数参数的传递顺序：位置→关键字→*args→**kwargs",
+        "模块导入的优先级规则"
+      ],
+      "answer": 1,
+      "explanation": "LEGB 是 Local（局部）、Enclosing（闭包）、Global（全局）、Built-in（内置）的缩写。Python 查找一个名字时按这个顺序搜索，在第一个找到的作用域停下来。"
+    },
+    {
+      "q": "<code>make_counter</code> 返回的 <code>counter</code> 函数为什么每次调用都能"记住"上次的 n 值？",
+      "options": [
+        "因为 n 是全局变量",
+        "因为 tick 函数是一个闭包，捕获了外层函数 make_counter 的局部变量 n",
+        "因为 Python 会自动缓存函数的返回值",
+        "因为 nonlocal 关键字把 n 变成了全局变量"
+      ],
+      "answer": 1,
+      "explanation": "闭包（closure）是一个函数，它捕获了定义它的外层作用域里的变量。tick 函数通过 nonlocal n 持有对 make_counter 局部变量 n 的引用。即使 make_counter 已经执行完毕，n 的值依然存活在闭包里。"
+    }
+  ]
+  </script>
 
   <div class="chapter-nav">
     <a href="ch3.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 3: Data Structures</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 3 章：内置数据结构</span>
     </a>
     <a href="ch5.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 5: Modules &amp; Ecosystem</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 5 章：模块与生态系统</span>
     </a>
   </div>
 

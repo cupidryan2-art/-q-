@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hans">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 12 — Machine Learning | Python for C++ Devs</title>
+<title>第 12 章 — 机器学习基础 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="12">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,68 +30,68 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 12</div>
-    <h1>Machine Learning Fundamentals <span style="font-weight:300;color:var(--text-muted)">机器学习基础</span></h1>
+    <div class="chapter-label">第 12 章</div>
+    <h1>机器学习基础 <span style="font-weight:300;color:var(--text-muted)">Machine Learning Fundamentals</span></h1>
     <p class="lead">
-      scikit-learn makes the mechanics of machine learning almost embarrassingly simple: every model has the same three-method API — <code>.fit()</code>, <code>.predict()</code>, <code>.score()</code>. This chapter teaches the workflow that wraps those three calls, and why each step exists.
+      scikit-learn 把机器学习的门槛压得极低：每个模型都只有三个方法——<code>.fit()</code>、<code>.predict()</code>、<code>.score()</code>。这一章教你包裹这三步的整套工作流，以及每一步存在的理由。
     </p>
   </div>
 
   <!-- ── What is ML ── -->
-  <h2>What is Machine Learning? (机器学习)</h2>
+  <h2>什么是机器学习？</h2>
 
   <p>
-    Classical programming: you write rules, feed in data, get answers.<br>
-    Machine learning: you feed in data <em>and</em> answers, and the algorithm learns the rules.
+    传统编程：你写规则，喂数据，得答案。<br>
+    机器学习：你喂数据<em>和</em>答案，算法自己学规则。
   </p>
 
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Paradigm</th><th>Definition</th><th>Examples</th></tr></thead>
+      <thead><tr><th>范式</th><th>定义</th><th>典型例子</th></tr></thead>
       <tbody>
         <tr>
-          <td><strong>Supervised Learning</strong><br><span style="color:var(--text-muted);font-size:0.85em">监督学习</span></td>
-          <td>Learn a mapping from inputs X to labelled outputs y</td>
-          <td>Predict house price, classify email as spam, diagnose disease</td>
+          <td><strong>监督学习</strong><br><span style="color:var(--text-muted);font-size:0.85em">Supervised Learning</span></td>
+          <td>从有标签的输入 X 学习到输出 y 的映射</td>
+          <td>预测房价、垃圾邮件分类、疾病诊断</td>
         </tr>
         <tr>
-          <td><strong>Unsupervised Learning</strong><br><span style="color:var(--text-muted);font-size:0.85em">无监督学习</span></td>
-          <td>Find structure in unlabelled data</td>
-          <td>Customer segmentation (clustering), anomaly detection, dimensionality reduction</td>
+          <td><strong>无监督学习</strong><br><span style="color:var(--text-muted);font-size:0.85em">Unsupervised Learning</span></td>
+          <td>从无标签数据中发现结构</td>
+          <td>客户分群（聚类）、异常检测、降维</td>
         </tr>
         <tr>
-          <td><strong>Regression</strong> (回归)</td>
-          <td>Supervised: predict a continuous number</td>
-          <td>Predict salary, temperature, stock price</td>
+          <td><strong>回归</strong>（Regression）</td>
+          <td>监督学习：预测一个连续数值</td>
+          <td>预测薪资、温度、股价</td>
         </tr>
         <tr>
-          <td><strong>Classification</strong> (分类)</td>
-          <td>Supervised: predict a discrete class label</td>
-          <td>Spam/not spam, dog/cat, pass/fail</td>
+          <td><strong>分类</strong>（Classification）</td>
+          <td>监督学习：预测一个离散类别标签</td>
+          <td>垃圾/非垃圾、猫/狗、通过/不通过</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <!-- ── Workflow ── -->
-  <h2>The ML Workflow (机器学习流程)</h2>
+  <h2>机器学习的七步流程</h2>
 
-  <p>Every scikit-learn project follows the same seven-step loop:</p>
+  <p>每个 scikit-learn 项目都遵循相同的七步循环：</p>
   <ol>
-    <li><strong>Load &amp; explore</strong> your data</li>
-    <li><strong>Clean</strong> missing values, outliers, wrong types</li>
-    <li><strong>Engineer features</strong> — encode categoricals, scale numerics, create derived columns</li>
-    <li><strong>Split</strong> into train and test sets</li>
-    <li><strong>Train</strong> a model on the training set</li>
-    <li><strong>Evaluate</strong> on the test set — never peek during training</li>
-    <li><strong>Iterate</strong> — tune hyperparameters, try different models</li>
+    <li><strong>加载 &amp; 探索</strong>数据</li>
+    <li><strong>清洗</strong>缺失值、异常值和错误类型</li>
+    <li><strong>特征工程</strong>——对类别特征编码、对数值特征缩放、创建衍生列</li>
+    <li><strong>切分</strong>训练集和测试集</li>
+    <li>在训练集上<strong>训练</strong>模型</li>
+    <li>在测试集上<strong>评估</strong>——训练过程中绝不偷看</li>
+    <li><strong>迭代</strong>——调超参数、尝试不同模型</li>
   </ol>
 
   <!-- ── Train/test split ── -->
-  <h2>Train / Test Split (训练集 / 测试集)</h2>
+  <h2>训练集 / 测试集切分</h2>
 
   <p>
-    If you evaluate a model on the same data it trained on, you're measuring memorisation, not generalisation. The test set is held out and used only for final evaluation — it simulates "new, unseen data."
+    如果你用训练数据本身来评估模型，你量的是"背题能力"，不是"举一反三的能力"。测试集被锁起来留到最后评估——它模拟的是"从未见过的新数据"。
   </p>
 
   <div class="code-block">
@@ -102,63 +102,63 @@ import numpy as np
 
 df = pd.read_csv("students.csv")
 
-# X = features (特征矩阵), y = target (目标变量)
+# X = 特征矩阵，y = 目标变量
 X = df[["study_hours", "prev_score", "attendance"]]
 y = df["final_score"]
 
-# Split — 80% train, 20% test
+# 切分：80% 训练，20% 测试
 X_train, X_test, y_train, y_test = train_test_split(
     X, y,
-    test_size=0.2,       # 20% held out for testing
-    random_state=42,     # seed for reproducibility
-    stratify=y if y.dtype == bool else None  # preserve class balance for classification
+    test_size=0.2,       # 20% 留给测试
+    random_state=42,     # 固定随机种子，保证可复现
+    stratify=y if y.dtype == bool else None  # 分类任务：保持类别比例
 )
 
-print(f"Train: {len(X_train)} samples | Test: {len(X_test)} samples")
+print(f"训练集：{len(X_train)} 条 | 测试集：{len(X_test)} 条")
 
-# Rule of thumb: 80/20 or 70/30 split
-# For very small datasets (< 1000 rows): use cross-validation instead</code></pre>
+# 经验规则：80/20 或 70/30 切分
+# 数据量极少（< 1000 行）时：改用交叉验证</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">Why This Matters</div>
-    This is the equivalent of a unit test for your model. Training accuracy is meaningless — a model can memorise the training data and score 100% (this is overfitting, 过拟合). Test accuracy measures what you actually care about: does the model generalise to data it has never seen?
+    <div class="callout-label">C++ 类比</div>
+    这就是你的模型的单元测试。训练集准确率毫无意义——一个模型完全可以把训练数据背下来，得到 100% 的准确率（这叫过拟合，overfitting）。测试集准确率才是你真正关心的：模型能泛化到它从未见过的数据吗？
   </div>
 
   <!-- ── Feature scaling ── -->
-  <h2>Feature Scaling (特征缩放)</h2>
+  <h2>特征缩放 (Feature Scaling)</h2>
 
   <p>
-    Many algorithms — logistic regression, SVM, k-NN, neural networks, PCA — are sensitive to the <em>scale</em> of input features. If <code>salary</code> ranges from 30,000 to 200,000 and <code>age</code> ranges from 22 to 65, salary will dominate any distance or gradient calculation. Scaling puts all features on the same footing.
+    很多算法——逻辑回归、SVM、k-NN、神经网络、PCA——对输入特征的<em>量纲</em>非常敏感。如果 <code>salary</code> 的范围是 3 万到 20 万，<code>age</code> 的范围是 22 到 65，salary 会在任何距离或梯度计算中碾压 age。缩放让所有特征站在同一条起跑线上。
   </p>
 
   <div class="code-block">
     <div class="code-label">Python — StandardScaler</div>
     <pre><code class="language-python">from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-# StandardScaler: z = (x - mean) / std  → mean=0, std=1
+# StandardScaler：z = (x - mean) / std  → 均值=0，标准差=1
 scaler = StandardScaler()
 
-# CRITICAL: fit on TRAIN data only, then transform both train and test
-# Fitting on test data would leak information ("data leakage" 数据泄漏)
+# 关键：只在训练集上 fit，然后分别 transform 训练集和测试集
+# 如果在全量数据上 fit，就把测试集信息"泄漏"给了模型（数据泄漏）
 X_train_scaled = scaler.fit_transform(X_train)   # fit + transform
-X_test_scaled  = scaler.transform(X_test)         # transform only (use train stats)
+X_test_scaled  = scaler.transform(X_test)         # 只 transform（用训练集的统计量）
 
-# MinMaxScaler: scales to [0, 1]  — useful when you need bounded inputs
+# MinMaxScaler：缩放到 [0, 1]——需要有界输入时用这个
 min_max = MinMaxScaler()
 X_train_mm = min_max.fit_transform(X_train)
 
-# Decision trees and random forests do NOT need scaling — they use thresholds
-# Linear models, SVM, k-NN, neural networks DO need scaling</code></pre>
+# 决策树和随机森林不需要缩放——它们基于阈值分裂，与尺度无关
+# 线性模型、SVM、k-NN、神经网络需要缩放</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Data Leakage — The Most Common Mistake (数据泄漏)</div>
-    Always fit your scaler (and any other preprocessor) on the <strong>training set only</strong>. If you call <code>scaler.fit_transform(X)</code> on the full dataset before splitting, the test set statistics influence the scaler — the model has indirectly "seen" the test data. This inflates performance metrics and gives you false confidence.
+    <div class="callout-label">数据泄漏——最常见的陷阱 (Data Leakage)</div>
+    永远只在<strong>训练集</strong>上 fit 你的 scaler（以及任何预处理器）。如果你在切分之前对全量数据调用 <code>scaler.fit_transform(X)</code>，测试集的统计信息就污染了 scaler——模型间接"看到"了测试数据。这会虚高评估指标，给你假的安全感。
   </div>
 
   <!-- ── Linear regression ── -->
-  <h2>Linear Regression (线性回归)</h2>
+  <h2>线性回归 (Linear Regression)</h2>
 
   <div class="code-block">
     <div class="code-label">Python — LinearRegression</div>
@@ -167,30 +167,30 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 
 model = LinearRegression()
-model.fit(X_train_scaled, y_train)       # learn coefficients
+model.fit(X_train_scaled, y_train)       # 学习系数
 
-# Inspect the learned model
-print("Intercept:", model.intercept_)
-print("Coefficients:", dict(zip(X_train.columns, model.coef_)))
+# 查看学到的模型参数
+print("截距:", model.intercept_)
+print("系数:", dict(zip(X_train.columns, model.coef_)))
 
-# Predict
+# 预测
 y_pred = model.predict(X_test_scaled)
 
-# Evaluate
+# 评估
 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 mae  = mean_absolute_error(y_test, y_pred)
-r2   = r2_score(y_test, y_pred)          # 1.0 = perfect, 0 = predicts mean, <0 = worse than mean
+r2   = r2_score(y_test, y_pred)   # 1.0=完美，0=只会预测均值，<0=比均值还烂
 
-print(f"RMSE: {rmse:.2f}")   # root mean squared error — same units as target
-print(f"MAE:  {mae:.2f}")    # mean absolute error — more interpretable
-print(f"R²:   {r2:.3f}")     # proportion of variance explained</code></pre>
+print(f"RMSE: {rmse:.2f}")   # 均方根误差——和目标变量同单位
+print(f"MAE:  {mae:.2f}")    # 平均绝对误差——更直观
+print(f"R²:   {r2:.3f}")     # 解释方差的比例</code></pre>
   </div>
 
   <!-- ── Logistic regression ── -->
-  <h2>Logistic Regression (逻辑回归) — Binary Classification</h2>
+  <h2>逻辑回归 (Logistic Regression) — 二分类</h2>
 
   <p>
-    Despite the name, logistic regression is a <em>classification</em> algorithm. It models the probability that a sample belongs to class 1 using the sigmoid function, then thresholds at 0.5. It's fast, interpretable, and a strong baseline for any binary classification problem.
+    别被名字骗了，逻辑回归是个<em>分类</em>算法。它用 sigmoid 函数对样本属于类别 1 的概率建模，然后以 0.5 为阈值做判断。速度快、可解释性强，是任何二分类问题的首选 baseline。
   </p>
 
   <div class="code-block">
@@ -198,7 +198,7 @@ print(f"R²:   {r2:.3f}")     # proportion of variance explained</code></pre>
     <pre><code class="language-python">from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-# Binary target: passed (1) or failed (0)
+# 二分类目标：通过(1) 或 不通过(0)
 y_binary = (df["final_score"] >= 60).astype(int)
 X = df[["study_hours", "prev_score", "attendance"]]
 
@@ -211,26 +211,26 @@ model = LogisticRegression(max_iter=1000)
 model.fit(X_train_s, y_train)
 
 y_pred  = model.predict(X_test_s)
-y_proba = model.predict_proba(X_test_s)[:, 1]  # probability of class 1
+y_proba = model.predict_proba(X_test_s)[:, 1]  # 类别 1 的概率
 
-print(f"Accuracy: {accuracy_score(y_test, y_pred):.3f}")
+print(f"准确率: {accuracy_score(y_test, y_pred):.3f}")
 
-# Confusion matrix (混淆矩阵)
+# 混淆矩阵 (Confusion Matrix)
 cm = confusion_matrix(y_test, y_pred)
-print("Confusion matrix:")
+print("混淆矩阵:")
 print(cm)
 # [[TN  FP]
 #  [FN  TP]]
 
-# Full classification report
-print(classification_report(y_test, y_pred, target_names=["Failed", "Passed"]))</code></pre>
+# 完整分类报告
+print(classification_report(y_test, y_pred, target_names=["不通过", "通过"]))</code></pre>
   </div>
 
   <!-- ── Decision tree ── -->
-  <h2>Decision Trees (决策树)</h2>
+  <h2>决策树 (Decision Tree)</h2>
 
   <p>
-    A decision tree learns a series of if-then rules by recursively splitting the data on feature thresholds. It's highly interpretable — you can visualise the exact rules the model learned. It does not require feature scaling.
+    决策树通过反复在特征阈值上切分数据，学出一套"if-then"规则。它的最大优势是可解释性——你可以把学到的规则打印出来，一条一条地读。而且决策树不需要特征缩放。
   </p>
 
   <div class="code-block">
@@ -238,58 +238,58 @@ print(classification_report(y_test, y_pred, target_names=["Failed", "Passed"]))<
     <pre><code class="language-python">from sklearn.tree import DecisionTreeClassifier, export_text
 
 model = DecisionTreeClassifier(
-    max_depth=4,          # limit tree depth — prevents overfitting
-    min_samples_leaf=5,   # each leaf needs at least 5 samples
+    max_depth=4,          # 限制树的深度——防止过拟合
+    min_samples_leaf=5,   # 每个叶节点至少 5 个样本
     random_state=42,
 )
-model.fit(X_train, y_train)   # no scaling needed for trees
+model.fit(X_train, y_train)   # 决策树不需要缩放
 
-print(f"Train accuracy: {model.score(X_train, y_train):.3f}")
-print(f"Test  accuracy: {model.score(X_test,  y_test):.3f}")
-# If train >> test, the tree is overfitting → increase max_depth restriction
+print(f"训练准确率: {model.score(X_train, y_train):.3f}")
+print(f"测试准确率: {model.score(X_test,  y_test):.3f}")
+# 如果训练远高于测试，说明过拟合了 → 收紧 max_depth
 
-# Print the learned rules as text
+# 把学到的规则打印成文字
 rules = export_text(model, feature_names=list(X.columns))
 print(rules)
 
-# Feature importance — which features mattered most?
+# 特征重要性——哪些特征最关键？
 importances = pd.Series(model.feature_importances_, index=X.columns)
 importances.sort_values(ascending=False)</code></pre>
   </div>
 
   <!-- ── Evaluation ── -->
-  <h2>Model Evaluation Metrics (模型评估)</h2>
+  <h2>模型评估指标</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — evaluation metrics</div>
+    <div class="code-label">Python — 评估指标</div>
     <pre><code class="language-python">from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     confusion_matrix, classification_report, ConfusionMatrixDisplay
 )
 import matplotlib.pyplot as plt
 
-# Core classification metrics
-acc  = accuracy_score(y_test, y_pred)    # (TP+TN) / total
-prec = precision_score(y_test, y_pred)   # TP / (TP+FP) — of predicted positives, how many were right?
-rec  = recall_score(y_test, y_pred)      # TP / (TP+FN) — of actual positives, how many did we catch?
-f1   = f1_score(y_test, y_pred)          # harmonic mean of precision and recall
+# 核心分类指标
+acc  = accuracy_score(y_test, y_pred)    # (TP+TN) / 总数
+prec = precision_score(y_test, y_pred)   # TP / (TP+FP) — 预测为正的里有多少真的是正
+rec  = recall_score(y_test, y_pred)      # TP / (TP+FN) — 真正的正例里有多少被找到
+f1   = f1_score(y_test, y_pred)          # precision 和 recall 的调和平均
 
-print(f"Accuracy:  {acc:.3f}")
-print(f"Precision: {prec:.3f}")
-print(f"Recall:    {rec:.3f}")
-print(f"F1:        {f1:.3f}")
+print(f"准确率:  {acc:.3f}")
+print(f"精确率:  {prec:.3f}")
+print(f"召回率:  {rec:.3f}")
+print(f"F1:      {f1:.3f}")
 
-# When to use which metric:
-# Accuracy — balanced classes, both error types equally costly
-# Precision — false positives are expensive (spam filter: don't block real emails)
-# Recall    — false negatives are expensive (cancer detection: don't miss cases)
-# F1        — imbalanced classes, need balance of precision and recall
+# 什么时候用哪个指标：
+# 准确率  — 类别均衡，两种错误代价相同
+# 精确率  — 误报（FP）代价高（垃圾邮件过滤：不能误杀正常邮件）
+# 召回率  — 漏报（FN）代价高（癌症检测：不能漏掉病例）
+# F1      — 类别不均衡，需要在精确率和召回率间取平衡
 
-# Visual confusion matrix
+# 可视化混淆矩阵
 fig, ax = plt.subplots(figsize=(4, 4))
 ConfusionMatrixDisplay.from_predictions(
     y_test, y_pred,
-    display_labels=["Failed", "Passed"],
+    display_labels=["不通过", "通过"],
     ax=ax, colorbar=False,
 )
 plt.tight_layout()
@@ -297,10 +297,10 @@ plt.savefig("confusion_matrix.png", dpi=150, bbox_inches="tight")</code></pre>
   </div>
 
   <!-- ── Cross-validation ── -->
-  <h2>Cross-Validation (交叉验证)</h2>
+  <h2>交叉验证 (Cross-Validation)</h2>
 
   <p>
-    A single train/test split gives you one estimate of performance — which might be lucky or unlucky depending on which samples ended up in the test set. Cross-validation (CV) repeats the evaluation <em>k</em> times on different splits and averages the results, giving a much more reliable estimate.
+    单次训练/测试切分只给你一个性能估计——可能运气好，也可能运气差，取决于哪些样本恰好落进了测试集。交叉验证（CV）把评估重复 <em>k</em> 次，每次用不同的切分方式，再取平均值，结果要可靠得多。
   </p>
 
   <div class="code-block">
@@ -311,83 +311,83 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 
-# Pipeline (流水线) — chains preprocessing + model into one object
-# This ensures the scaler is fit only on training folds, never test folds
+# Pipeline（流水线）——把预处理和模型链成一个对象
+# 这样可以确保 scaler 只在训练折上 fit，绝不在测试折上 fit
 pipe = Pipeline([
     ("scaler", StandardScaler()),
     ("model",  LogisticRegression(max_iter=1000)),
 ])
 
-# 5-fold cross-validation
+# 5 折交叉验证
 cv_scores = cross_val_score(pipe, X, y_binary, cv=5, scoring="accuracy")
-print(f"CV scores:  {cv_scores}")
-print(f"Mean ± std: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
-# e.g. "Mean ± std: 0.847 ± 0.023"
-# The std tells you how stable the performance is across folds
+print(f"CV 得分:     {cv_scores}")
+print(f"均值 ± 标准差: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
+# 例如："均值 ± 标准差: 0.847 ± 0.023"
+# 标准差告诉你性能在不同折之间有多稳定
 
-# Stratified K-Fold — preserves class proportions in each fold
+# 分层 K 折——每个折都保持类别比例
 from sklearn.model_selection import StratifiedKFold
 skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 cv_scores = cross_val_score(pipe, X, y_binary, cv=skf, scoring="f1")</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">Always Use a Pipeline</div>
-    Wrapping your preprocessor and model in a <code>Pipeline</code> is not just convenient — it's <strong>correct</strong>. When you pass a Pipeline to <code>cross_val_score</code>, the scaler is re-fit on each training fold separately, and then applied to the corresponding test fold. This is the only way to avoid data leakage in cross-validation. Always use Pipelines for any workflow that includes preprocessing.
+    <div class="callout-label">永远用 Pipeline</div>
+    把预处理器和模型包进 <code>Pipeline</code> 不只是方便——这才是<strong>正确</strong>的做法。把 Pipeline 传给 <code>cross_val_score</code> 时，scaler 会在每个训练折上独立重新 fit，然后只应用到对应的测试折。这是避免交叉验证中数据泄漏的唯一正确方式。凡是包含预处理步骤的工作流，都要用 Pipeline。
   </div>
 
   <div class="done-btn-wrap">
-    <button id="mark-done-btn">Mark as complete</button>
-    <span class="done-hint">Saves your progress locally.</span>
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
   </div>
 
   <div id="quiz"></div>
   <script id="quiz-data" type="application/json">
   [
     {
-      "q": "Why do we split data into a training set and a test set before modelling?",
+      "q": "为什么要在建模前把数据切分成训练集和测试集？",
       "options": [
-        "To speed up training by using less data",
-        "To evaluate whether the model generalises to unseen data, detecting overfitting",
-        "Because scikit-learn requires it",
-        "To reduce memory usage during training"
+        "用更少的数据来加快训练速度",
+        "评估模型能否泛化到未见过的数据，从而检测过拟合",
+        "因为 scikit-learn 强制要求这样做",
+        "减少训练时的内存占用"
       ],
       "answer": 1,
-      "explanation": "A model evaluated on its own training data measures memorisation, not learning. The held-out test set simulates new, unseen data — if test accuracy is much lower than training accuracy, the model has overfit (过拟合). The test set must never be seen during training or hyperparameter tuning."
+      "explanation": "在自己的训练数据上评估模型，量的是记忆能力，不是学习能力。留出的测试集模拟的是全新的、从未见过的数据——如果测试准确率远低于训练准确率，说明模型过拟合（overfitting）了。测试集在训练和超参数调优期间绝不能被看到。"
     },
     {
-      "q": "Why is feature scaling important for logistic regression and SVM, but NOT for decision trees?",
+      "q": "特征缩放对逻辑回归和 SVM 很重要，但对决策树完全不必要，原因是？",
       "options": [
-        "Scikit-learn automatically scales for trees but not linear models",
-        "Algorithms using distance or gradient descent are sensitive to feature magnitude; trees use thresholds and are scale-invariant",
-        "Feature scaling always improves accuracy for every algorithm",
-        "Trees are slower and scaling would make them too fast"
+        "scikit-learn 对树模型自动缩放，对线性模型不缩放",
+        "基于距离或梯度下降的算法对特征量级敏感；决策树用阈值切分，与尺度无关",
+        "特征缩放对所有算法都能提升准确率",
+        "树模型速度慢，缩放会让它快得不公平"
       ],
       "answer": 1,
-      "explanation": "Linear models optimise a weighted sum of features — if salary (50000) and age (30) are on different scales, gradient descent takes tiny steps on salary and huge steps on age, making training slow and unstable. Decision trees split on thresholds like 'study_hours > 3.5', which is the same whether hours are measured in seconds or minutes."
+      "explanation": "线性模型优化的是特征的加权求和——如果薪资（50000）和年龄（30）尺度不同，梯度下降在薪资方向步子极小、在年龄方向步子极大，训练又慢又不稳定。决策树的分裂条件是"study_hours > 3.5"这样的阈值判断，无论 study_hours 用秒还是小时计量，结果完全一样。"
     },
     {
-      "q": "What does <code>cross_val_score(pipeline, X, y, cv=5)</code> do?",
+      "q": "<code>cross_val_score(pipeline, X, y, cv=5)</code> 做了什么？",
       "options": [
-        "Validates that the pipeline code runs without runtime errors",
-        "Splits data into 5 folds, trains and evaluates the pipeline 5 times on different splits, returning 5 scores",
-        "Scores all 5 possible cross-products of feature combinations",
-        "Runs the model 5 times on the same data with different random seeds"
+        "验证 pipeline 代码能否正常运行而不报错",
+        "把数据切成 5 折，在不同的切分上训练和评估 pipeline 共 5 次，返回 5 个得分",
+        "对 5 种可能的特征组合的交叉乘积打分",
+        "用 5 个不同的随机种子在同一份数据上运行模型 5 次"
       ],
       "answer": 1,
-      "explanation": "5-fold CV divides the data into 5 equal parts. In each iteration, 4 parts are used for training and 1 for testing — rotating which fold is the test set. You get 5 independent performance estimates whose mean and standard deviation tell you how reliably the model generalises."
+      "explanation": "5 折交叉验证把数据平均分成 5 份。每次迭代用其中 4 份训练、1 份测试，轮流换哪份做测试集。你会得到 5 个独立的性能估计，它们的均值和标准差能告诉你模型泛化能力有多稳定可靠。"
     }
   ]
   </script>
 
   <div class="chapter-nav">
     <a href="ch11.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 11: Data Visualization</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 11 章：数据可视化</span>
     </a>
     <a href="ch13.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 13: Capstone Project</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 13 章：综合实战项目</span>
     </a>
   </div>
 

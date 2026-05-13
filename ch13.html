@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hans">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 13 — Capstone Project | Python for C++ Devs</title>
+<title>第 13 章 — 综合实战项目 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="13">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,43 +30,43 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 13 · Capstone</div>
-    <h1>Putting It All Together <span style="font-weight:300;color:var(--text-muted)">综合项目</span></h1>
+    <div class="chapter-label">第 13 章 · 综合实战</div>
+    <h1>把所有东西拼在一起 <span style="font-weight:300;color:var(--text-muted)">Capstone Project</span></h1>
     <p class="lead">
-      Every chapter in this curriculum has been a building block. Now we assemble them into a single coherent project: load raw data, explore it, clean it, engineer features, build two models, evaluate them, and interpret the results. This is the pipeline (管道思维) you'll follow on every real data science project.
+      前面每一章都是一块积木。现在我们把它们组装成一个完整的项目：加载原始数据、探索、清洗、特征工程、建两个模型、评估、解读结果。这就是你在每一个真实数据科学项目里都会重复的管道思维（pipeline thinking）。
     </p>
   </div>
 
   <!-- ── Dataset ── -->
-  <h2>The Dataset: Student Performance Prediction</h2>
+  <h2>数据集：学生成绩预测</h2>
 
   <p>
-    We'll use a synthetic dataset of 400 students. Each row represents one student with four input features and one outcome. We'll predict both a continuous score (regression) and a pass/fail label (classification).
+    我们用一份 400 名学生的合成数据集。每行代表一名学生，有四个输入特征和一个结果变量。我们会同时预测连续分数（回归）和通过/不通过标签（分类）。
   </p>
 
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+      <thead><tr><th>列名</th><th>类型</th><th>说明</th></tr></thead>
       <tbody>
-        <tr><td><code>study_hours</code></td><td>float</td><td>Weekly study hours (0–20), with some outliers</td></tr>
-        <tr><td><code>prev_score</code></td><td>float</td><td>Previous exam score (0–100), a few missing values</td></tr>
-        <tr><td><code>attendance</code></td><td>float</td><td>Attendance rate (0.0–1.0)</td></tr>
-        <tr><td><code>sleep_hours</code></td><td>float</td><td>Average nightly sleep (3–10)</td></tr>
-        <tr><td><code>support_level</code></td><td>str</td><td>Tutoring support: "none", "basic", "intensive"</td></tr>
-        <tr><td><code>final_score</code></td><td>float</td><td><strong>Target</strong>: final exam score (0–100)</td></tr>
+        <tr><td><code>study_hours</code></td><td>float</td><td>每周学习时长（0–20 小时），含部分异常值</td></tr>
+        <tr><td><code>prev_score</code></td><td>float</td><td>上次考试分数（0–100），有少量缺失值</td></tr>
+        <tr><td><code>attendance</code></td><td>float</td><td>出勤率（0.0–1.0）</td></tr>
+        <tr><td><code>sleep_hours</code></td><td>float</td><td>平均每晚睡眠时长（3–10 小时）</td></tr>
+        <tr><td><code>support_level</code></td><td>str</td><td>辅导支持等级："none"、"basic"、"intensive"</td></tr>
+        <tr><td><code>final_score</code></td><td>float</td><td><strong>目标变量</strong>：期末考试分数（0–100）</td></tr>
       </tbody>
     </table>
   </div>
 
   <!-- ── Step 0: Generate ── -->
-  <h2>Step 0 — Generate the Synthetic Dataset</h2>
+  <h2>Step 0 — 生成合成数据集</h2>
 
   <p>
-    We generate the data with NumPy so this project is fully self-contained — no external file needed. The data has realistic noise, missing values, and outliers baked in.
+    我们用 NumPy 在代码里生成数据，这样整个项目完全自给自足，不依赖外部文件。数据里内置了真实的噪声、缺失值和异常值。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — generate_data.py (run once)</div>
+    <div class="code-label">Python — generate_data.py（运行一次）</div>
     <pre><code class="language-python">import numpy as np
 import pandas as pd
 
@@ -75,22 +75,22 @@ n = 400
 
 study_hours   = rng.uniform(0, 16, n)
 prev_score    = rng.normal(65, 18, n).clip(0, 100)
-attendance    = rng.beta(7, 2, n)           # skewed toward high attendance
+attendance    = rng.beta(7, 2, n)           # 偏向高出勤率
 sleep_hours   = rng.normal(7, 1.2, n).clip(3, 10)
 support_level = rng.choice(["none", "basic", "intensive"],
                              p=[0.5, 0.3, 0.2], size=n)
 
-# True relationship (with noise)
+# 真实的分数生成逻辑（加噪声）
 support_bonus = {"none": 0, "basic": 5, "intensive": 12}
 bonus = np.array([support_bonus[s] for s in support_level])
 
 final_score = (
-    0.35 * study_hours * 4           # study hours → up to ~22 pts
-  + 0.40 * prev_score                # previous score carries weight
-  + 0.15 * attendance * 100          # attendance → up to 15 pts
-  + 0.10 * (sleep_hours - 4) * 5    # sleep → small bonus
+    0.35 * study_hours * 4           # 学习时长 → 最多约 22 分
+  + 0.40 * prev_score                # 历史成绩权重最高
+  + 0.15 * attendance * 100          # 出勤率 → 最多 15 分
+  + 0.10 * (sleep_hours - 4) * 5    # 睡眠 → 小幅加成
   + bonus
-  + rng.normal(0, 8, n)             # noise
+  + rng.normal(0, 8, n)             # 噪声
 ).clip(0, 100)
 
 df = pd.DataFrame({
@@ -102,21 +102,21 @@ df = pd.DataFrame({
     "final_score":   final_score,
 })
 
-# Inject realistic problems
-df.loc[rng.choice(n, 20, replace=False), "prev_score"] = np.nan   # missing values
-df.loc[rng.choice(n, 5,  replace=False), "study_hours"] *= 3      # outliers
+# 注入真实的"脏数据"问题
+df.loc[rng.choice(n, 20, replace=False), "prev_score"] = np.nan   # 缺失值
+df.loc[rng.choice(n, 5,  replace=False), "study_hours"] *= 3      # 异常值
 df.loc[rng.choice(n, 8,  replace=False), "attendance"] = rng.uniform(0, 0.1, 8)
 
 df = df.round(2)
 df.to_csv("students.csv", index=False)
-print(f"Saved {len(df)} rows to students.csv")</code></pre>
+print(f"已保存 {len(df)} 行到 students.csv")</code></pre>
   </div>
 
   <!-- ── Step 1: Load & Explore ── -->
-  <h2>Step 1 — Load and Explore</h2>
+  <h2>Step 1 — 加载与探索</h2>
 
   <p>
-    Never skip exploration. Five minutes here saves hours of debugging later.
+    永远不要跳过探索这一步。在这里花五分钟，能省下后面几小时的调试时间。
   </p>
 
   <div class="code-block">
@@ -127,50 +127,50 @@ import seaborn as sns
 
 df = pd.read_csv("students.csv")
 
-# ── Shape and types ──
+# ── 形状与类型 ──
 print(df.shape)       # (400, 6)
 print(df.dtypes)
 print(df.head())
 
-# ── Missing values ──
-print("\nMissing values:")
+# ── 缺失值 ──
+print("\n缺失值：")
 print(df.isnull().sum())
-# prev_score    20  ← we injected these
+# prev_score    20  ← 我们手动注入的
 
-# ── Statistics ──
-print("\nDescriptive statistics:")
+# ── 描述统计 ──
+print("\n描述统计：")
 print(df.describe().round(2))
 
-# ── Target distribution ──
+# ── 目标变量分布 ──
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 axes[0].hist(df["final_score"], bins=30, color="#CC785C", edgecolor="white")
-axes[0].set_title("Final Score Distribution")
-axes[0].set_xlabel("Score")
+axes[0].set_title("期末成绩分布")
+axes[0].set_xlabel("分数")
 
-# Scores by support level
+# 各辅导等级的成绩箱线图
 sns.boxplot(df, x="support_level",
             y="final_score",
             order=["none","basic","intensive"],
             ax=axes[1],
             palette="muted")
-axes[1].set_title("Score by Support Level")
+axes[1].set_title("各辅导等级的成绩分布")
 
 fig.tight_layout()
 plt.savefig("01_exploration.png", dpi=150, bbox_inches="tight")
 
-# ── Correlation ──
+# ── 相关矩阵 ──
 corr = df.select_dtypes("number").corr()
 fig, ax = plt.subplots(figsize=(6, 5))
 sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm",
             vmin=-1, vmax=1, ax=ax)
-ax.set_title("Correlation Matrix")
+ax.set_title("相关性矩阵")
 fig.tight_layout()
 plt.savefig("01_correlation.png", dpi=150, bbox_inches="tight")
-print("Exploration plots saved.")</code></pre>
+print("探索图表已保存。")</code></pre>
   </div>
 
   <!-- ── Step 2: Clean ── -->
-  <h2>Step 2 — Clean the Data</h2>
+  <h2>Step 2 — 数据清洗</h2>
 
   <div class="code-block">
     <div class="code-label">Python — 02_clean.py</div>
@@ -182,34 +182,34 @@ df = pd.read_csv("students.csv")
 def clean(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    # ── Missing values ──
-    # Fill prev_score with median (robust to outliers)
+    # ── 缺失值处理 ──
+    # 用中位数填充 prev_score（中位数对异常值更鲁棒）
     df["prev_score"] = df["prev_score"].fillna(df["prev_score"].median())
 
-    # ── Outliers in study_hours (cap at 20h/week) ──
+    # ── 截断 study_hours 的异常值（上限 20 小时/周）──
     df["study_hours"] = df["study_hours"].clip(upper=20.0)
 
-    # ── Impossible attendance values ──
+    # ── 修正不可能的出勤率值 ──
     df["attendance"] = df["attendance"].clip(0.0, 1.0)
 
-    # ── Ensure dtypes ──
+    # ── 确保类型正确 ──
     df["support_level"] = df["support_level"].str.strip().str.lower()
 
     return df
 
 df_clean = clean(df)
 
-# Verify
-print("Missing after cleaning:", df_clean.isnull().sum().sum())
-print("study_hours max:", df_clean["study_hours"].max())
-print("attendance range:", df_clean["attendance"].min(), "–", df_clean["attendance"].max())
+# 验证
+print("清洗后缺失值：", df_clean.isnull().sum().sum())
+print("study_hours 最大值：", df_clean["study_hours"].max())
+print("attendance 范围：", df_clean["attendance"].min(), "–", df_clean["attendance"].max())
 
 df_clean.to_csv("students_clean.csv", index=False)
-print(f"\nCleaned data saved. Shape: {df_clean.shape}")</code></pre>
+print(f"\n已保存清洗后数据。形状：{df_clean.shape}")</code></pre>
   </div>
 
   <!-- ── Step 3: Feature Engineering ── -->
-  <h2>Step 3 — Feature Engineering</h2>
+  <h2>Step 3 — 特征工程</h2>
 
   <div class="code-block">
     <div class="code-label">Python — 03_features.py</div>
@@ -221,32 +221,32 @@ df = pd.read_csv("students_clean.csv")
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    # ── Encode ordinal categorical ──
+    # ── 有序类别编码 ──
     support_map = {"none": 0, "basic": 1, "intensive": 2}
     df["support_num"] = df["support_level"].map(support_map)
 
-    # ── Interaction features ──
-    # Study efficiency = study hours × attendance
+    # ── 交互特征 ──
+    # 学习效率 = 学习时长 × 出勤率
     df["study_efficiency"] = df["study_hours"] * df["attendance"]
 
-    # Sleep quality score — penalise too little AND too much
+    # 睡眠质量分——睡太少和睡太多都扣分
     df["sleep_quality"] = 1.0 - (np.abs(df["sleep_hours"] - 7.5) / 4.5).clip(0, 1)
 
-    # ── Binary target for classification ──
+    # ── 分类任务的二值目标 ──
     df["passed"] = (df["final_score"] >= 60).astype(int)
 
     return df
 
 df_feat = engineer_features(df)
 
-# Check what we have
+# 检查结果
 print(df_feat[["study_efficiency", "sleep_quality", "support_num", "passed"]].describe().round(2))
 df_feat.to_csv("students_features.csv", index=False)
-print(f"\nFeature data saved. Columns: {list(df_feat.columns)}")</code></pre>
+print(f"\n特征数据已保存。列名：{list(df_feat.columns)}")</code></pre>
   </div>
 
   <!-- ── Step 4: Model ── -->
-  <h2>Step 4 — Build Models</h2>
+  <h2>Step 4 — 建模</h2>
 
   <div class="code-block">
     <div class="code-label">Python — 04_model.py</div>
@@ -268,18 +268,18 @@ FEATURES = ["study_hours", "prev_score", "attendance",
             "sleep_hours", "support_num", "study_efficiency", "sleep_quality"]
 
 X = df[FEATURES]
-y_reg  = df["final_score"]    # regression target (continuous)
-y_clf  = df["passed"]          # classification target (binary)
+y_reg  = df["final_score"]    # 回归目标（连续值）
+y_clf  = df["passed"]          # 分类目标（二值）
 
 X_train, X_test, yr_train, yr_test, yc_train, yc_test = train_test_split(
     X, y_reg, y_clf, test_size=0.2, random_state=42, stratify=y_clf
 )
 
-print(f"Train: {len(X_train)} | Test: {len(X_test)}")
-print(f"Pass rate (train): {yc_train.mean():.1%}  (test): {yc_test.mean():.1%}\n")
+print(f"训练集：{len(X_train)} 条 | 测试集：{len(X_test)} 条")
+print(f"通过率（训练）：{yc_train.mean():.1%}  （测试）：{yc_test.mean():.1%}\n")
 
 # ────────────────────────────────
-#  REGRESSION — predict final_score
+#  回归——预测 final_score
 # ────────────────────────────────
 reg_pipe = Pipeline([
     ("scaler", StandardScaler()),
@@ -288,16 +288,16 @@ reg_pipe = Pipeline([
 reg_pipe.fit(X_train, yr_train)
 yr_pred = reg_pipe.predict(X_test)
 
-print("=== Linear Regression ===")
+print("=== 线性回归 ===")
 print(f"R²:  {r2_score(yr_test, yr_pred):.3f}")
-print(f"MAE: {mean_absolute_error(yr_test, yr_pred):.2f} points\n")
+print(f"MAE: {mean_absolute_error(yr_test, yr_pred):.2f} 分\n")
 
-# Cross-validated R²
+# 5 折交叉验证 R²
 cv_r2 = cross_val_score(reg_pipe, X, y_reg, cv=5, scoring="r2")
-print(f"5-fold CV R²: {cv_r2.mean():.3f} ± {cv_r2.std():.3f}\n")
+print(f"5 折 CV R²: {cv_r2.mean():.3f} ± {cv_r2.std():.3f}\n")
 
 # ────────────────────────────────
-#  CLASSIFICATION — predict passed
+#  分类——预测 passed
 # ────────────────────────────────
 log_pipe = Pipeline([
     ("scaler", StandardScaler()),
@@ -306,21 +306,21 @@ log_pipe = Pipeline([
 log_pipe.fit(X_train, yc_train)
 yc_pred = log_pipe.predict(X_test)
 
-print("=== Logistic Regression ===")
-print(f"Accuracy: {accuracy_score(yc_test, yc_pred):.3f}")
-print(classification_report(yc_test, yc_pred, target_names=["Failed", "Passed"]))
+print("=== 逻辑回归 ===")
+print(f"准确率: {accuracy_score(yc_test, yc_pred):.3f}")
+print(classification_report(yc_test, yc_pred, target_names=["不通过", "通过"]))
 
-# Decision Tree for comparison
+# 用决策树做对比
 tree_pipe = Pipeline([
     ("model", DecisionTreeClassifier(max_depth=5, min_samples_leaf=8, random_state=42))
 ])
 tree_pipe.fit(X_train, yc_train)
-print("=== Decision Tree ===")
-print(f"Accuracy: {tree_pipe.score(X_test, yc_test):.3f}")</code></pre>
+print("=== 决策树 ===")
+print(f"准确率: {tree_pipe.score(X_test, yc_test):.3f}")</code></pre>
   </div>
 
   <!-- ── Step 5: Evaluate ── -->
-  <h2>Step 5 — Evaluate and Interpret</h2>
+  <h2>Step 5 — 评估与解读</h2>
 
   <div class="code-block">
     <div class="code-label">Python — 05_evaluate.py</div>
@@ -330,38 +330,38 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import ConfusionMatrixDisplay
 
-# ── Regression: actual vs predicted ──
+# ── 回归：真实值 vs 预测值 ──
 fig, axes = plt.subplots(1, 2, figsize=(11, 4))
 
 axes[0].scatter(yr_test, yr_pred, alpha=0.5, color="steelblue", s=20)
-axes[0].plot([0,100], [0,100], "r--", lw=1.5, label="Perfect prediction")
-axes[0].set_xlabel("Actual Score")
-axes[0].set_ylabel("Predicted Score")
-axes[0].set_title(f"Regression: Actual vs Predicted  (MAE={mean_absolute_error(yr_test,yr_pred):.1f})")
+axes[0].plot([0,100], [0,100], "r--", lw=1.5, label="完美预测线")
+axes[0].set_xlabel("真实分数")
+axes[0].set_ylabel("预测分数")
+axes[0].set_title(f"回归：真实 vs 预测  (MAE={mean_absolute_error(yr_test,yr_pred):.1f})")
 axes[0].legend()
 
-# Residuals
+# 残差分布
 residuals = yr_test - yr_pred
 axes[1].hist(residuals, bins=25, color="#CC785C", edgecolor="white")
 axes[1].axvline(0, color="black", lw=1.5)
-axes[1].set_title("Residuals (Actual − Predicted)")
-axes[1].set_xlabel("Error (points)")
+axes[1].set_title("残差分布（真实 − 预测）")
+axes[1].set_xlabel("误差（分）")
 
 fig.tight_layout()
 plt.savefig("05_regression_eval.png", dpi=150, bbox_inches="tight")
 
-# ── Classification: confusion matrix ──
+# ── 分类：混淆矩阵 ──
 fig, ax = plt.subplots(figsize=(4, 4))
 ConfusionMatrixDisplay.from_predictions(
     yc_test, yc_pred,
-    display_labels=["Failed", "Passed"],
+    display_labels=["不通过", "通过"],
     ax=ax, colorbar=False, cmap="Blues",
 )
-ax.set_title("Logistic Regression — Confusion Matrix")
+ax.set_title("逻辑回归 — 混淆矩阵")
 plt.tight_layout()
 plt.savefig("05_confusion_matrix.png", dpi=150, bbox_inches="tight")
 
-# ── Feature importance (from linear regression coefficients) ──
+# ── 特征重要性（来自线性回归系数）──
 coefs = pd.Series(
     reg_pipe.named_steps["model"].coef_,
     index=FEATURES
@@ -370,65 +370,65 @@ coefs = pd.Series(
 fig, ax = plt.subplots(figsize=(7, 4))
 coefs.plot(kind="barh", ax=ax, color=["#CC785C" if v > 0 else "steelblue" for v in coefs])
 ax.axvline(0, color="black", lw=0.8)
-ax.set_title("Linear Regression Coefficients (Standardised Features)")
-ax.set_xlabel("Coefficient Value")
+ax.set_title("线性回归系数（标准化特征）")
+ax.set_xlabel("系数值")
 fig.tight_layout()
 plt.savefig("05_feature_importance.png", dpi=150, bbox_inches="tight")
-print("Evaluation plots saved.")</code></pre>
+print("评估图表已保存。")</code></pre>
   </div>
 
   <!-- ── Interpretation ── -->
-  <h2>Interpreting the Results</h2>
+  <h2>解读结果</h2>
 
   <p>
-    Once you have numbers, the job isn't done — you need to ask whether they make sense and what they imply.
+    有了数字之后，工作还没结束——你需要问自己：这些结果合理吗？它们意味着什么？
   </p>
 
   <div class="note-box">
-    <div class="callout-label">Reading the Coefficients</div>
-    Because we standardised the features before fitting, the linear regression coefficients are directly comparable. A larger absolute coefficient means a stronger influence on the predicted score. If <code>prev_score</code> has the highest coefficient, it means previous performance is the strongest predictor — which makes intuitive sense and gives us confidence the model learned something real rather than noise.
+    <div class="callout-label">读懂系数</div>
+    因为我们在拟合前对特征做了标准化，线性回归的系数可以直接比较大小。系数绝对值越大，说明该特征对预测分数的影响越强。如果 <code>prev_score</code> 的系数最大，意味着历史成绩是最强的预测信号——这符合直觉，也给了我们信心：模型学到的是真实规律，而不是噪声。
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — sanity-checking predictions</div>
-    <pre><code class="language-python"># Predict for two hypothetical students and verify the model makes sense
+    <div class="code-label">Python — 合理性检验</div>
+    <pre><code class="language-python"># 对两个假设学生做预测，验证模型输出是否合理
 hypotheticals = pd.DataFrame([
     # study_hours, prev_score, attendance, sleep_hours, support_num, study_eff, sleep_qual
-    [2,   40, 0.50, 5.0, 0, 2*0.50,   0.56],   # low effort, poor history
-    [12,  80, 0.95, 7.5, 2, 12*0.95,  1.00],   # high effort, good history, intensive support
+    [2,   40, 0.50, 5.0, 0, 2*0.50,   0.56],   # 学习少、底子差
+    [12,  80, 0.95, 7.5, 2, 12*0.95,  1.00],   # 学习多、底子好、强化辅导
 ], columns=FEATURES)
 
 predictions = reg_pipe.predict(hypotheticals)
-print(f"Struggling student predicted score:  {predictions[0]:.1f}")
-print(f"High-achieving student predicted score: {predictions[1]:.1f}")
-# Expected: ~35–45 for the first, ~80–90 for the second
-# If predictions look wrong, re-examine the cleaning and feature engineering steps</code></pre>
+print(f"挣扎型学生预测分数：  {predictions[0]:.1f}")
+print(f"优秀型学生预测分数：{predictions[1]:.1f}")
+# 预期：第一个约 35–45 分，第二个约 80–90 分
+# 如果预测明显偏差，回头检查清洗和特征工程步骤</code></pre>
   </div>
 
   <!-- ── Pipeline thinking ── -->
-  <h2>Pipeline Thinking (管道思维)</h2>
+  <h2>管道思维 (Pipeline Thinking)</h2>
 
   <p>
-    Notice what we did: every step is a <em>pure function</em> (Chapter 4) that takes a DataFrame and returns a new DataFrame. The pipeline is just function composition:
+    注意我们的做法：每一步都是一个<em>纯函数</em>（第 4 章），接收一个 DataFrame，返回一个新 DataFrame。整个 pipeline 就是函数的组合链：
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — the complete pipeline in one function</div>
+    <div class="code-label">Python — 用一个函数跑完整个 pipeline</div>
     <pre><code class="language-python">def run_pipeline(raw_csv: str) -> dict:
     """
-    Complete data science pipeline — load to evaluation in one call.
-    Each step is independently testable and replaceable.
+    完整的数据科学流水线——从加载到评估一键跑完。
+    每个步骤都可以独立测试和替换。
     """
-    # Load
+    # 加载
     df = pd.read_csv(raw_csv)
 
-    # Clean
+    # 清洗
     df = clean(df)                # Step 2
 
-    # Feature engineering
+    # 特征工程
     df = engineer_features(df)    # Step 3
 
-    # Train / test split
+    # 切分
     X = df[FEATURES]
     y_reg = df["final_score"]
     y_clf = df["passed"]
@@ -436,13 +436,13 @@ print(f"High-achieving student predicted score: {predictions[1]:.1f}")
         X, y_reg, y_clf, test_size=0.2, random_state=42, stratify=y_clf
     )
 
-    # Train models
+    # 训练
     reg_pipe = Pipeline([("scaler", StandardScaler()), ("model", LinearRegression())])
     clf_pipe = Pipeline([("scaler", StandardScaler()), ("model", LogisticRegression(max_iter=1000))])
     reg_pipe.fit(X_train, yr_train)
     clf_pipe.fit(X_train, yc_train)
 
-    # Evaluate
+    # 评估
     return {
         "regression_r2":       r2_score(yr_test, reg_pipe.predict(X_test)),
         "regression_mae":      mean_absolute_error(yr_test, reg_pipe.predict(X_test)),
@@ -457,88 +457,88 @@ for k, v in results.items():
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">What You've Built</div>
-    <p>This is a real, production-ready data science workflow structure. The functions <code>clean()</code>, <code>engineer_features()</code>, and the final pipeline are independently testable, version-controllable, and reproducible. You can:</p>
+    <div class="callout-label">你刚刚构建了什么</div>
+    <p>这是一个真实的、可用于生产的数据科学工作流结构。<code>clean()</code>、<code>engineer_features()</code> 和最终的 pipeline 都可以独立测试、版本控制和复现。你可以：</p>
     <ul>
-      <li>Swap in new raw data without touching the model code</li>
-      <li>Add new features by extending <code>engineer_features()</code></li>
-      <li>Try different models by replacing the pipeline estimator</li>
-      <li>Write unit tests for each transformation step</li>
+      <li>换入新的原始数据，不需要动模型代码</li>
+      <li>扩展 <code>engineer_features()</code> 来添加新特征</li>
+      <li>替换 pipeline 里的 estimator 来尝试不同模型</li>
+      <li>为每个数据变换步骤编写单元测试</li>
     </ul>
-    <p>This is exactly how production ML systems are structured — and you now have the Python foundation to build them.</p>
+    <p>这正是生产 ML 系统的组织方式——而你现在已经有了构建它们所需的 Python 基础。</p>
   </div>
 
   <!-- ── Where next ── -->
-  <h2>Where to Go From Here</h2>
+  <h2>接下来去哪儿？</h2>
 
-  <p>You've covered the full arc from Python syntax to a working ML pipeline. Natural next steps:</p>
+  <p>你已经走完了从 Python 语法到完整 ML 流水线的全程。自然的下一步：</p>
 
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Topic</th><th>Library / Resource</th><th>Why it matters</th></tr></thead>
+      <thead><tr><th>主题</th><th>库 / 资源</th><th>为什么重要</th></tr></thead>
       <tbody>
-        <tr><td>Random Forests &amp; XGBoost</td><td><code>sklearn</code>, <code>xgboost</code></td><td>More powerful classifiers; handle non-linearity</td></tr>
-        <tr><td>Hyperparameter tuning</td><td><code>GridSearchCV</code>, <code>Optuna</code></td><td>Systematically find the best model settings</td></tr>
-        <tr><td>Deep Learning</td><td><code>PyTorch</code>, <code>TensorFlow</code></td><td>Neural networks for images, text, sequences</td></tr>
-        <tr><td>Data engineering at scale</td><td><code>Polars</code>, <code>DuckDB</code>, <code>Spark</code></td><td>DataFrames beyond RAM size</td></tr>
-        <tr><td>Model serving</td><td><code>FastAPI</code>, <code>MLflow</code></td><td>Deploy your model as an API</td></tr>
-        <tr><td>Time series</td><td><code>statsmodels</code>, <code>Prophet</code></td><td>Forecasting, seasonality, autocorrelation</td></tr>
+        <tr><td>随机森林 &amp; XGBoost</td><td><code>sklearn</code>、<code>xgboost</code></td><td>更强的分类器，能处理非线性关系</td></tr>
+        <tr><td>超参数调优</td><td><code>GridSearchCV</code>、<code>Optuna</code></td><td>系统性地找到最佳模型配置</td></tr>
+        <tr><td>深度学习</td><td><code>PyTorch</code>、<code>TensorFlow</code></td><td>处理图像、文本、序列的神经网络</td></tr>
+        <tr><td>大规模数据处理</td><td><code>Polars</code>、<code>DuckDB</code>、<code>Spark</code></td><td>内存放不下的超大 DataFrame</td></tr>
+        <tr><td>模型部署</td><td><code>FastAPI</code>、<code>MLflow</code></td><td>把模型封装成 API 对外服务</td></tr>
+        <tr><td>时间序列</td><td><code>statsmodels</code>、<code>Prophet</code></td><td>预测、季节性分解、自相关分析</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="done-btn-wrap">
-    <button id="mark-done-btn">Mark as complete</button>
-    <span class="done-hint">Saves your progress locally — you've finished the curriculum!</span>
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。恭喜你完成了全部课程！</span>
   </div>
 
   <div id="quiz"></div>
   <script id="quiz-data" type="application/json">
   [
     {
-      "q": "In a data science pipeline, what step should happen BEFORE feature engineering?",
+      "q": "在数据科学流水线中，特征工程应该在哪一步之后进行？",
       "options": [
-        "Model training and evaluation",
-        "Data cleaning — handling missing values, type errors, and outliers",
-        "Hyperparameter tuning",
-        "Splitting into train and test sets"
+        "模型训练和评估之后",
+        "数据清洗之后——处理完缺失值、类型错误和异常值之后",
+        "超参数调优之后",
+        "切分训练集和测试集之后"
       ],
       "answer": 1,
-      "explanation": "Clean first, engineer second. Features built on dirty data inherit the dirt. For example, if outlier study_hours of 45/week aren't capped first, <code>study_efficiency = study_hours × attendance</code> will contain impossibly large values that skew the model."
+      "explanation": "先清洗，再工程。在脏数据上构建的特征会继承那些脏数据的问题。例如，如果没有先把异常的 study_hours（每周 45 小时）截断，<code>study_efficiency = study_hours × attendance</code> 就会产生不合理的极大值，直接扭曲模型。"
     },
     {
-      "q": "Why does the capstone define <code>clean()</code> and <code>engineer_features()</code> as separate pure functions rather than one big block of code?",
+      "q": "综合项目为什么把 <code>clean()</code> 和 <code>engineer_features()</code> 定义成独立的纯函数，而不是写成一大块代码？",
       "options": [
-        "Python requires functions for code longer than 10 lines",
-        "Each step is independently testable and replaceable — you can re-run cleaning without re-running feature engineering, and swap feature logic without touching cleaning",
-        "It's a style preference with no practical difference",
-        "Pipeline objects require functions with exactly those names"
+        "Python 强制要求超过 10 行的代码必须放进函数",
+        "每个步骤都可以独立测试和替换——可以单独重跑清洗而不重跑特征工程，也可以在不碰清洗逻辑的情况下替换特征",
+        "只是风格偏好，没有实质区别",
+        "Pipeline 对象要求函数必须叫这两个名字"
       ],
       "answer": 1,
-      "explanation": "Modular pure functions are the key to reproducible, maintainable data pipelines. You can write a unit test for <code>clean()</code> independently, verify it handles edge cases, and be confident the cleaning logic is correct before you ever touch the model. When a bug appears in production, you can pinpoint exactly which step caused it."
+      "explanation": "模块化的纯函数是可复现、可维护数据管道的核心。你可以为 <code>clean()</code> 单独写单元测试，验证它能正确处理边界情况，然后在完全确信清洗逻辑正确后再去碰模型。当生产环境出现 bug，你能精确定位是哪个步骤出了问题。"
     },
     {
-      "q": "The linear regression model's coefficients are only directly comparable if…",
+      "q": "线性回归模型的系数只有在哪种条件下才可以直接比较大小？",
       "options": [
-        "The model uses cross-validation",
-        "The features were scaled (e.g., with StandardScaler) before fitting",
-        "The target variable is binary",
-        "All features are integers"
+        "模型使用了交叉验证",
+        "特征在拟合前经过了缩放（例如用 StandardScaler）",
+        "目标变量是二值的",
+        "所有特征都是整数"
       ],
       "answer": 1,
-      "explanation": "Standardising features (zero mean, unit variance) puts them on the same scale. Without scaling, a coefficient of 0.4 on <code>prev_score</code> (range 0–100) and 2.1 on <code>study_hours</code> (range 0–20) aren't comparable — the raw values have different magnitudes. After StandardScaler, both features have the same spread, and the coefficient magnitude directly reflects each feature's predictive contribution."
+      "explanation": "对特征做标准化（零均值、单位方差）之后，所有特征都在同一个尺度上。不做缩放的话，<code>prev_score</code>（范围 0–100）上的系数 0.4 和 <code>study_hours</code>（范围 0–20）上的系数 2.1 根本没有可比性——原始数值量级不同。StandardScaler 之后，系数的绝对值大小才能直接反映每个特征的预测贡献。"
     }
   ]
   </script>
 
   <div class="chapter-nav">
     <a href="ch12.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 12: Machine Learning</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 12 章：机器学习基础</span>
     </a>
     <a href="index.html" class="nav-btn next">
-      <span class="nav-direction">↑ Back to</span>
-      <span class="nav-title">Table of Contents</span>
+      <span class="nav-direction">↑ 返回</span>
+      <span class="nav-title">目录首页</span>
     </a>
   </div>
 

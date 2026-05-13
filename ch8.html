@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 8 — Pandas: Working with Data | Python for C++ Devs</title>
+<title>第 8 章 — Pandas 数据处理 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="8">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,18 +30,17 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 8</div>
-    <h1>Pandas: Working with Real Data <span style="font-weight:300;color:var(--text-muted)">数据处理</span></h1>
+    <div class="chapter-label">第 8 章</div>
+    <h1>Pandas 数据处理</h1>
     <p class="lead">
-      pandas is the central table in every Python data science workflow. Its two core abstractions — <code>Series</code> and <code>DataFrame</code> — let you manipulate labelled, heterogeneous tabular data with an expressive, SQL-like API. This chapter covers everything you need to load, inspect, select, filter, and modify data.
+      pandas 是每个 Python 数据科学工作流里的核心桌子。它的两个核心抽象——<code>Series</code> 和 <code>DataFrame</code>——让你用一套表达力极强的类 SQL API 来操作带标签的异构表格数据。这一章覆盖加载、探索、选取、过滤和修改数据你需要知道的一切。
     </p>
   </div>
 
-  <!-- ── Series and DataFrame ── -->
-  <h2>DataFrame and Series — The Core Abstractions</h2>
+  <h2>DataFrame 与 Series — 核心抽象</h2>
 
   <p>
-    A <code>Series</code> (序列) is a one-dimensional labelled array — essentially a NumPy array with an index. A <code>DataFrame</code> (数据框) is a two-dimensional table: a collection of Series that share the same index. Think of it as a spreadsheet you program.
+    <code>Series</code> 是一维带标签数组——本质上是有索引的 NumPy 数组。<code>DataFrame</code> 是二维表格：共享同一个索引的 Series 集合。把它想成你可以编程的电子表格。
   </p>
 
   <div class="code-block">
@@ -49,7 +48,7 @@
     <pre><code class="language-python">import pandas as pd
 import numpy as np
 
-# Creating a Series
+# 创建 Series
 s = pd.Series([88, 75, 92, 60], name="score")
 print(s)
 # 0    88
@@ -58,291 +57,279 @@ print(s)
 # 3    60
 # Name: score, dtype: int64
 
-# Custom index
+# 自定义索引
 s = pd.Series([88, 75, 92, 60],
               index=["Alice", "Bob", "Charlie", "Dave"],
               name="score")
 s["Alice"]   # 88
-s[s > 80]    # Alice: 88, Charlie: 92  — boolean indexing works on Series too</code></pre>
+s[s > 80]    # Alice: 88, Charlie: 92——布尔索引在 Series 上同样有效</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — creating a DataFrame</div>
-    <pre><code class="language-python"># From a dict of lists — most common approach
+    <div class="code-label">Python — 创建 DataFrame</div>
+    <pre><code class="language-python"># 从 list 字典创建——最常用的方式
 df = pd.DataFrame({
     "name":       ["Alice", "Bob", "Charlie", "Dave"],
     "age":        [30, 25, 35, 28],
     "score":      [88, 75, 92, 60],
-    "department": ["Eng", "Sales", "Eng", "HR"],
+    "department": ["工程", "销售", "工程", "人事"],
 })
 
-# From a list of dicts (as discussed in Chapter 3)
+# 从字典列表创建（第 3 章介绍过的方式）
 records = [{"name": "Alice", "score": 88}, {"name": "Bob", "score": 75}]
 df = pd.DataFrame(records)
 
-# From a NumPy array
+# 从 NumPy 数组创建
 arr = np.random.randint(0, 100, (4, 3))
 df = pd.DataFrame(arr, columns=["A", "B", "C"])</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Analogy</div>
-    A DataFrame is conceptually similar to a <code>std::vector&lt;struct Row&gt;</code> combined with column-wise random access and a rich query API. Unlike a C++ struct array where every row must have the same schema at compile time, a DataFrame can have mixed types per column and you can add/remove columns at runtime.
+    <div class="callout-label">C++ 类比</div>
+    DataFrame 在概念上类似于 <code>std::vector&lt;struct Row&gt;</code> 加上按列随机访问和丰富查询 API 的组合。和 C++ struct 数组不同——那里每行在编译期必须有相同的 schema——DataFrame 可以按列有不同类型，而且可以在运行时添加/删除列。
   </div>
 
-  <!-- ── Loading data ── -->
-  <h2>Loading Data (加载数据)</h2>
+  <h2>加载数据</h2>
 
   <div class="code-block">
-    <div class="code-label">Python — read_csv, read_json</div>
+    <div class="code-label">Python — read_csv、read_json</div>
     <pre><code class="language-python">import pandas as pd
 
-# CSV — the most common format in data science
+# CSV——数据科学里最常见的格式
 df = pd.read_csv("data.csv")
 
-# Common read_csv options
+# 常用 read_csv 参数
 df = pd.read_csv(
     "data.csv",
-    sep=";",                  # delimiter (default is ",")
-    header=0,                 # row number of header (default 0)
-    index_col="id",           # use this column as the row index
-    usecols=["name","score"], # only load these columns
-    dtype={"score": float},   # specify dtypes to avoid inference
-    na_values=["N/A", "-"],   # treat these strings as NaN
+    sep=";",                  # 分隔符（默认是","）
+    header=0,                 # 表头行号（默认 0）
+    index_col="id",           # 用这列作行索引
+    usecols=["name","score"], # 只加载这些列
+    dtype={"score": float},   # 指定 dtype 避免推断
+    na_values=["N/A", "-"],   # 把这些字符串当作 NaN
     encoding="utf-8",
-    nrows=1000,               # only read first 1000 rows (great for large files)
+    nrows=1000,               # 只读前 1000 行（处理大文件很好用）
 )
 
 # JSON
 df = pd.read_json("data.json")
-df = pd.read_json("https://api.example.com/data.json")  # URL works too
 
 # Excel
-df = pd.read_excel("report.xlsx", sheet_name="Q1 Sales")
-
-# From a dict / list (in-memory, useful for testing)
-df = pd.DataFrame({"x": [1,2,3], "y": [4,5,6]})</code></pre>
+df = pd.read_excel("report.xlsx", sheet_name="Q1 销售")</code></pre>
   </div>
 
-  <!-- ── Exploring ── -->
-  <h2>Exploring Your Data (探索数据)</h2>
+  <h2>探索数据</h2>
 
   <p>
-    The first thing you do with any new dataset is explore it. These five operations answer "what do I have?" in about 30 seconds.
+    拿到任何新数据集的第一件事是探索它。下面这五个操作能在大约 30 秒内回答"我手上有什么数据？"。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — exploration workflow</div>
+    <div class="code-label">Python — 探索工作流</div>
     <pre><code class="language-python">df = pd.read_csv("students.csv")
 
-# Shape (形状) — always start here
-df.shape           # (200, 6)  — 200 rows, 6 columns
+# shape——始终从这里开始
+df.shape           # (200, 6)  — 200 行，6 列
 
-# First and last rows
-df.head()          # first 5 rows (default)
-df.head(10)        # first 10 rows
-df.tail(3)         # last 3 rows
+# 头尾几行
+df.head()          # 前 5 行（默认）
+df.head(10)        # 前 10 行
+df.tail(3)         # 最后 3 行
 
-# Column names and dtypes
+# 列名与 dtype
 df.columns         # Index(['name','age','score','dept', ...])
 df.dtypes          # name: object, age: int64, score: float64, ...
-df.info()          # concise summary: dtypes, null counts, memory usage
+df.info()          # 简洁摘要：dtype、空值计数、内存占用
 
-# Descriptive statistics for numerical columns
+# 数值列的描述性统计
 df.describe()
-# count, mean, std, min, 25%, 50%, 75%, max for each numeric col
+# 对每个数值列：count, mean, std, min, 25%, 50%, 75%, max
 
-# Value counts for categorical columns
-df["dept"].value_counts()    # Eng: 80, Sales: 60, HR: 60
-df["dept"].unique()          # array(['Eng', 'Sales', 'HR'])
+# 分类列的值计数
+df["dept"].value_counts()    # 工程: 80, 销售: 60, 人事: 60
+df["dept"].unique()          # array(['工程', '销售', '人事'])
 df["dept"].nunique()         # 3
 
-# Missing value summary (crucial before any analysis!)
-df.isnull().sum()            # count NaN per column
-df.isnull().sum() / len(df)  # proportion missing per column</code></pre>
+# 缺失值汇总（分析前必看！）
+df.isnull().sum()            # 每列 NaN 计数
+df.isnull().sum() / len(df)  # 每列缺失比例</code></pre>
   </div>
 
-  <!-- ── Selecting ── -->
-  <h2>Selecting Columns</h2>
+  <h2>选取列</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">df = pd.read_csv("students.csv")
 
-# Single column → Series
-df["score"]          # returns a Series
-df.score             # attribute access — only works for valid Python identifiers!
+# 单列 → Series
+df["score"]          # 返回 Series
+df.score             # 属性访问——只对合法 Python 标识符有效！
 
-# Multiple columns → DataFrame
-df[["name", "score"]]        # double brackets — list of column names
+# 多列 → DataFrame
+df[["name", "score"]]        # 双重方括号——列名列表
 
-# Add a new column
+# 添加新列
 df["passed"] = df["score"] >= 60
 
-# Rename columns
+# 重命名列
 df.rename(columns={"score": "final_score", "dept": "department"}, inplace=True)
 
-# Drop a column
-df = df.drop(columns=["temp_col"])    # returns new DataFrame
-# or: df.drop(columns=["temp_col"], inplace=True)  # modifies in-place</code></pre>
+# 删除列
+df = df.drop(columns=["temp_col"])    # 返回新 DataFrame</code></pre>
   </div>
 
-  <!-- ── loc and iloc ── -->
-  <h2>Selecting Rows: <code>.loc[]</code> and <code>.iloc[]</code></h2>
+  <h2>选取行：.loc[] 与 .iloc[]</h2>
 
   <p>
-    This is where beginners consistently get confused. pandas has two indexers:
-    <code>.loc</code> (label-based) and <code>.iloc</code> (integer position-based).
-    Knowing which to use and when is one of the most important pandas fundamentals.
+    这是初学者最容易搞混的地方。pandas 有两种索引器：
+    <code>.loc</code>（基于标签）和 <code>.iloc</code>（基于整数位置）。
+    知道什么时候用哪个，是 pandas 最重要的基础之一。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — loc (label-based, labels inclusive)</div>
+    <div class="code-label">Python — loc（基于标签，终点包含）</div>
     <pre><code class="language-python">df = pd.DataFrame({
     "name":  ["Alice", "Bob", "Charlie", "Dave"],
     "score": [88, 75, 92, 60],
-    "dept":  ["Eng", "Sales", "Eng", "HR"],
-}, index=["a", "b", "c", "d"])   # string row labels
+    "dept":  ["工程", "销售", "工程", "人事"],
+}, index=["a", "b", "c", "d"])   # 字符串行标签
 
-# loc uses the INDEX LABEL
-df.loc["a"]            # row with label 'a' → Alice's data
-df.loc["a", "score"]   # 88  — specific cell
-df.loc["a":"c"]        # rows 'a', 'b', 'c'  — NOTE: end is INCLUSIVE with loc!
-df.loc[:, "score"]     # all rows, 'score' column
-df.loc[["a", "c"], ["name", "score"]]  # specific rows and columns</code></pre>
+# loc 用的是索引标签
+df.loc["a"]            # 标签为 'a' 的行 → Alice 的数据
+df.loc["a", "score"]   # 88  — 特定单元格
+df.loc["a":"c"]        # 'a', 'b', 'c' 三行——注意：loc 的终点是包含的！
+df.loc[:, "score"]     # 所有行的 'score' 列
+df.loc[["a", "c"], ["name", "score"]]  # 特定行和列</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — iloc (position-based, exclusive end)</div>
-    <pre><code class="language-python"># iloc uses INTEGER POSITIONS — ignores the index labels
-df.iloc[0]             # first row (regardless of index label)
-df.iloc[0, 1]          # row 0, column 1 → 88
-df.iloc[0:3]           # rows 0,1,2  — end is EXCLUSIVE like Python slices!
-df.iloc[:, 1]          # all rows, column 1
-df.iloc[[0, 2], [0, 1]] # rows 0 and 2, columns 0 and 1</code></pre>
+    <div class="code-label">Python — iloc（基于位置，终点不含）</div>
+    <pre><code class="language-python"># iloc 用的是整数位置——忽略索引标签
+df.iloc[0]             # 第一行（不管索引标签是什么）
+df.iloc[0, 1]          # 第 0 行，第 1 列 → 88
+df.iloc[0:3]           # 第 0,1,2 行——终点不含，和 Python 切片一样！
+df.iloc[:, 1]          # 所有行，第 1 列
+df.iloc[[0, 2], [0, 1]] # 第 0 和 2 行，第 0 和 1 列</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">The Key Difference</div>
-    <strong>loc</strong> = labels. <strong>iloc</strong> = positions (integer). When your DataFrame has a default integer index (0, 1, 2, …), loc and iloc behave the same for single rows. They differ when your index has custom labels or when slicing: <code>loc["a":"c"]</code> includes "c", while <code>iloc[0:3]</code> excludes position 3. In practice, use <code>.iloc</code> for positional slicing and <code>.loc</code> for label or conditional selection.
+    <div class="callout-label">关键区别</div>
+    <strong>loc</strong> = 标签。<strong>iloc</strong> = 整数位置。当 DataFrame 有默认整数索引（0, 1, 2, …）时，两者对单行的行为相同。切片时它们有差异：<code>loc["a":"c"]</code> 包含 "c"，而 <code>iloc[0:3]</code> 不含位置 3。实践中：用 <code>.iloc</code> 做位置切片，用 <code>.loc</code> 做标签或条件选取。
   </div>
 
-  <!-- ── Boolean indexing ── -->
-  <h2>Filtering Rows with Boolean Indexing (布尔索引)</h2>
+  <h2>用布尔索引过滤行</h2>
 
   <p>
-    This is the pandas feature you'll use most. The pattern: create a boolean Series, use it to filter rows. It builds directly on NumPy's boolean indexing from Chapter 7.
+    这是你用得最多的 pandas 特性。模式是：创建一个布尔 Series，用它过滤行。直接建立在第 7 章 NumPy 布尔索引的基础上。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — filtering</div>
+    <div class="code-label">Python — 过滤</div>
     <pre><code class="language-python">df = pd.read_csv("employees.csv")
 
-# Simple filter
+# 简单过滤
 df[df["age"] > 30]
-df[df["dept"] == "Engineering"]
+df[df["dept"] == "工程"]
 
-# Multiple conditions — ALWAYS use & (and) | (or), NOT Python's 'and'/'or'
-# AND: parentheses around each condition are required!
+# 多条件——必须用 & 和 |，不能用 Python 的 'and'/'or'
+# 每个条件必须加括号！
 df[(df["age"] > 25) & (df["salary"] > 50000)]
 
 # OR
-df[(df["dept"] == "Eng") | (df["dept"] == "Sales")]
+df[(df["dept"] == "工程") | (df["dept"] == "销售")]
 
 # NOT
-df[~(df["dept"] == "HR")]           # everyone not in HR
+df[~(df["dept"] == "人事")]           # 不在人事部门的所有人
 
-# String filtering — .str accessor
-df[df["name"].str.startswith("A")]  # names starting with A
+# 字符串过滤——.str 访问器
+df[df["name"].str.startswith("A")]  # 名字以 A 开头
 df[df["email"].str.contains("@company.com")]
 
-# .isin() — check membership in a list
-df[df["dept"].isin(["Eng", "Product", "Design"])]
+# .isin()——检查是否在列表里
+df[df["dept"].isin(["工程", "产品", "设计"])]
 
-# .between() — range filter (inclusive on both ends)
+# .between()——范围过滤（两端包含）
 df[df["score"].between(60, 90)]
 
-# .query() — SQL-like string syntax (readable for simple conditions)
+# .query()——类 SQL 字符串语法（简单条件时更易读）
 df.query("age > 25 and salary > 50000")</code></pre>
   </div>
 
-  <!-- ── Sorting ── -->
-  <h2>Sorting (排序)</h2>
+  <h2>排序</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># Sort by a single column
-df.sort_values("score")                    # ascending (default)
-df.sort_values("score", ascending=False)   # descending
+    <pre><code class="language-python"># 按单列排序
+df.sort_values("score")                    # 升序（默认）
+df.sort_values("score", ascending=False)   # 降序
 
-# Sort by multiple columns (hierarchical sort)
+# 按多列排序（分层排序）
 df.sort_values(["dept", "score"], ascending=[True, False])
-# First sort by dept A→Z, then within each dept sort score high→low
+# 先按部门 A→Z 排，同一部门内按分数从高到低排
 
-# Sort by index
-df.sort_index()           # sort rows by their index
-df.sort_index(axis=1)     # sort columns alphabetically
+# 按索引排序
+df.sort_index()           # 按行索引排序
+df.sort_index(axis=1)     # 按列名字母顺序排
 
-# Note: sort_values returns a new DataFrame by default
+# 注意：sort_values 默认返回新 DataFrame
 df = df.sort_values("score", ascending=False).reset_index(drop=True)
-# reset_index(drop=True) gives the sorted result clean 0,1,2,... indices</code></pre>
+# reset_index(drop=True) 给排序结果一个干净的 0,1,2,... 索引</code></pre>
   </div>
 
-  <!-- ── Adding/modifying ── -->
-  <h2>Adding and Modifying Columns (列操作)</h2>
+  <h2>添加与修改列</h2>
 
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python"># Add a column — simple assignment
+    <pre><code class="language-python"># 添加列——简单赋值
 df["passed"] = df["score"] >= 60
 df["score_pct"] = df["score"] / 100.0
 df["full_name"] = df["first_name"] + " " + df["last_name"]
 
-# Conditional column — np.where or pd.cut
+# 条件列——np.where 或 pd.cut
 import numpy as np
 df["grade"] = np.where(df["score"] >= 90, "A",
               np.where(df["score"] >= 80, "B",
               np.where(df["score"] >= 70, "C", "F")))
 
-# Binning — pd.cut for equal-width, pd.qcut for equal-frequency
+# 分箱——pd.cut 等宽，pd.qcut 等频
 df["score_bin"] = pd.cut(df["score"],
                           bins=[0, 60, 75, 90, 100],
                           labels=["F", "C", "B", "A"])
 
-# Modify a column in-place
-df["score"] = df["score"].round(1)         # round to 1 decimal
-df["name"]  = df["name"].str.strip().str.title()  # clean strings
+# 就地修改列
+df["score"] = df["score"].round(1)         # 保留 1 位小数
+df["name"]  = df["name"].str.strip().str.title()  # 清洗字符串
 
-# Remove columns
-df = df.drop(columns=["temp", "raw_value"])  # drop by name</code></pre>
+# 删除列
+df = df.drop(columns=["temp", "raw_value"])</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">Data Science Habit</div>
-    In exploratory analysis, always keep a copy of the raw DataFrame: <code>raw = df.copy()</code> before you start cleaning or modifying. pandas operations that return new DataFrames leave <code>df</code> unchanged (unless you use <code>inplace=True</code>), but assignment like <code>df["col"] = ...</code> mutates <code>df</code> directly.
+    <div class="callout-label">数据科学好习惯</div>
+    在探索性分析里，开始清洗或修改前始终保留一份原始 DataFrame 副本：<code>raw = df.copy()</code>。返回新 DataFrame 的操作不会修改 <code>df</code>（除非用 <code>inplace=True</code>），但 <code>df["col"] = ...</code> 这样的赋值会直接变异 <code>df</code>。
   </div>
 
   <div class="done-btn-wrap">
-    <button id="mark-done-btn">Mark as complete</button>
-    <span class="done-hint">Saves your progress locally.</span>
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
   </div>
 
   <div id="quiz"></div>
   <script id="quiz-data" type="application/json">
   [
     {
-      "q": "What is the difference between <code>df.loc</code> and <code>df.iloc</code>?",
+      "q": "<code>df.loc</code> 和 <code>df.iloc</code> 有什么区别？",
       "options": [
-        "loc is for columns, iloc is for rows",
-        "loc uses label-based indexing; iloc uses integer position-based indexing",
-        "loc is faster than iloc for large DataFrames",
-        "They are identical when the index is the default integer range"
+        "loc 用于列，iloc 用于行",
+        "loc 基于标签索引；iloc 基于整数位置索引",
+        "loc 对大 DataFrame 比 iloc 更快",
+        "当索引是默认整数范围时，两者完全相同"
       ],
       "answer": 1,
-      "explanation": "<code>.loc['a':'c']</code> selects rows with index <em>labels</em> 'a' through 'c' (inclusive). <code>.iloc[0:3]</code> selects rows at integer <em>positions</em> 0, 1, 2 (exclusive end). They diverge when your index has custom labels or non-zero starting integers."
+      "explanation": "<code>.loc['a':'c']</code> 选取索引标签为 'a' 到 'c' 的行（终点包含）。<code>.iloc[0:3]</code> 选取整数位置 0、1、2 的行（终点不含）。当索引有自定义标签或非零起点时，两者结果会不同。"
     },
     {
-      "q": "How do you correctly select rows where the 'age' column is greater than 25 AND salary is above 50000?",
+      "q": "如何正确选取 'age' 大于 25 且 salary 高于 50000 的行？",
       "options": [
         "df[df['age'] > 25 and df['salary'] > 50000]",
         "df[(df['age'] > 25) & (df['salary'] > 50000)]",
@@ -350,30 +337,30 @@ df = df.drop(columns=["temp", "raw_value"])  # drop by name</code></pre>
         "df.filter(age='>25', salary='>50000')"
       ],
       "answer": 1,
-      "explanation": "Python's <code>and</code> keyword is not defined for Series objects. You must use the bitwise <code>&amp;</code> operator, with <strong>each condition in parentheses</strong> — operator precedence rules require this. <code>df['age'] > 25 and df['salary'] > 50000</code> will raise a <code>ValueError</code>."
+      "explanation": "Python 的 and 关键字对 Series 对象没有定义。必须用位运算符 &，而且每个条件都要加括号——运算符优先级规则要求这样。写 df['age'] > 25 and df['salary'] > 50000 会抛出 ValueError。"
     },
     {
-      "q": "What does <code>df.describe()</code> return?",
+      "q": "<code>df.describe()</code> 返回什么？",
       "options": [
-        "Column names and their data types",
-        "Summary statistics for numerical columns: count, mean, std, min, percentiles, max",
-        "A written description of the DataFrame's schema",
-        "The first and last five rows of the DataFrame"
+        "列名及其数据类型",
+        "数值列的汇总统计：count、mean、std、min、百分位数、max",
+        "对 DataFrame schema 的文字描述",
+        "DataFrame 的头五行和尾五行"
       ],
       "answer": 1,
-      "explanation": "<code>df.describe()</code> computes descriptive statistics for every numeric column by default: count of non-null values, mean, standard deviation, minimum, 25th/50th/75th percentiles, and maximum. Pass <code>include='all'</code> to also include object/categorical columns."
+      "explanation": "<code>df.describe()</code> 默认对每个数值列计算描述性统计：非空值计数、均值、标准差、最小值、25/50/75 百分位数和最大值。传入 <code>include='all'</code> 也可以包含 object/分类列。"
     }
   ]
   </script>
 
   <div class="chapter-nav">
     <a href="ch7.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 7: NumPy</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 7 章：NumPy 数值计算</span>
     </a>
     <a href="ch9.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 9: Data Cleaning</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 9 章：数据清洗</span>
     </a>
   </div>
 

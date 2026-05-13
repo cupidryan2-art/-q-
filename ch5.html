@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 5 — Modules & Ecosystem | Python for C++ Devs</title>
+<title>第 5 章 — 模块与生态系统 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="5">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,81 +30,78 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 5</div>
-    <h1>Modules &amp; Ecosystem <span style="font-weight:300;color:var(--text-muted)">模块与生态系统</span></h1>
+    <div class="chapter-label">第 5 章</div>
+    <h1>模块与生态系统</h1>
     <p class="lead">
-      Python's real superpower isn't the language — it's the ecosystem. The standard library covers nearly every everyday task,
-      and PyPI (the Python Package Index) hosts over 500,000 third-party packages.
-      This chapter covers how to navigate all of it.
+      Python 真正的超能力不是语言本身——是生态系统。标准库覆盖了几乎所有日常任务，PyPI（Python Package Index）上还有超过 50 万个第三方包。
+      这一章教你怎么在这片丛林里找到方向。
     </p>
   </div>
 
-  <!-- ── import ── -->
-  <h2>The <code>import</code> System (导入系统)</h2>
+  <h2>import 系统</h2>
 
   <p>
-    Python organises code into <em>modules</em> (模块) — individual <code>.py</code> files — and <em>packages</em> (包) — directories containing an <code>__init__.py</code> file. You bring them into your namespace with <code>import</code>.
+    Python 把代码组织成<em>模块（module）</em>——单个 <code>.py</code> 文件——和<em>包（package）</em>——包含 <code>__init__.py</code> 文件的目录。用 <code>import</code> 把它们引入你的命名空间。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — import forms</div>
-    <pre><code class="language-python"># 1. Import the whole module — access via module.name
+    <div class="code-label">Python — import 的几种写法</div>
+    <pre><code class="language-python"># 1. 导入整个模块——通过 模块名.名字 访问
 import math
 math.sqrt(16)     # 4.0
 math.pi           # 3.141592653589793
 
-# 2. Import specific names — brings them into local namespace
+# 2. 导入特定名字——引入到本地命名空间
 from math import sqrt, pi
-sqrt(16)          # 4.0  (no math. prefix needed)
+sqrt(16)          # 4.0（不需要 math. 前缀）
 pi                # 3.141592653589793
 
-# 3. Import with alias (别名) — essential for long names
-import numpy as np          # industry-standard alias
+# 3. 带别名（alias）导入——对长名字必不可少
+import numpy as np          # 行业标准别名
 import pandas as pd
 import matplotlib.pyplot as plt
 
 np.array([1, 2, 3])
 
-# 4. Import everything — avoid in production code
-from math import *    # pollutes namespace — hard to trace where names come from
+# 4. 导入全部——在生产代码里避免这样写
+from math import *    # 污染命名空间——难以追踪名字从哪来的
 
-# 5. Conditional import — for optional dependencies
+# 5. 条件导入——用于可选依赖
 try:
-    import ujson as json    # faster JSON library if available
+    import ujson as json    # 如果有更快的 JSON 库就用它
 except ImportError:
-    import json             # fall back to standard library</code></pre>
+    import json             # 回退到标准库</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    <p><code>import math</code> ≈ <code>#include &lt;cmath&gt;</code>, but <code>import</code> happens at runtime — the module's code actually executes when you import it for the first time. Subsequent imports of the same module are cached in <code>sys.modules</code> and return instantly, similar to include guards.</p>
-    <p><code>from math import sqrt</code> is roughly equivalent to <code>using std::sqrt;</code> after including the header.</p>
-    <p><code>import numpy as np</code> is like <code>namespace np = numpy;</code> — you're just creating a short alias for the module object.</p>
+    <div class="callout-label">C++ 对比</div>
+    <p><code>import math</code> ≈ <code>#include &lt;cmath&gt;</code>，但 <code>import</code> 在运行时发生——第一次导入模块时，该模块的代码会真正执行。之后再导入同一个模块会从 <code>sys.modules</code> 缓存里直接返回，类似 include guard。</p>
+    <p><code>from math import sqrt</code> 大致相当于在包含头文件后写 <code>using std::sqrt;</code>。</p>
+    <p><code>import numpy as np</code> 类似 <code>namespace np = numpy;</code>——你只是为模块对象创建了一个短别名。</p>
   </div>
 
-  <h3>How Python finds modules</h3>
+  <h3>Python 怎么找到模块</h3>
   <div class="code-block">
-    <div class="code-label">Python — the module search path</div>
+    <div class="code-label">Python — 模块搜索路径</div>
     <pre><code class="language-python">import sys
 
-# Python searches these directories in order:
+# Python 按顺序搜索这些目录：
 for path in sys.path:
     print(path)
 
-# 1. The directory of the script being run (or '' for REPL/current dir)
-# 2. PYTHONPATH environment variable entries
-# 3. Standard library directories
-# 4. Site-packages (where pip installs third-party packages)</code></pre>
+# 1. 被运行脚本所在的目录（REPL/当前目录用 ''）
+# 2. PYTHONPATH 环境变量里的目录
+# 3. 标准库目录
+# 4. site-packages（pip 安装第三方包的地方）</code></pre>
   </div>
 
-  <!-- ── Standard library ── -->
-  <h2>Standard Library Highlights (标准库)</h2>
+  <h2>标准库精选</h2>
 
   <p>
-    Python's standard library is large enough that experienced developers spend years discovering new corners of it. Here are the modules you'll reach for most often in data and scripting work.
+    Python 的标准库大到有经验的开发者也要花好几年才能摸清每个角落。下面是你在数据和脚本工作里最常用的模块。
   </p>
 
-  <h3><code>math</code> — Mathematical functions</h3>
+  <h3><code>math</code> — 数学函数</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">import math
@@ -112,7 +109,7 @@ for path in sys.path:
 math.sqrt(2)         # 1.4142135623730951
 math.floor(3.7)      # 3
 math.ceil(3.2)       # 4
-math.log(math.e)     # 1.0   — natural log
+math.log(math.e)     # 1.0  — 自然对数
 math.log10(1000)     # 3.0
 math.log2(8)         # 3.0
 math.sin(math.pi/2)  # 1.0
@@ -122,27 +119,27 @@ math.isfinite(float('inf'))  # False
 math.isnan(float('nan'))     # True</code></pre>
   </div>
 
-  <h3><code>random</code> — Pseudorandom numbers</h3>
+  <h3><code>random</code> — 伪随机数</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">import random
 
-random.random()              # float in [0.0, 1.0)
-random.randint(1, 6)         # int in [1, 6] inclusive — roll a die
-random.uniform(0.5, 1.5)     # float in [0.5, 1.5]
+random.random()              # [0.0, 1.0) 之间的 float
+random.randint(1, 6)         # [1, 6] 之间的整数（含两端）——掷骰子
+random.uniform(0.5, 1.5)     # [0.5, 1.5] 之间的 float
 
-items = ["apple", "banana", "cherry"]
-random.choice(items)         # random element
-random.choices(items, k=3)   # 3 random elements WITH replacement
-random.sample(items, k=2)    # 2 random elements WITHOUT replacement
-random.shuffle(items)        # shuffle in-place
+items = ["苹果", "香蕉", "樱桃"]
+random.choice(items)         # 随机取一个元素
+random.choices(items, k=3)   # 有放回地随机取 3 个
+random.sample(items, k=2)    # 无放回地随机取 2 个
+random.shuffle(items)        # 就地随机打乱
 
-# Reproducible randomness — essential for data science experiments
+# 可复现的随机性——数据科学实验必备
 random.seed(42)
-print(random.random())   # always the same value for seed=42</code></pre>
+print(random.random())   # 对 seed=42 永远是同一个值</code></pre>
   </div>
 
-  <h3><code>datetime</code> — Dates and times</h3>
+  <h3><code>datetime</code> — 日期与时间</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">from datetime import datetime, date, timedelta
@@ -153,28 +150,26 @@ print(now)                          # 2024-03-15 14:32:07.123456
 today = date.today()
 print(today)                        # 2024-03-15
 
-# Parse a date string
+# 解析日期字符串
 d = datetime.strptime("2024-01-15", "%Y-%m-%d")
 
-# Format as string
-d.strftime("%B %d, %Y")             # 'January 15, 2024'
+# 格式化为字符串
+d.strftime("%Y年%m月%d日")          # '2024年01月15日'
 
-# Arithmetic
+# 日期运算
 one_week = timedelta(weeks=1)
 next_week = today + one_week
 
-# Difference between dates
-delta = datetime(2024, 12, 31) - datetime.now()
-print(f"{delta.days} days until New Year")</code></pre>
+# 两个日期之差
+delta = datetime(2025, 1, 1) - datetime.now()
+print(f"距离 2025 年还有 {delta.days} 天")</code></pre>
   </div>
 
-  <h3><code>os</code> and <code>pathlib</code> — File system</h3>
+  <h3><code>pathlib</code> — 文件系统</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
-    <pre><code class="language-python">import os
-from pathlib import Path   # modern, object-oriented approach (推荐)
+    <pre><code class="language-python">from pathlib import Path   # 现代面向对象的方式（推荐）
 
-# pathlib — the modern way (Python 3.4+)
 p = Path("data/results.csv")
 p.exists()          # True / False
 p.name              # 'results.csv'
@@ -182,208 +177,228 @@ p.stem              # 'results'
 p.suffix            # '.csv'
 p.parent            # Path('data')
 
-# Build paths safely (works on Windows and Unix)
+# 安全地拼接路径（在 Windows 和 Unix 上都能用）
 data_dir = Path("data")
-output   = data_dir / "output" / "report.csv"   # / operator!
+output   = data_dir / "output" / "report.csv"   # / 运算符！
 
-# List directory
+# 遍历目录
 for f in Path(".").iterdir():
     if f.suffix == ".py":
         print(f)
 
-# Create / delete
-Path("logs").mkdir(parents=True, exist_ok=True)
-
-# os module — legacy but still common
-os.getcwd()                  # current working directory
-os.listdir(".")              # list files
-os.path.join("data", "f.csv") # safe path join (use pathlib instead)</code></pre>
+# 创建目录
+Path("logs").mkdir(parents=True, exist_ok=True)</code></pre>
   </div>
 
-  <h3><code>sys</code> — Interpreter internals</h3>
-  <div class="code-block">
-    <div class="code-label">Python</div>
-    <pre><code class="language-python">import sys
-
-sys.version          # '3.12.1 (main, ...)'
-sys.platform         # 'darwin' / 'linux' / 'win32'
-sys.argv             # command-line arguments: ['script.py', 'arg1', 'arg2']
-sys.exit(0)          # exit the program with a return code
-sys.stdin            # standard input stream
-sys.stdout           # standard output stream
-
-# Check Python version in code
-if sys.version_info < (3, 10):
-    raise RuntimeError("Python 3.10+ required")</code></pre>
-  </div>
-
-  <!-- ── pip and venv ── -->
-  <h2>pip and Virtual Environments (包管理)</h2>
+  <h2>pip 与虚拟环境</h2>
 
   <p>
-    <code>pip</code> is Python's package installer (包安装工具). It downloads packages from PyPI and installs them. Always use it inside a virtual environment so different projects stay isolated.
+    <code>pip</code> 是 Python 的包安装工具，从 PyPI 下载并安装包。永远在虚拟环境里用它，让不同项目保持隔离。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Terminal — common pip commands</div>
-    <pre><code class="language-bash"># Install a package
+    <div class="code-label">终端 — 常用 pip 命令</div>
+    <pre><code class="language-bash"># 安装包
 pip install numpy
 
-# Install a specific version
+# 安装特定版本
 pip install numpy==1.26.4
 
-# Install multiple packages
+# 安装多个包
 pip install numpy pandas matplotlib
 
-# Install from a requirements file
+# 从 requirements 文件安装
 pip install -r requirements.txt
 
-# Upgrade a package
+# 升级包
 pip install --upgrade pandas
 
-# Uninstall
+# 卸载
 pip uninstall numpy
 
-# List installed packages
+# 列出已安装的包
 pip list
 
-# Show info about a package
+# 查看某个包的信息
 pip show pandas
 
-# Freeze current environment to a requirements file
+# 把当前环境冻结到 requirements 文件
 pip freeze > requirements.txt</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Terminal — virtual environment workflow</div>
-    <pre><code class="language-bash"># Create
+    <div class="code-label">终端 — 虚拟环境工作流</div>
+    <pre><code class="language-bash"># 创建
 python3 -m venv .venv
 
-# Activate
+# 激活
 source .venv/bin/activate    # macOS / Linux
 .venv\Scripts\activate       # Windows
 
-# Your prompt changes: (.venv) $
+# 提示符会变成：(.venv) $
 
-# Install packages — they go into .venv/lib/, not system Python
+# 安装包——它们进入 .venv/lib/，不影响系统 Python
 pip install pandas matplotlib scikit-learn
 
-# Save dependencies
+# 保存依赖
 pip freeze > requirements.txt
 
-# Deactivate when done
+# 完成后退出
 deactivate
 
-# Recreate the environment on another machine:
+# 在另一台机器上重建环境：
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">Modern Alternative</div>
-    <strong>uv</strong> (from Astral) is a very fast modern replacement for pip + venv, written in Rust. <code>uv init</code>, <code>uv add pandas</code>, <code>uv run script.py</code>. Worth knowing about if you're starting a new project in 2024+.
+    <div class="callout-label">现代替代方案</div>
+    <strong>uv</strong>（来自 Astral）是用 Rust 写的极速现代替代品，取代 pip + venv。<code>uv init</code>、<code>uv add pandas</code>、<code>uv run script.py</code>。如果你在 2024 年后开始新项目，值得了解一下。
   </div>
 
-  <!-- ── Data science preview ── -->
-  <h2>The Data Science Stack — A Preview (数据科学生态预览)</h2>
+  <h2>数据科学生态预览</h2>
 
   <p>
-    Four libraries form the backbone of Python data science. You'll spend most of Chapters 7–11 with them. Here's what each one is for:
+    四个库构成了 Python 数据科学的骨架。你会在第 7–11 章里和它们深度相处。先认识一下它们各自的定位：
   </p>
 
   <div class="code-block">
-    <div class="code-label">Terminal — install the stack</div>
+    <div class="code-label">终端 — 安装整套工具</div>
     <pre><code class="language-bash">pip install numpy pandas matplotlib scikit-learn</code></pre>
   </div>
 
-  <h3>NumPy (数值计算)</h3>
+  <h3>NumPy — 数值计算</h3>
   <p>
-    NumPy provides the <code>ndarray</code> — a fixed-type, C-backed multidimensional array. It's the foundation everything else is built on. The key insight: NumPy operations run in compiled C/Fortran code, so looping over a NumPy array in C is orders of magnitude faster than looping in Python.
+    NumPy 提供 <code>ndarray</code>——一个固定类型、C 语言底层的多维数组。它是其他一切的基础。关键洞见：NumPy 操作在编译好的 C/Fortran 代码里跑，比 Python 循环快几个数量级。
   </p>
   <div class="code-block">
-    <div class="code-label">Python — NumPy taste</div>
+    <div class="code-label">Python — NumPy 味道</div>
     <pre><code class="language-python">import numpy as np
 
 a = np.array([1, 2, 3, 4, 5])
-a * 2             # array([2, 4, 6, 8, 10]) — vectorised, no loop!
+a * 2             # array([2, 4, 6, 8, 10]) — 向量化，不需要循环！
 a ** 2            # array([1, 4, 9, 16, 25])
 a.mean()          # 3.0
 a.std()           # 1.4142...
 
-# 2D array — matrix operations
+# 2D 数组——矩阵操作
 m = np.array([[1, 2], [3, 4]])
-m.T               # transpose
-m @ m             # matrix multiply (Python 3.5+ @ operator)</code></pre>
+m.T               # 转置
+m @ m             # 矩阵乘法（Python 3.5+ 的 @ 运算符）</code></pre>
   </div>
 
-  <h3>pandas (数据分析)</h3>
+  <h3>pandas — 数据分析</h3>
   <p>
-    pandas provides the <code>DataFrame</code> — a table with labelled columns and a row index. Think of it as a spreadsheet you program. If Chapter 3's list-of-dicts was your raw data, a pandas DataFrame is what it becomes after it grows up.
+    pandas 提供 <code>DataFrame</code>——一张带标签列和行索引的表格。把它想成你可以编程的电子表格。第 3 章里的字典列表是你的原始数据，pandas DataFrame 是它长大后的样子。
   </p>
   <div class="code-block">
-    <div class="code-label">Python — pandas taste</div>
+    <div class="code-label">Python — pandas 味道</div>
     <pre><code class="language-python">import pandas as pd
 
-df = pd.read_csv("sales.csv")   # load a CSV into a DataFrame
+df = pd.read_csv("sales.csv")   # 把 CSV 加载成 DataFrame
 
-df.head()                    # first 5 rows
-df.info()                    # column types and null counts
-df.describe()                # summary statistics
+df.head()                    # 前 5 行
+df.info()                    # 列类型和空值计数
+df.describe()                # 汇总统计
 
-df["revenue"].mean()         # column mean
-df[df["revenue"] > 1000]     # filter rows
-df.groupby("region").sum()   # SQL-style GROUP BY</code></pre>
+df["revenue"].mean()         # 列均值
+df[df["revenue"] > 1000]     # 过滤行
+df.groupby("region").sum()   # SQL 风格的 GROUP BY</code></pre>
   </div>
 
-  <h3>Matplotlib (数据可视化)</h3>
+  <h3>Matplotlib — 数据可视化</h3>
   <p>
-    Matplotlib is Python's foundational plotting library. It can feel verbose, but it's precise. Higher-level libraries like seaborn and pandas' own <code>.plot()</code> wrap it.
+    Matplotlib 是 Python 的基础绘图库。用起来可能有点啰嗦，但很精确。更高层的库如 seaborn 和 pandas 自带的 <code>.plot()</code> 都是对它的封装。
   </p>
   <div class="code-block">
-    <div class="code-label">Python — matplotlib taste</div>
+    <div class="code-label">Python — matplotlib 味道</div>
     <pre><code class="language-python">import matplotlib.pyplot as plt
 
 x = [1, 2, 3, 4, 5]
 y = [1, 4, 9, 16, 25]
 
 plt.plot(x, y, marker='o')
-plt.title("Squares")
+plt.title("平方数")
 plt.xlabel("x")
 plt.ylabel("x²")
-plt.savefig("squares.png")   # or plt.show() in Jupyter</code></pre>
+plt.savefig("squares.png")   # 或者在 Jupyter 里用 plt.show()</code></pre>
   </div>
 
-  <h3>scikit-learn (机器学习)</h3>
+  <h3>scikit-learn — 机器学习</h3>
   <p>
-    scikit-learn is the standard ML library for classical algorithms: regression, classification, clustering, dimensionality reduction, model evaluation. It has a beautifully consistent API: every model has <code>.fit(X, y)</code>, <code>.predict(X)</code>, and <code>.score(X, y)</code>.
+    scikit-learn 是经典算法的标准 ML 库：回归、分类、聚类、降维、模型评估。它有一套极其一致的 API：每个模型都有 <code>.fit(X, y)</code>、<code>.predict(X)</code> 和 <code>.score(X, y)</code>。
   </p>
   <div class="code-block">
-    <div class="code-label">Python — scikit-learn taste</div>
+    <div class="code-label">Python — scikit-learn 味道</div>
     <pre><code class="language-python">from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 model = LinearRegression()
-model.fit(X_train, y_train)       # train
-predictions = model.predict(X_test)  # infer
-score = model.score(X_test, y_test)  # R² score</code></pre>
+model.fit(X_train, y_train)          # 训练
+predictions = model.predict(X_test)  # 推断
+score = model.score(X_test, y_test)  # R² 分数</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">What's Next</div>
-    Before we dive into these libraries, Chapter 6 covers something more fundamental: reading and writing data from files. Real data science starts with loading data, and that means files — CSV, JSON, Excel. That's where we're headed.
+    <div class="callout-label">下一步</div>
+    在我们一头扎进这些库之前，第 6 章要先处理一件更基础的事：从文件里读写数据。真实的数据科学从加载数据开始，而加载数据意味着文件——CSV、JSON、Excel。我们下章见。
   </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "<code>import numpy as np</code> 里的 <code>as np</code> 是做什么的？",
+      "options": [
+        "把 numpy 模块安装到当前项目",
+        "为 numpy 模块创建一个短别名 np，之后用 np. 代替 numpy. 来访问",
+        "只导入 numpy 里名字叫 np 的函数",
+        "把 numpy 重命名为 np，之后不能再用 numpy 这个名字"
+      ],
+      "answer": 1,
+      "explanation": "as np 为导入的模块创建一个本地别名。numpy 是数据科学里的行业标准别名——几乎所有代码都用 np.array() 而不是 numpy.array()。模块本身没有被改变，只是你引用它的方式变短了。"
+    },
+    {
+      "q": "Python 的虚拟环境（virtual environment）把安装的包放在哪里？",
+      "options": [
+        "系统 Python 的全局 site-packages 目录",
+        "虚拟环境目录（如 .venv/）下的独立 lib/ 目录，不影响系统",
+        "当前项目的源代码目录里",
+        "用户主目录的 ~/.python/ 文件夹里"
+      ],
+      "answer": 1,
+      "explanation": "虚拟环境是一个独立目录，有自己的 Python 解释器副本和 lib/ 目录。pip install 在虚拟环境激活时，包会安装到 .venv/lib/ 下，完全不影响系统 Python 或其他虚拟环境。"
+    },
+    {
+      "q": "下面关于 Python 标准库的说法，哪个是正确的？",
+      "options": [
+        "标准库需要用 pip 单独安装",
+        "标准库是 Python 自带的，安装 Python 就有了，无需额外安装",
+        "标准库只包含 math 和 os 两个模块",
+        "标准库里的模块不需要 import，直接使用"
+      ],
+      "answer": 1,
+      "explanation": "Python 标准库随 Python 安装包一起提供，不需要 pip 安装。它包含数百个模块（math、random、datetime、json、pathlib、csv 等等）。但你仍然需要 import 才能使用它们——Python 不会自动把所有模块加载进命名空间。"
+    }
+  ]
+  </script>
 
   <div class="chapter-nav">
     <a href="ch4.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 4: Functions &amp; Scope</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 4 章：函数与作用域</span>
     </a>
     <a href="ch6.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 6: File I/O &amp; Data Formats</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 6 章：文件 I/O 与数据格式</span>
     </a>
   </div>
 

@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 3 — Data Structures | Python for C++ Devs</title>
+<title>第 3 章 — 内置数据结构 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="3">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,349 +30,387 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 3</div>
-    <h1>Data Structures <span style="font-weight:300;color:var(--text-muted)">数据结构</span></h1>
+    <div class="chapter-label">第 3 章</div>
+    <h1>内置数据结构</h1>
     <p class="lead">
-      Python ships four built-in collection types: <code>list</code>, <code>tuple</code>, <code>dict</code>, and <code>set</code>.
-      They cover the vast majority of what you'd reach for <code>std::vector</code>, <code>std::unordered_map</code>, or <code>std::set</code> to do in C++.
-      The key question about each one: is it mutable (可变) or immutable (不可变)?
+      Python 内置四种集合类型：<code>list</code>、<code>tuple</code>、<code>dict</code> 和 <code>set</code>。
+      它们覆盖了你在 C++ 里会用 <code>std::vector</code>、<code>std::unordered_map</code> 或 <code>std::set</code> 做的绝大多数事情。
+      关于每种类型，最关键的问题是：它可变（mutable）还是不可变（immutable）？
     </p>
   </div>
 
-  <!-- ── list ── -->
-  <h2>list (列表) — Ordered, Mutable Sequence</h2>
+  <h2>list — 有序可变序列</h2>
 
   <p>
-    A <code>list</code> is Python's workhorse container: ordered, zero-indexed, and mutable. It's the closest equivalent to <code>std::vector&lt;T&gt;</code>, except it can hold objects of different types in the same list.
+    <code>list</code> 是 Python 里用得最多的容器：有序、从零开始索引、可变。它最接近 <code>std::vector&lt;T&gt;</code>，但同一个 list 里可以存不同类型的对象。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — creating lists</div>
+    <div class="code-label">Python — 创建 list</div>
     <pre><code class="language-python">nums    = [1, 2, 3, 4, 5]
-mixed   = [42, "hello", 3.14, True]   # different types in one list
+mixed   = [42, "hello", 3.14, True]   # 不同类型可以放在一起
 empty   = []
 from_range = list(range(5))           # [0, 1, 2, 3, 4]
 repeated   = [0] * 5                  # [0, 0, 0, 0, 0]</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — indexing and slicing</div>
-    <pre><code class="language-python">fruits = ["apple", "banana", "cherry", "date"]
+    <div class="code-label">Python — 索引与切片</div>
+    <pre><code class="language-python">fruits = ["苹果", "香蕉", "樱桃", "枣子"]
 
-fruits[0]      # 'apple'   — first element
-fruits[-1]     # 'date'    — last element
-fruits[1:3]    # ['banana', 'cherry']  — slice [start, stop)
-fruits[:2]     # ['apple', 'banana']
-fruits[::2]    # ['apple', 'cherry']   — every other element
+fruits[0]      # '苹果'  — 第一个元素
+fruits[-1]     # '枣子'  — 最后一个元素
+fruits[1:3]    # ['香蕉', '樱桃']  — 切片 [start, stop)
+fruits[:2]     # ['苹果', '香蕉']
+fruits[::2]    # ['苹果', '樱桃']   — 每隔一个取一个
 
-# Modifying in-place
-fruits[0] = "avocado"          # replace
-fruits[1:3] = ["blueberry"]    # replace a slice with fewer items</code></pre>
+# 就地修改
+fruits[0] = "牛油果"          # 替换单个元素
+fruits[1:3] = ["蓝莓"]        # 用更少的元素替换一个切片</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — list methods (CRUD)</div>
+    <div class="code-label">Python — list 方法（增删改查）</div>
     <pre><code class="language-python">nums = [3, 1, 4, 1, 5, 9]
 
-# Adding
-nums.append(2)           # add to end: [3,1,4,1,5,9,2]
-nums.insert(0, 99)       # insert at index: [99,3,1,4,1,5,9,2]
-nums.extend([6, 5])      # add multiple: appends another list
+# 添加
+nums.append(2)           # 加到末尾：[3,1,4,1,5,9,2]
+nums.insert(0, 99)       # 在索引处插入：[99,3,1,4,1,5,9,2]
+nums.extend([6, 5])      # 追加多个元素：追加另一个 list
 
-# Removing
-nums.remove(1)           # removes FIRST occurrence of value 1
-popped = nums.pop()      # removes and returns last element
-popped2 = nums.pop(0)    # removes and returns element at index 0
-del nums[2]              # delete by index
+# 删除
+nums.remove(1)           # 删除第一个值为 1 的元素
+popped = nums.pop()      # 删除并返回最后一个元素
+popped2 = nums.pop(0)    # 删除并返回索引 0 处的元素
+del nums[2]              # 按索引删除
 
-# Searching
-nums.index(5)            # index of first occurrence (raises ValueError if missing)
-nums.count(1)            # count occurrences
+# 查找
+nums.index(5)            # 第一次出现的索引（找不到抛 ValueError）
+nums.count(1)            # 计算出现次数
 
-# Sorting
-nums.sort()              # in-place sort (modifies nums)
-nums.sort(reverse=True)  # in-place descending
-sorted_copy = sorted(nums)   # returns NEW sorted list, original unchanged
-nums.reverse()           # reverse in-place
+# 排序
+nums.sort()              # 就地排序（修改原 list）
+nums.sort(reverse=True)  # 就地降序
+sorted_copy = sorted(nums)   # 返回新的已排序 list，原 list 不变
+nums.reverse()           # 就地反转
 
-# Other
-len(nums)                # number of elements
-nums.copy()              # shallow copy
-nums.clear()             # empty the list</code></pre>
+# 其他
+len(nums)                # 元素数量
+nums.copy()              # 浅拷贝
+nums.clear()             # 清空 list</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
+    <div class="callout-label">C++ 对比</div>
     <ul>
       <li><code>list.append(x)</code> ≈ <code>vec.push_back(x)</code></li>
-      <li><code>list.pop()</code> ≈ <code>vec.pop_back()</code> — but Python's returns the value</li>
+      <li><code>list.pop()</code> ≈ <code>vec.pop_back()</code>——但 Python 的版本会返回被删除的值</li>
       <li><code>list.insert(i, x)</code> ≈ <code>vec.insert(vec.begin()+i, x)</code></li>
-      <li><code>sorted(lst)</code> ≈ <code>std::sort</code> on a copy — Python's sort is Timsort, stable and O(n log n)</li>
-      <li>Unlike <code>std::vector</code>, Python lists are dynamically typed — no template parameter needed</li>
+      <li><code>sorted(lst)</code> ≈ 对副本执行 <code>std::sort</code>——Python 的排序是 Timsort，稳定且 O(n log n)</li>
+      <li>和 <code>std::vector</code> 不同，Python list 是动态类型的——不需要模板参数</li>
     </ul>
   </div>
 
-  <h3>Sorting with a key function</h3>
+  <h3>用 key 函数排序</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">words = ["banana", "fig", "apple", "elderberry"]
 
-# Sort by length
+# 按长度排序
 words.sort(key=len)
 # ['fig', 'apple', 'banana', 'elderberry']
 
-# Sort by last character
+# 按最后一个字符排序
 words.sort(key=lambda w: w[-1])
 
-# Sort a list of dicts by a field
+# 对字典列表按某个字段排序
 people = [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
 people.sort(key=lambda p: p["age"])
-# Bob comes first now</code></pre>
+# Bob 排在前面了</code></pre>
   </div>
 
-  <!-- ── tuple ── -->
-  <h2>tuple (元组) — Ordered, Immutable Sequence</h2>
+  <h2>tuple — 有序不可变序列</h2>
 
   <p>
-    A <code>tuple</code> is like a <code>list</code> but immutable — once created, you can't change its contents. Use tuples when the data shouldn't change: coordinates, RGB colours, function return values, dictionary keys.
+    <code>tuple</code> 像 <code>list</code>，但不可变——一旦创建就不能修改内容。在数据不应该变化的地方用 tuple：坐标、RGB 颜色、函数返回值、字典键。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — tuples</div>
+    <div class="code-label">Python — tuple</div>
     <pre><code class="language-python">point  = (3, 7)
-color  = (255, 128, 0)     # RGB — semantically fixed
-single = (42,)             # single-element tuple needs trailing comma!
+color  = (255, 128, 0)     # RGB——语义上是固定的
+single = (42,)             # 单元素 tuple 需要拖尾逗号！
 empty  = ()
 
-# Immutable — this raises TypeError:
+# 不可变——下面这行会抛 TypeError：
 # point[0] = 99
 
-# Tuple unpacking (元组解包)
+# tuple 解包（unpacking）
 x, y = point               # x=3, y=7
 r, g, b = color
 
-# Functions returning multiple values — it's just a tuple
+# 函数返回多个值——其实就是一个 tuple
 def min_max(nums):
-    return min(nums), max(nums)   # returns a tuple
+    return min(nums), max(nums)   # 返回一个 tuple
 
 lo, hi = min_max([3, 1, 4, 1, 5, 9])
 print(lo, hi)   # 1 9
 
-# Swap using tuple unpacking
+# 用 tuple 解包交换变量
 a, b = 10, 20
-a, b = b, a     # no temp variable needed</code></pre>
+a, b = b, a     # 不需要临时变量</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Python tuples map well to C++17's <code>std::tuple</code> and structured bindings:
-    <code>auto [lo, hi] = min_max(nums);</code> is the C++ equivalent of <code>lo, hi = min_max(nums)</code>.
-    Python tuples can be used as dictionary keys (because they're hashable and immutable); <code>std::vector</code> cannot be a <code>std::unordered_map</code> key for the same reason.
+    <div class="callout-label">C++ 对比</div>
+    Python tuple 很好地对应 C++17 的 <code>std::tuple</code> 和结构化绑定：
+    <code>auto [lo, hi] = min_max(nums);</code> 就是 <code>lo, hi = min_max(nums)</code> 的 C++ 版本。
+    Python tuple 可以用作字典键（因为它们可哈希且不可变）；<code>std::vector</code> 不能作为 <code>std::unordered_map</code> 的键，原因相同。
   </div>
 
-  <!-- ── dict ── -->
-  <h2>dict (字典) — Key-Value Map</h2>
+  <h2>dict — 键值映射</h2>
 
   <p>
-    Python's <code>dict</code> is a hash map: O(1) average lookup, insertion, and deletion. As of Python 3.7+, dicts preserve insertion order.
+    Python 的 <code>dict</code> 是哈希表：查找、插入、删除的平均时间复杂度都是 O(1)。从 Python 3.7+ 开始，dict 保持插入顺序。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — creating and accessing dicts</div>
-    <pre><code class="language-python">person = {"name": "Alice", "age": 30, "city": "Beijing"}
+    <div class="code-label">Python — 创建和访问 dict</div>
+    <pre><code class="language-python">person = {"name": "Alice", "age": 30, "city": "北京"}
 empty  = {}
-from_keys = dict(name="Bob", age=25)   # keyword-argument form
+from_keys = dict(name="Bob", age=25)   # 关键字参数形式
 
-# Access
-person["name"]          # 'Alice' — raises KeyError if missing
-person.get("name")      # 'Alice' — returns None if missing (safe)
-person.get("email", "N/A")  # 'N/A' — default value if missing
+# 访问
+person["name"]          # 'Alice' — 键不存在会抛 KeyError
+person.get("name")      # 'Alice' — 键不存在返回 None（安全）
+person.get("email", "N/A")  # 'N/A' — 键不存在时返回默认值
 
-# Modify
-person["age"] = 31      # update existing key
-person["email"] = "a@b.com"  # add new key
-del person["city"]      # delete key
+# 修改
+person["age"] = 31      # 更新已有键
+person["email"] = "a@b.com"  # 添加新键
+del person["city"]      # 删除键
 
-# Check membership (成员测试)
+# 成员测试
 "name" in person        # True
 "salary" in person      # False</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — iterating dicts</div>
+    <div class="code-label">Python — 遍历 dict</div>
     <pre><code class="language-python">person = {"name": "Alice", "age": 30}
 
-# Iterate keys (默认)
+# 遍历键（默认）
 for key in person:
     print(key)           # name, age
 
-# Iterate values
+# 遍历值
 for val in person.values():
     print(val)           # Alice, 30
 
-# Iterate key-value pairs
+# 遍历键值对
 for key, val in person.items():
     print(f"{key}: {val}")
 
-# Useful methods
+# 常用方法
 list(person.keys())      # ['name', 'age']
 list(person.values())    # ['Alice', 30]
 list(person.items())     # [('name', 'Alice'), ('age', 30)]
 
-# Merge two dicts (Python 3.9+)
+# 合并两个 dict（Python 3.9+）
 defaults = {"color": "red", "size": "M"}
 custom   = {"size": "L", "weight": 1.5}
-merged   = defaults | custom   # custom values win on conflict
+merged   = defaults | custom   # custom 的值在冲突时优先
 # {'color': 'red', 'size': 'L', 'weight': 1.5}</code></pre>
   </div>
 
-  <h3>Dict comprehension</h3>
+  <h3>字典推导式</h3>
   <div class="code-block">
     <div class="code-label">Python</div>
     <pre><code class="language-python">words = ["apple", "fig", "banana"]
 
-# Map each word to its length
+# 把每个单词映射到它的长度
 lengths = {w: len(w) for w in words}
 # {'apple': 5, 'fig': 3, 'banana': 6}
 
-# Invert a dict (swap keys and values)
+# 反转字典（交换键和值）
 original = {"a": 1, "b": 2, "c": 3}
 inverted = {v: k for k, v in original.items()}
 # {1: 'a', 2: 'b', 3: 'c'}</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Python <code>dict</code> ≈ <code>std::unordered_map</code> (hash table, O(1) average).
-    Python <code>dict</code> preserves insertion order; <code>std::unordered_map</code> does not.
-    If you need sorted-key iteration, use <code>sorted(d.keys())</code> or Python's <code>collections.OrderedDict</code> (mostly redundant now) — or in C++ use <code>std::map</code>.
+    <div class="callout-label">C++ 对比</div>
+    Python <code>dict</code> ≈ <code>std::unordered_map</code>（哈希表，平均 O(1)）。
+    Python <code>dict</code> 保持插入顺序；<code>std::unordered_map</code> 不保证。
+    如果你需要按键排序的遍历，用 <code>sorted(d.keys())</code>——C++ 里用 <code>std::map</code> 来对应。
   </div>
 
-  <!-- ── set ── -->
-  <h2>set (集合) — Unordered, Unique Values</h2>
+  <h2>set — 无序唯一值集合</h2>
 
   <p>
-    A <code>set</code> stores unique values with no guaranteed order. Fast membership testing (O(1)), and supports the full suite of mathematical set operations.
+    <code>set</code> 存储唯一值，不保证顺序。成员测试 O(1)，支持完整的数学集合运算。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — sets</div>
+    <div class="code-label">Python — set</div>
     <pre><code class="language-python">primes = {2, 3, 5, 7, 11}
-empty  = set()    # NOT {} — that makes an empty dict!
+empty  = set()    # 注意！不是 {}——那会创建一个空 dict！
 
-# Deduplication — convert a list with duplicates
+# 去重——把有重复的 list 转成 set
 nums = [1, 2, 2, 3, 3, 3, 4]
 unique = set(nums)    # {1, 2, 3, 4}
 
-# Membership (O(1))
+# 成员测试（O(1)）
 3 in primes           # True
 4 in primes           # False
 
-# Modification
+# 修改
 primes.add(13)
-primes.discard(2)     # remove if present (no error if missing)
-primes.remove(3)      # remove — raises KeyError if missing
+primes.discard(2)     # 存在就删，不存在不报错
+primes.remove(3)      # 删除——不存在抛 KeyError
 
-# Set operations (集合运算)
+# 集合运算
 a = {1, 2, 3, 4}
 b = {3, 4, 5, 6}
 
-a | b     # union (并集):        {1, 2, 3, 4, 5, 6}
-a & b     # intersection (交集): {3, 4}
-a - b     # difference (差集):   {1, 2}  — in a but not b
-a ^ b     # symmetric diff:      {1, 2, 5, 6}  — in either, not both
+a | b     # 并集：        {1, 2, 3, 4, 5, 6}
+a & b     # 交集：        {3, 4}
+a - b     # 差集：        {1, 2}  — 在 a 不在 b
+a ^ b     # 对称差：      {1, 2, 5, 6}  — 在其中一个里，但不在两个里
 
-a.issubset(b)       # a ⊆ b ?
-a.issuperset(b)     # a ⊇ b ?</code></pre>
+a.issubset(b)       # a ⊆ b？
+a.issuperset(b)     # a ⊇ b？</code></pre>
   </div>
 
-  <!-- ── Mutability ── -->
-  <h2>Mutability Explained (可变性)</h2>
+  <h2>可变性详解</h2>
 
   <p>
-    This distinction is critical, especially once you start passing containers into functions.
+    这个区别非常关键，尤其是当你开始把容器传进函数时。
   </p>
 
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Type</th><th>Mutable?</th><th>Hashable?</th><th>Typical Use</th></tr></thead>
+      <thead><tr><th>类型</th><th>可变？</th><th>可哈希？</th><th>典型用途</th></tr></thead>
       <tbody>
-        <tr><td><code>list</code></td><td>Yes ✓</td><td>No</td><td>Ordered collection you'll modify</td></tr>
-        <tr><td><code>tuple</code></td><td>No</td><td>Yes ✓</td><td>Fixed record; dict key; return value</td></tr>
-        <tr><td><code>dict</code></td><td>Yes ✓</td><td>No</td><td>Key-value lookup</td></tr>
-        <tr><td><code>set</code></td><td>Yes ✓</td><td>No</td><td>Unique items; membership tests</td></tr>
-        <tr><td><code>frozenset</code></td><td>No</td><td>Yes ✓</td><td>Immutable set; can be a dict key</td></tr>
-        <tr><td><code>str</code></td><td>No</td><td>Yes ✓</td><td>Text</td></tr>
+        <tr><td><code>list</code></td><td>是 ✓</td><td>否</td><td>需要修改的有序集合</td></tr>
+        <tr><td><code>tuple</code></td><td>否</td><td>是 ✓</td><td>固定记录；dict 键；返回值</td></tr>
+        <tr><td><code>dict</code></td><td>是 ✓</td><td>否</td><td>键值查找</td></tr>
+        <tr><td><code>set</code></td><td>是 ✓</td><td>否</td><td>唯一值；成员测试</td></tr>
+        <tr><td><code>frozenset</code></td><td>否</td><td>是 ✓</td><td>不可变集合；可作 dict 键</td></tr>
+        <tr><td><code>str</code></td><td>否</td><td>是 ✓</td><td>文本</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — mutation in functions (important!)</div>
+    <div class="code-label">Python — 函数里的变异（重要！）</div>
     <pre><code class="language-python">def double_all(lst):
     for i in range(len(lst)):
-        lst[i] *= 2   # mutates the original list!
+        lst[i] *= 2   # 变异了原始 list！
 
 numbers = [1, 2, 3]
 double_all(numbers)
-print(numbers)   # [2, 4, 6] — the list was changed in place
+print(numbers)   # [2, 4, 6] — list 被就地修改了
 
-# To avoid mutation, pass a copy:
-double_all(numbers[:])   # or numbers.copy()</code></pre>
+# 为了避免变异，传入副本：
+double_all(numbers[:])   # 或者 numbers.copy()</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    In C++, passing by value copies the container; passing by reference or pointer allows mutation.
-    In Python, <em>all arguments are passed by object reference</em>. Mutable objects (list, dict, set) can be mutated inside functions. Immutable objects (int, str, tuple) cannot. This is similar to C++ <code>const&amp;</code> vs mutable <code>&amp;</code> but implicit — Python gives you no <code>const</code> keyword to enforce immutability at the type level.
+    <div class="callout-label">C++ 对比</div>
+    C++ 里，按值传递会复制容器；按引用或指针传递允许变异。
+    Python 里，<em>所有参数都按对象引用传递</em>。可变对象（list、dict、set）在函数内部可以被变异。不可变对象（int、str、tuple）不能。这类似于 C++ 的 <code>const&amp;</code> vs 可变 <code>&amp;</code>，但是隐式的——Python 没有 <code>const</code> 关键字来在类型层面强制不可变性。
   </div>
 
-  <!-- ── Nested ── -->
-  <h2>Nested Structures — Foreshadowing DataFrames</h2>
+  <h2>嵌套结构 — DataFrame 的前奏</h2>
 
   <p>
-    Real data rarely lives in flat arrays. A list of dicts is one of the most common patterns in Python data work — it maps directly to a spreadsheet or database table, and it's exactly the internal representation of a pandas DataFrame.
+    真实数据很少是扁平数组。字典列表是 Python 数据工作里最常见的模式之一——它直接对应一张电子表格或数据库表，也正是 pandas DataFrame 的内部表示。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — list of dicts (table-like data)</div>
+    <div class="code-label">Python — 字典列表（类似表格的数据）</div>
     <pre><code class="language-python">students = [
     {"name": "Alice",   "score": 92, "grade": "A"},
     {"name": "Bob",     "score": 78, "grade": "C"},
     {"name": "Charlie", "score": 85, "grade": "B"},
 ]
 
-# Access a field
+# 访问一个字段
 students[0]["name"]    # 'Alice'
 
-# Iterate rows
+# 遍历行
 for s in students:
     print(f"{s['name']}: {s['score']}")
 
-# Filter with comprehension
+# 用推导式过滤
 honor_roll = [s for s in students if s["score"] >= 90]
 
-# Extract a column
+# 提取一列
 names  = [s["name"]  for s in students]
 scores = [s["score"] for s in students]
 
-# Sort by score
+# 按分数排序
 students.sort(key=lambda s: s["score"], reverse=True)
 
-# In Chapter 8, you'll replace all of this with:
+# 第 8 章里，你会把上面这些全部换成：
 # import pandas as pd
 # df = pd.DataFrame(students)
 # df.sort_values("score", ascending=False)</code></pre>
   </div>
 
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "Python 里，<code>empty_set = {}</code> 创建的是什么？",
+      "options": [
+        "一个空的 set",
+        "一个空的 dict",
+        "一个空的 tuple",
+        "会抛出 SyntaxError"
+      ],
+      "answer": 1,
+      "explanation": "{} 创建的是空的 dict，不是空的 set！要创建空 set，必须用 set()。这是一个常见陷阱——dict 和 set 都用花括号，但空字面量 {} 属于 dict。"
+    },
+    {
+      "q": "下面关于 tuple 和 list 的说法，哪个是正确的？",
+      "options": [
+        "tuple 和 list 没有区别，只是写法不同",
+        "tuple 是不可变的，可以作为 dict 的键；list 是可变的，不能",
+        "tuple 比 list 慢，因为它需要额外的内存",
+        "list 是不可变的，tuple 是可变的"
+      ],
+      "answer": 1,
+      "explanation": "tuple 是不可变的（创建后不能修改），因此是可哈希的，可以作为 dict 的键。list 是可变的，不可哈希，不能作为 dict 键。这是二者最核心的区别。"
+    },
+    {
+      "q": "对于 <code>a = [1, 2, 3]</code>，调用 <code>a.pop(0)</code> 后，a 的值是什么？",
+      "options": [
+        "[2, 3]",
+        "[1, 2]",
+        "[1, 2, 3]（pop 不修改原 list）",
+        "[0, 1, 2, 3]"
+      ],
+      "answer": 0,
+      "explanation": "pop(0) 删除并返回索引 0 处的元素（即 1），剩下的 list 是 [2, 3]。pop() 不带参数时删除最后一个元素。"
+    }
+  ]
+  </script>
+
   <div class="chapter-nav">
     <a href="ch2.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 2: Control Flow</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 2 章：控制流</span>
     </a>
     <a href="ch4.html" class="nav-btn next">
-      <span class="nav-direction">Next →</span>
-      <span class="nav-title">Chapter 4: Functions &amp; Scope</span>
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 4 章：函数与作用域</span>
     </a>
   </div>
 

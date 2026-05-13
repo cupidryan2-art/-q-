@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 6 — File I/O & Data Formats | Python for C++ Devs</title>
+<title>第 6 章 — 文件 I/O 与数据格式 | Python for C++ Devs</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body data-chapter="6">
 
-<button class="menu-toggle" aria-label="Open menu">
+<button class="menu-toggle" aria-label="打开菜单">
   <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -21,7 +21,7 @@
   <div class="sidebar-logo">
     <a href="index.html">
       <div class="site-title">Python for C++ Devs</div>
-      <div class="site-subtitle">Zero to Data Science</div>
+      <div class="site-subtitle">从零到数据科学</div>
     </a>
   </div>
   <ul class="chapter-list"></ul>
@@ -30,131 +30,107 @@
 <main class="main">
 
   <div class="chapter-header">
-    <div class="chapter-label">Chapter 6</div>
-    <h1>File I/O &amp; Data Formats <span style="font-weight:300;color:var(--text-muted)">文件操作</span></h1>
+    <div class="chapter-label">第 6 章</div>
+    <h1>文件 I/O 与数据格式</h1>
     <p class="lead">
-      Every real data science project starts with loading data from somewhere — a text file, a CSV export, a JSON API response, an Excel spreadsheet.
-      Python makes this remarkably straightforward. This chapter takes you from the lowest level (raw file handles) to the idiom you'll actually use every day.
+      每个真实的数据科学项目都从某处加载数据开始——文本文件、CSV 导出、JSON API 响应、Excel 表格。
+      Python 把这件事处理得异常顺手。这一章带你从最底层（原始文件句柄）走到你每天真正会用的写法。
     </p>
   </div>
 
-  <!-- ── open() ── -->
-  <h2>Reading and Writing Text Files</h2>
+  <h2>读写文本文件</h2>
 
-  <h3>The <code>open()</code> function</h3>
+  <h3>open() 函数</h3>
   <p>
-    <code>open(path, mode)</code> returns a file object (文件对象). The <code>mode</code> argument controls whether you read, write, or append, and whether the file is treated as text or binary.
+    <code>open(path, mode)</code> 返回一个文件对象（file object）。<code>mode</code> 参数控制你是读、写还是追加，以及文件是文本模式还是二进制模式。
   </p>
 
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Mode</th><th>Meaning</th><th>File must exist?</th></tr></thead>
+      <thead><tr><th>模式</th><th>含义</th><th>文件必须存在？</th></tr></thead>
       <tbody>
-        <tr><td><code>'r'</code></td><td>Read text (default)</td><td>Yes — FileNotFoundError otherwise</td></tr>
-        <tr><td><code>'w'</code></td><td>Write text — <strong>overwrites</strong> existing content</td><td>No — creates if missing</td></tr>
-        <tr><td><code>'a'</code></td><td>Append text — adds to end</td><td>No — creates if missing</td></tr>
-        <tr><td><code>'x'</code></td><td>Exclusive create — fails if file exists</td><td>No — must be new</td></tr>
-        <tr><td><code>'rb'</code> / <code>'wb'</code></td><td>Read / write binary bytes</td><td>Same as above</td></tr>
+        <tr><td><code>'r'</code></td><td>读文本（默认）</td><td>必须——否则 FileNotFoundError</td></tr>
+        <tr><td><code>'w'</code></td><td>写文本——<strong>覆盖</strong>已有内容</td><td>不必——不存在则创建</td></tr>
+        <tr><td><code>'a'</code></td><td>追加文本——在末尾添加</td><td>不必——不存在则创建</td></tr>
+        <tr><td><code>'x'</code></td><td>独占创建——文件已存在则失败</td><td>不必——必须是新文件</td></tr>
+        <tr><td><code>'rb'</code> / <code>'wb'</code></td><td>读/写二进制字节</td><td>同上</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — reading a file (low-level)</div>
+    <div class="code-label">Python — 读文件（低层写法）</div>
     <pre><code class="language-python">f = open("notes.txt", "r", encoding="utf-8")
-content = f.read()    # entire file as one string
-f.close()             # MUST close — releases the file handle
+content = f.read()    # 整个文件作为一个字符串
+f.close()             # 必须关闭——释放文件句柄
 
-# Read line by line
+# 逐行读取
 f = open("notes.txt", "r", encoding="utf-8")
-for line in f:           # file objects are iterable
-    print(line.strip())  # strip() removes trailing \n
+for line in f:           # 文件对象是可迭代的
+    print(line.strip())  # strip() 去掉末尾的 \n
 f.close()</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Always Specify Encoding</div>
-    Pass <code>encoding="utf-8"</code> explicitly. The default encoding varies by OS (UTF-8 on macOS/Linux, often CP1252 on Windows). Specifying it makes your code portable and avoids silent mojibake (乱码) errors with non-ASCII text.
+    <div class="callout-label">始终指定编码</div>
+    明确传入 <code>encoding="utf-8"</code>。默认编码因操作系统而异（macOS/Linux 是 UTF-8，Windows 常常是 CP1252）。显式指定让你的代码可移植，也避免非 ASCII 文本的乱码。
   </div>
 
-  <!-- ── with ── -->
-  <h2>The <code>with</code> Statement — Context Managers (上下文管理器)</h2>
+  <h2>with 语句 — 上下文管理器（context manager）</h2>
 
   <p>
-    Calling <code>f.close()</code> manually is error-prone — if an exception occurs between <code>open()</code> and <code>close()</code>, the file stays open. Python's <code>with</code> statement guarantees the file is closed when the block exits, regardless of whether it exits normally or via an exception.
+    手动调用 <code>f.close()</code> 容易出错——如果 <code>open()</code> 和 <code>close()</code> 之间抛了异常，文件就一直开着。Python 的 <code>with</code> 语句保证代码块退出时文件一定会被关闭，不管是正常退出还是因为异常。
   </p>
   <p>
-    <strong>Always use <code>with open(...)</code></strong>. You will never see experienced Python developers using bare <code>open()</code> in production code.
+    <strong>永远用 <code>with open(...)</code></strong>。你不会在有经验的 Python 开发者的生产代码里看到裸的 <code>open()</code>。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — with open() (the correct idiom)</div>
-    <pre><code class="language-python"># Reading
+    <div class="code-label">Python — with open()（正确的惯用写法）</div>
+    <pre><code class="language-python"># 读取
 with open("notes.txt", "r", encoding="utf-8") as f:
-    content = f.read()          # entire file as string
-# f is automatically closed here, even if an exception was raised
+    content = f.read()          # 整个文件作为字符串
+# 这里 f 自动关闭，即使发生了异常也一样
 
-# Read all lines into a list
+# 把所有行读入一个 list
 with open("notes.txt", "r", encoding="utf-8") as f:
-    lines = f.readlines()       # ['line1\n', 'line2\n', ...]
+    lines = f.readlines()       # ['行1\n', '行2\n', ...]
 
-# Iterate line by line (memory-efficient for large files)
+# 逐行遍历（对大文件内存友好）
 with open("notes.txt", "r", encoding="utf-8") as f:
     for line in f:
         process(line.strip())
 
-# Writing — overwrites existing content
+# 写入——覆盖已有内容
 with open("output.txt", "w", encoding="utf-8") as f:
     f.write("Hello, World!\n")
-    f.write("Second line\n")
+    f.write("第二行\n")
 
-# Writing multiple lines at once
-lines = ["apple\n", "banana\n", "cherry\n"]
+# 一次性写入多行
+lines = ["苹果\n", "香蕉\n", "樱桃\n"]
 with open("fruits.txt", "w", encoding="utf-8") as f:
     f.writelines(lines)
 
-# Appending — adds to end without erasing
+# 追加——不清空原有内容
 with open("log.txt", "a", encoding="utf-8") as f:
-    f.write("New log entry\n")</code></pre>
+    f.write("新的日志条目\n")</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Python's <code>with</code> block is the equivalent of C++ RAII. The file object implements <code>__enter__</code> and <code>__exit__</code> — the context manager protocol — so <code>__exit__</code> calls <code>close()</code> automatically. This is like a <code>std::ifstream</code> on the stack whose destructor closes the file when it goes out of scope, except it works for any resource, not just files (database connections, locks, network sockets, etc.).
+    <div class="callout-label">C++ 对比</div>
+    Python 的 <code>with</code> 块等价于 C++ RAII。文件对象实现了 <code>__enter__</code> 和 <code>__exit__</code>——上下文管理器协议——所以 <code>__exit__</code> 会自动调用 <code>close()</code>。这就像栈上的 <code>std::ifstream</code>，析构函数在它离开作用域时关闭文件——只不过它适用于任何资源，不只是文件（数据库连接、锁、网络 socket 等等）。
   </div>
 
-  <h3>Reading structured text</h3>
-  <div class="code-block">
-    <div class="code-label">Python — common text file patterns</div>
-    <pre><code class="language-python"># Count lines
-with open("data.txt", "r", encoding="utf-8") as f:
-    line_count = sum(1 for _ in f)
-
-# Find lines matching a pattern
-with open("server.log", "r", encoding="utf-8") as f:
-    errors = [line for line in f if "ERROR" in line]
-
-# Read a config file (key=value format)
-config = {}
-with open("config.ini", "r", encoding="utf-8") as f:
-    for line in f:
-        line = line.strip()
-        if "=" in line and not line.startswith("#"):
-            key, _, value = line.partition("=")
-            config[key.strip()] = value.strip()</code></pre>
-  </div>
-
-  <!-- ── CSV ── -->
-  <h2>CSV Files (逗号分隔值)</h2>
+  <h2>CSV 文件</h2>
 
   <p>
-    CSV (Comma-Separated Values) is the most common plain-text data format. Let's see the evolution from doing it manually to using the right tool for the job.
+    CSV（逗号分隔值，Comma-Separated Values）是最常见的纯文本数据格式。下面看看从手动解析到正确工具的演进过程。
   </p>
 
-  <h3>Stage 1 — Manual parsing (don't do this in production)</h3>
+  <h3>阶段一 — 手动解析（生产代码别这么做）</h3>
   <div class="code-block">
-    <div class="code-label">Python — naive CSV parsing</div>
-    <pre><code class="language-python"># This breaks on: quoted fields, commas inside quotes, newlines in fields...
+    <div class="code-label">Python — 朴素 CSV 解析</div>
+    <pre><code class="language-python"># 这种写法在以下情况会出错：带引号的字段、引号里的逗号、字段里的换行...
 with open("data.csv", "r", encoding="utf-8") as f:
     header = f.readline().strip().split(",")
     rows = []
@@ -163,21 +139,21 @@ with open("data.csv", "r", encoding="utf-8") as f:
         rows.append(dict(zip(header, values)))</code></pre>
   </div>
 
-  <h3>Stage 2 — The <code>csv</code> module (handles edge cases)</h3>
+  <h3>阶段二 — csv 模块（处理边缘情况）</h3>
   <div class="code-block">
-    <div class="code-label">Python — csv module</div>
+    <div class="code-label">Python — csv 模块</div>
     <pre><code class="language-python">import csv
 
-# Reading with DictReader — each row is a dict keyed by header
+# 用 DictReader 读取——每行是一个以表头为键的 dict
 with open("students.csv", "r", encoding="utf-8", newline="") as f:
     reader = csv.DictReader(f)
     students = list(reader)
     # [{'name': 'Alice', 'score': '92'}, {'name': 'Bob', 'score': '78'}, ...]
 
-# Note: all values are strings — cast as needed
+# 注意：所有值都是字符串——需要自己转换类型
 scores = [int(s["score"]) for s in students]
 
-# Writing with DictWriter
+# 用 DictWriter 写入
 fieldnames = ["name", "score", "grade"]
 with open("results.csv", "w", encoding="utf-8", newline="") as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -189,59 +165,58 @@ with open("results.csv", "w", encoding="utf-8", newline="") as f:
   </div>
 
   <div class="note-box">
-    <div class="callout-label">Why newline=""?</div>
-    Pass <code>newline=""</code> when opening CSV files with the <code>csv</code> module. Otherwise the module's own newline handling conflicts with Python's universal newline translation, producing blank rows on Windows.
+    <div class="callout-label">为什么要 newline=""？</div>
+    用 csv 模块打开 CSV 文件时，传 <code>newline=""</code>。否则模块自己的换行处理会和 Python 的通用换行转换冲突，在 Windows 上产生空行。
   </div>
 
-  <h3>Stage 3 — pandas (what you'll actually use)</h3>
+  <h3>阶段三 — pandas（你实际会用的方式）</h3>
   <div class="code-block">
-    <div class="code-label">Python — pandas read_csv (one line replaces all of the above)</div>
+    <div class="code-label">Python — pandas read_csv（一行代替上面所有）</div>
     <pre><code class="language-python">import pandas as pd
 
-# One line to load, parse headers, infer types, handle encoding
+# 一行：加载、解析表头、推断类型、处理编码
 df = pd.read_csv("students.csv")
 
-print(df.head())        # first 5 rows
-print(df.dtypes)        # column types (automatically inferred!)
-print(df["score"].mean())   # column operations
+print(df.head())        # 前 5 行
+print(df.dtypes)        # 列类型（自动推断！）
+print(df["score"].mean())   # 列操作
 
-# Filtering and sorting
+# 过滤和排序
 top_students = df[df["score"] >= 90].sort_values("score", ascending=False)
 
-# Save back to CSV
+# 保存回 CSV
 top_students.to_csv("top_students.csv", index=False)</code></pre>
   </div>
 
   <div class="tip-box">
-    <div class="callout-label">When to Use Which</div>
-    Use the <code>csv</code> module when you're writing a script that needs no dependencies and the data is simple. Use pandas when you're doing any analysis, filtering, or transformation — the ergonomics are incomparably better. Avoid manual <code>split(",")</code> for anything beyond a quick prototype.
+    <div class="callout-label">该用哪个</div>
+    写脚本且不需要依赖、数据简单时用 <code>csv</code> 模块。做任何分析、过滤或变换时用 pandas——它的使用体验好到没得比。对于 prototype 之外的场景，避免手动 <code>split(",")</code>。
   </div>
 
-  <!-- ── JSON ── -->
-  <h2>JSON Files (JavaScript Object Notation)</h2>
+  <h2>JSON 文件</h2>
 
   <p>
-    JSON is the dominant format for API responses and configuration files. Python's <code>json</code> module maps JSON directly to Python objects: objects become <code>dict</code>, arrays become <code>list</code>, strings stay <code>str</code>, numbers become <code>int</code> or <code>float</code>, booleans become <code>bool</code>, and <code>null</code> becomes <code>None</code>.
+    JSON 是 API 响应和配置文件的主流格式。Python 的 <code>json</code> 模块把 JSON 直接映射到 Python 对象：对象变 <code>dict</code>、数组变 <code>list</code>、字符串是 <code>str</code>、数字是 <code>int</code> 或 <code>float</code>、布尔是 <code>bool</code>、<code>null</code> 变 <code>None</code>。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — reading JSON</div>
+    <div class="code-label">Python — 读取 JSON</div>
     <pre><code class="language-python">import json
 
-# From a file — json.load() (note: no 's')
+# 从文件——json.load()（注意：没有 's'）
 with open("config.json", "r", encoding="utf-8") as f:
-    config = json.load(f)    # returns a dict, list, etc.
+    config = json.load(f)    # 返回 dict、list 等
 
 print(config["database"]["host"])
 
-# From a string — json.loads() ('s' = string)
+# 从字符串——json.loads()（'s' = string）
 raw = '{"name": "Alice", "scores": [90, 85, 92]}'
 data = json.loads(raw)
 print(data["scores"])        # [90, 85, 92]</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — writing JSON</div>
+    <div class="code-label">Python — 写入 JSON</div>
     <pre><code class="language-python">import json
 
 results = {
@@ -251,131 +226,84 @@ results = {
     "losses": [1.2, 0.8, 0.5, 0.3],
 }
 
-# To a file — json.dump()
+# 写到文件——json.dump()
 with open("results.json", "w", encoding="utf-8") as f:
-    json.dump(results, f, indent=2)   # indent=2 for pretty printing
+    json.dump(results, f, indent=2)   # indent=2 做格式化输出
 
-# To a string — json.dumps() ('s' = string)
+# 写到字符串——json.dumps()（'s' = string）
 s = json.dumps(results, indent=2)
 print(s)
 
-# Handle non-serialisable types
+# 处理不可序列化的类型
 import datetime
 data = {"timestamp": datetime.datetime.now()}
-# json.dumps(data)  ← raises TypeError: datetime is not JSON serialisable
+# json.dumps(data)  ← 抛 TypeError: datetime 不可序列化
 
-# Fix: use default= to specify a serialiser
+# 解决方案：用 default= 参数指定序列化函数
 def json_default(obj):
     if isinstance(obj, datetime.datetime):
         return obj.isoformat()
-    raise TypeError(f"Not serialisable: {type(obj)}")
+    raise TypeError(f"不可序列化：{type(obj)}")
 
 json.dumps(data, default=json_default)</code></pre>
   </div>
 
   <div class="cpp-callout">
-    <div class="callout-label">C++ Comparison</div>
-    Python's <code>json</code> module does what nlohmann/json or RapidJSON do in C++, but with zero boilerplate. There's no schema to define, no type to map to — Python's dynamic types map directly to JSON's types. The equivalent of <code>json.loads(s)</code> in C++ would be <code>auto j = nlohmann::json::parse(s);</code>, but accessing nested fields is far more ergonomic in Python: <code>data["key"]["nested"]</code> just works.
+    <div class="callout-label">C++ 对比</div>
+    Python 的 <code>json</code> 模块做的是 C++ 里 nlohmann/json 或 RapidJSON 做的事，但没有任何样板代码。不需要定义 schema，不需要定义映射类型——Python 的动态类型直接对应 JSON 的类型。<code>json.loads(s)</code> 的 C++ 等价是 <code>auto j = nlohmann::json::parse(s);</code>，但访问嵌套字段在 Python 里轻松得多：<code>data["key"]["nested"]</code> 直接就能用。
   </div>
 
-  <h3>JSON with pandas</h3>
-  <div class="code-block">
-    <div class="code-label">Python — JSON + pandas</div>
-    <pre><code class="language-python">import pandas as pd
-
-# Load a JSON file of records directly into a DataFrame
-df = pd.read_json("students.json")
-
-# Load from a URL (pandas handles the HTTP request)
-df = pd.read_json("https://api.example.com/data.json")
-
-# Convert DataFrame back to JSON
-df.to_json("output.json", orient="records", indent=2)
-# orient="records" → list of dicts [{col: val, ...}, ...]</code></pre>
-  </div>
-
-  <!-- ── Excel ── -->
-  <h2>Excel Files (.xlsx)</h2>
+  <h2>Excel 文件（.xlsx）</h2>
 
   <p>
-    Excel files are binary formats — you can't read them with <code>open()</code>. You'll need either <code>openpyxl</code> for low-level cell manipulation or pandas for data analysis.
+    Excel 文件是二进制格式——你没法用 <code>open()</code> 读它。需要 <code>openpyxl</code> 做底层单元格操作，或者用 pandas 做数据分析。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Terminal — install dependencies</div>
-    <pre><code class="language-bash">pip install openpyxl   # required by pandas for .xlsx support</code></pre>
+    <div class="code-label">终端 — 安装依赖</div>
+    <pre><code class="language-bash">pip install openpyxl   # pandas 读写 .xlsx 需要这个</code></pre>
   </div>
 
   <div class="code-block">
-    <div class="code-label">Python — Excel with pandas (most common)</div>
+    <div class="code-label">Python — pandas 处理 Excel（最常用）</div>
     <pre><code class="language-python">import pandas as pd
 
-# Read the first sheet
+# 读取第一个 sheet
 df = pd.read_excel("report.xlsx")
 
-# Read a specific sheet by name or index
+# 按名称或索引读取特定 sheet
 df = pd.read_excel("report.xlsx", sheet_name="Sales Q1")
 df = pd.read_excel("report.xlsx", sheet_name=0)
 
-# Read multiple sheets — returns a dict of DataFrames
+# 读取所有 sheet——返回 dict of DataFrames
 sheets = pd.read_excel("report.xlsx", sheet_name=None)
 for name, df in sheets.items():
-    print(f"Sheet '{name}': {len(df)} rows")
+    print(f"Sheet '{name}'：{len(df)} 行")
 
-# Write to Excel
+# 写入 Excel
 df.to_excel("output.xlsx", sheet_name="Results", index=False)
 
-# Write multiple sheets
+# 写入多个 sheet
 with pd.ExcelWriter("multi_sheet.xlsx", engine="openpyxl") as writer:
-    df_sales.to_excel(writer, sheet_name="Sales",    index=False)
-    df_costs.to_excel(writer, sheet_name="Costs",    index=False)
-    df_summary.to_excel(writer, sheet_name="Summary", index=False)</code></pre>
+    df_sales.to_excel(writer, sheet_name="销售",   index=False)
+    df_costs.to_excel(writer, sheet_name="成本",   index=False)
+    df_summary.to_excel(writer, sheet_name="汇总", index=False)</code></pre>
   </div>
 
-  <div class="code-block">
-    <div class="code-label">Python — openpyxl for cell-level control</div>
-    <pre><code class="language-python">from openpyxl import Workbook, load_workbook
-from openpyxl.styles import Font, PatternFill
-
-# Create a new workbook
-wb = Workbook()
-ws = wb.active
-ws.title = "Data"
-
-# Write cells
-ws["A1"] = "Name"
-ws["B1"] = "Score"
-ws.append(["Alice", 92])
-ws.append(["Bob",   78])
-
-# Style a header cell
-ws["A1"].font = Font(bold=True, size=12)
-ws["B1"].font = Font(bold=True, size=12)
-
-wb.save("styled_report.xlsx")
-
-# Read an existing file and modify it
-wb = load_workbook("existing.xlsx")
-ws = wb["Sheet1"]
-for row in ws.iter_rows(min_row=2, values_only=True):
-    print(row)   # tuple of cell values</code></pre>
-  </div>
-
-  <!-- ── Putting it together ── -->
-  <h2>Putting It Together — A Mini ETL Pipeline</h2>
+  <h2>综合实战 — 一个迷你 ETL 管道</h2>
 
   <p>
-    ETL (Extract, Transform, Load) is the backbone of data engineering: read data from a source, clean or reshape it, write it somewhere else. Here's a small example using what we've covered.
+    ETL（Extract, Transform, Load——提取、变换、加载）是数据工程的骨架：从某处读取数据，清洗或重塑，写到某处。下面是一个综合本章所学的小例子。
   </p>
 
   <div class="code-block">
-    <div class="code-label">Python — read CSV → transform → write JSON</div>
+    <div class="code-label">Python — 读 CSV → 变换 → 写 JSON</div>
     <pre><code class="language-python">import csv
 import json
 from pathlib import Path
 
 def load_students(path: str) -> list[dict]:
-    """Read a CSV and return a list of dicts with typed values."""
+    """读取 CSV，返回带类型化值的字典列表。"""
     students = []
     with open(path, "r", encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
@@ -387,7 +315,7 @@ def load_students(path: str) -> list[dict]:
     return students
 
 def add_pass_fail(students: list[dict]) -> list[dict]:
-    """Pure function — returns new list with pass/fail field added."""
+    """纯函数——返回新列表，添加及格/不及格字段。"""
     return [
         {**s, "passed": s["score"] >= 60}
         for s in students
@@ -398,27 +326,71 @@ def save_json(data, path: str) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-# Run the pipeline
+# 运行管道
 students = load_students("students.csv")
 students = add_pass_fail(students)
 save_json(students, "output/students.json")
 
-print(f"Processed {len(students)} students")</code></pre>
+print(f"处理了 {len(students)} 名学生")</code></pre>
   </div>
 
   <div class="note-box">
-    <div class="callout-label">What's Next — NumPy and pandas</div>
-    You now have the complete Python foundation: types, control flow, functions, modules, and file I/O. The remaining chapters move into the data science stack proper. Chapter 7 starts with NumPy — the array library that makes numerical Python fast enough to be useful — and Chapter 8 dives deep into pandas DataFrames, where most real data work happens.
+    <div class="callout-label">下一步 — NumPy 与 pandas</div>
+    你现在已经有了完整的 Python 基础：类型、控制流、函数、模块、文件 I/O。接下来的章节进入真正的数据科学工具栈。第 7 章从 NumPy 开始——让数值型 Python 足够快的数组库——第 8 章深入 pandas DataFrame，大多数真实数据工作发生的地方。
   </div>
+
+  <div class="done-btn-wrap">
+    <button id="mark-done-btn">标记为已完成</button>
+    <span class="done-hint">进度保存在浏览器本地。</span>
+  </div>
+
+  <div id="quiz"></div>
+  <script id="quiz-data" type="application/json">
+  [
+    {
+      "q": "Python 里，<code>with open('file.txt', 'w') as f:</code> 的 'w' 模式会做什么？",
+      "options": [
+        "以只读方式打开文件",
+        "打开文件并追加内容到末尾",
+        "创建或覆盖文件并以写入模式打开",
+        "以二进制模式打开文件"
+      ],
+      "answer": 2,
+      "explanation": "'w' 模式以写入方式打开文件。如果文件不存在会创建它；如果已存在，会清空原有内容然后从头写入。如果你想在不清空的情况下添加内容，用 'a'（追加）模式。"
+    },
+    {
+      "q": "为什么要用 <code>with open(...) as f:</code> 而不是直接 <code>f = open(...)</code> 然后 <code>f.close()</code>？",
+      "options": [
+        "with 语句读文件更快",
+        "with 语句保证代码块结束时文件一定关闭，即使发生了异常",
+        "直接用 open() 不能写文件，只能读",
+        "with 语句自动处理文件编码，不需要指定 utf-8"
+      ],
+      "answer": 1,
+      "explanation": "with 语句使用上下文管理器协议（__enter__ 和 __exit__）。无论代码块是正常结束还是抛出异常，__exit__ 都会被调用，从而保证文件句柄被释放。手动 f.close() 在异常发生时可能被跳过，导致资源泄漏——类似 C++ 的 RAII。"
+    },
+    {
+      "q": "<code>json.loads(s)</code> 和 <code>json.load(f)</code> 的区别是什么？",
+      "options": [
+        "没有区别，两个函数完全相同",
+        "loads 解析 JSON 字符串，load 从文件对象读取并解析 JSON",
+        "load 解析 JSON 字符串，loads 从文件对象读取",
+        "loads 只能解析 list，load 只能解析 dict"
+      ],
+      "answer": 1,
+      "explanation": "json.loads(s) 的 's' 代表 string——它接受一个 JSON 字符串作为参数。json.load(f) 接受一个文件对象作为参数，直接从文件读取并解析。记忆方法：有 's' 的是字符串，没有 's' 的是文件。"
+    }
+  ]
+  </script>
 
   <div class="chapter-nav">
     <a href="ch5.html" class="nav-btn">
-      <span class="nav-direction">← Previous</span>
-      <span class="nav-title">Chapter 5: Modules &amp; Ecosystem</span>
+      <span class="nav-direction">← 上一章</span>
+      <span class="nav-title">第 5 章：模块与生态系统</span>
     </a>
-    <a href="index.html" class="nav-btn next">
-      <span class="nav-direction">↑ Back to</span>
-      <span class="nav-title">Table of Contents</span>
+    <a href="ch7.html" class="nav-btn next">
+      <span class="nav-direction">下一章 →</span>
+      <span class="nav-title">第 7 章：NumPy 数值计算</span>
     </a>
   </div>
 
